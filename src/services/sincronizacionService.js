@@ -42,12 +42,12 @@ async function sincronizarMantenimiento(producto = null, equipo = null, maxTotal
         
         console.log(`✅ ${proyectosMapeados.length} proyectos obtenidos de Redmine\n`);
         
-        // 2. Filtrar proyectos de categoría "Mantenimiento" y excluir "Licencias"
+        // 2. Filtrar proyectos de categoría "Mantenimiento" o "On-Site" y excluir "Licencias"
         const proyectosMantenimiento = proyectosMapeados.filter(p => 
-            p.categoria === 'Mantenimiento' && 
+            (p.categoria === 'Mantenimiento' || p.categoria === 'On-Site') && 
             p.categoria !== 'Licencias'
         );
-        console.log(`✅ ${proyectosMantenimiento.length} proyectos de mantenimiento (excluyendo licencias)\n`);
+        console.log(`✅ ${proyectosMantenimiento.length} proyectos de mantenimiento/on-site (excluyendo licencias)\n`);
         
         // 3. Insertar/actualizar en redmine_mantenimiento
         console.log('💾 Paso 2: Guardando proyectos en la base de datos...');

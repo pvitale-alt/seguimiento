@@ -75,6 +75,10 @@
                         <span style="margin-left: 6px; font-size: 13px;">Estado</span>
                     </button>
                     <div class="filter-dropdown" id="filterEstados" style="display: none;">
+                        <div style="padding: 8px 16px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
+                            <button onclick="seleccionarTodosEstados()" style="background: none; border: none; color: var(--primary-color); font-size: 13px; font-weight: 500; cursor: pointer; padding: 4px 8px;">Todos</button>
+                            <button onclick="deseleccionarTodosEstados()" style="background: none; border: none; color: var(--text-secondary); font-size: 13px; cursor: pointer; padding: 4px 8px;">Borrar todos</button>
+                        </div>
                         <label style="display: flex; align-items: center; padding: 10px 16px; cursor: pointer; transition: background 0.2s;" onmouseover="this.style.background='#f1f3f4'" onmouseout="this.style.background='white'">
                             <input type="checkbox" class="filter-checkbox-estado" value="sin comenzar" style="margin-right: 8px; cursor: pointer;" onchange="aplicarFiltrosProyectos()" />
                             <span style="font-size: 13px;">Sin comenzar</span>
@@ -106,9 +110,9 @@
                     </div>
                     
                     <!-- Buscador -->
-                    <div style="position: relative; flex: 1; max-width: 600px; margin: 0 auto;">
+                    <div style="position: relative; flex: 1; max-width: 600px; margin: 0;">
                         <form onsubmit="buscar(event)" class="google-search-box" style="position: relative;">
-                            <div class="google-search-box-container" id="searchBoxContainer">
+                            <div class="google-search-box-container" id="searchBoxContainer" style="display: flex; align-items: center;">
                                 <svg style="width: 20px; height: 20px; color: #9aa0a6; margin-right: 12px; flex-shrink: 0;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
                                     <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
                                 </svg>
@@ -122,9 +126,21 @@
                                     autocorrect="off"
                                     spellcheck="false"
                                     style="flex: 1; border: none; outline: none; font-size: 16px; font-family: 'Google Sans', 'Roboto', sans-serif; resize: none; overflow: hidden; padding: 0; margin: 0; background: transparent; line-height: 44px; max-height: 44px;"
-                                    oninput="this.style.height='auto'; this.style.height=Math.min(this.scrollHeight, 44)+'px'; buscarSugerencias(this.value);"
+                                    oninput="this.style.height='auto'; this.style.height=Math.min(this.scrollHeight, 44)+'px'; buscarSugerencias(this.value); actualizarBotonLimpiar(this.value);"
                                     onkeydown="if(event.key === 'Enter') { event.preventDefault(); buscar(event); }"
                                 ></textarea>
+                                <button 
+                                    id="btnLimpiarBusqueda" 
+                                    onclick="limpiarBusqueda()" 
+                                    style="display: none; background: none; border: none; cursor: pointer; padding: 8px; margin-left: 8px; color: #5f6368; transition: color 0.2s; align-items: center; justify-content: center;"
+                                    onmouseover="this.style.color='#202124'"
+                                    onmouseout="this.style.color='#5f6368'"
+                                    title="Limpiar búsqueda"
+                                >
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                                        <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+                                    </svg>
+                                </button>
                             </div>
                             <!-- Sugerencias -->
                             <div id="searchSuggestions" class="google-search-suggestions"></div>
@@ -174,7 +190,11 @@
                 const clientes = [...new Set(result.data.map(p => p.cliente).filter(c => c))].sort();
                 const filterClientes = document.getElementById('filterClientes');
                 if (filterClientes) {
-                    filterClientes.innerHTML = clientes.map(cliente => `
+                    let html = '<div style="padding: 8px 16px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">';
+                    html += '<button onclick="seleccionarTodosClientes()" style="background: none; border: none; color: var(--primary-color); font-size: 13px; font-weight: 500; cursor: pointer; padding: 4px 8px;">Todos</button>';
+                    html += '<button onclick="deseleccionarTodosClientes()" style="background: none; border: none; color: var(--text-secondary); font-size: 13px; cursor: pointer; padding: 4px 8px;">Borrar todos</button>';
+                    html += '</div>';
+                    html += clientes.map(cliente => `
                         <label style="display: flex; align-items: center; padding: 10px 16px; cursor: pointer; transition: background 0.2s;" 
                                onmouseover="this.style.background='#f1f3f4'" 
                                onmouseout="this.style.background='white'">
@@ -182,6 +202,7 @@
                             <span style="font-size: 13px;">${cliente}</span>
                         </label>
                     `).join('');
+                    filterClientes.innerHTML = html;
                 }
             }
         } catch (error) {
@@ -226,6 +247,22 @@
                     actualizarFiltrosAplicados();
                 }
                 
+                // Ordenar por defecto: cliente (asc) y luego estado (según orden del select)
+                if (tipoActual === 'proyectos' && ordenActual.columna === 'cliente' && ordenActual.direccion === 'asc') {
+                    datosFiltrados.sort((a, b) => {
+                        const clienteA = (a.cliente || '').toLowerCase();
+                        const clienteB = (b.cliente || '').toLowerCase();
+                        if (clienteA !== clienteB) {
+                            return clienteA < clienteB ? -1 : 1;
+                        }
+                        const indexA = ordenEstados.indexOf((a.estado || '').toLowerCase());
+                        const indexB = ordenEstados.indexOf((b.estado || '').toLowerCase());
+                        const estadoA = indexA === -1 ? 999 : indexA;
+                        const estadoB = indexB === -1 ? 999 : indexB;
+                        return estadoA - estadoB;
+                    });
+                }
+                
                 renderizarTabla(datosFiltrados);
             } else {
                 contenido.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📭</div><div class="empty-state-text">No hay datos disponibles</div><div class="empty-state-subtext">Haz clic en "Actualizar" para sincronizar</div></div>';
@@ -257,9 +294,17 @@
                 const estadoValue = item.estado || '';
                 const estadoClass = estadoValue ? 'color-' + estadoValue : '';
                 tablaHTML += '<div class="modern-table-cell"><select class="modern-select overall-select ' + estadoClass + '" onchange="actualizarMantenimiento(' + item.id_proyecto + ', \'estado\', this.value); this.className=\'modern-select overall-select \' + (this.value ? \'color-\' + this.value : \'\');"><option value="">-</option><option value="verde" ' + (estadoValue === 'verde' ? 'selected' : '') + '>🟢</option><option value="amarillo" ' + (estadoValue === 'amarillo' ? 'selected' : '') + '>🟡</option><option value="rojo" ' + (estadoValue === 'rojo' ? 'selected' : '') + '>🔴</option></select></div>';
-                tablaHTML += '<div class="modern-table-cell"><select class="modern-select icon-select" onchange="actualizarMantenimiento(' + item.id_proyecto + ', \'demanda\', this.value)"><option value="">-</option><option value="llama" ' + (item.demanda === 'llama' ? 'selected' : '') + '>🔥</option><option value="congelado" ' + (item.demanda === 'congelado' ? 'selected' : '') + '>❄️</option><option value="herramientas" ' + (item.demanda === 'herramientas' ? 'selected' : '') + '>🔧</option><option value="palmera" ' + (item.demanda === 'palmera' ? 'selected' : '') + '>🌴</option></select></div>';
-                tablaHTML += '<div class="modern-table-cell"><select class="modern-select icon-select" onchange="actualizarMantenimiento(' + item.id_proyecto + ', \'estabilidad\', this.value)"><option value="">-</option><option value="llama" ' + (item.estabilidad === 'llama' ? 'selected' : '') + '>🔥</option><option value="herramientas" ' + (item.estabilidad === 'herramientas' ? 'selected' : '') + '>🔧</option><option value="cohete" ' + (item.estabilidad === 'cohete' ? 'selected' : '') + '>🚀</option></select></div>';
-                tablaHTML += '<div class="modern-table-cell"><select class="modern-select face-select" onchange="actualizarMantenimiento(' + item.id_proyecto + ', \'satisfaccion\', this.value)"><option value="">-</option><option value="feliz" ' + (item.satisfaccion === 'feliz' ? 'selected' : '') + '>😄</option><option value="buena" ' + (item.satisfaccion === 'buena' ? 'selected' : '') + '>😊</option><option value="regular" ' + (item.satisfaccion === 'regular' ? 'selected' : '') + '>😐</option><option value="mala" ' + (item.satisfaccion === 'mala' ? 'selected' : '') + '>😞</option><option value="enojado" ' + (item.satisfaccion === 'enojado' ? 'selected' : '') + '>😠</option><option value="calavera" ' + (item.satisfaccion === 'calavera' ? 'selected' : '') + '>💀</option></select></div>';
+                const demandaValue = item.demanda || '';
+                const demandaClass = demandaValue ? 'demanda-' + demandaValue : '';
+                tablaHTML += '<div class="modern-table-cell"><select class="modern-select icon-select ' + demandaClass + '" onchange="actualizarMantenimiento(' + item.id_proyecto + ', \'demanda\', this.value); this.className=\'modern-select icon-select \' + (this.value ? \'demanda-\' + this.value : \'\');"><option value="">-</option><option value="llama" ' + (demandaValue === 'llama' ? 'selected' : '') + '>🔥</option><option value="congelado" ' + (demandaValue === 'congelado' ? 'selected' : '') + '>❄️</option><option value="herramientas" ' + (demandaValue === 'herramientas' ? 'selected' : '') + '>🔧</option><option value="palmera" ' + (demandaValue === 'palmera' ? 'selected' : '') + '>🌴</option></select></div>';
+                
+                const estabilidadValue = item.estabilidad || '';
+                const estabilidadClass = estabilidadValue ? 'estabilidad-' + estabilidadValue : '';
+                tablaHTML += '<div class="modern-table-cell"><select class="modern-select icon-select ' + estabilidadClass + '" onchange="actualizarMantenimiento(' + item.id_proyecto + ', \'estabilidad\', this.value); this.className=\'modern-select icon-select \' + (this.value ? \'estabilidad-\' + this.value : \'\');"><option value="">-</option><option value="llama" ' + (estabilidadValue === 'llama' ? 'selected' : '') + '>🔥</option><option value="herramientas" ' + (estabilidadValue === 'herramientas' ? 'selected' : '') + '>🔧</option><option value="cohete" ' + (estabilidadValue === 'cohete' ? 'selected' : '') + '>🚀</option></select></div>';
+                
+                const satisfaccionValue = item.satisfaccion || '';
+                const satisfaccionClass = satisfaccionValue ? 'satisfaccion-' + satisfaccionValue : '';
+                tablaHTML += '<div class="modern-table-cell"><select class="modern-select face-select ' + satisfaccionClass + '" onchange="actualizarMantenimiento(' + item.id_proyecto + ', \'satisfaccion\', this.value); this.className=\'modern-select face-select \' + (this.value ? \'satisfaccion-\' + this.value : \'\');"><option value="">-</option><option value="feliz" ' + (satisfaccionValue === 'feliz' ? 'selected' : '') + '>😄</option><option value="buena" ' + (satisfaccionValue === 'buena' ? 'selected' : '') + '>😊</option><option value="regular" ' + (satisfaccionValue === 'regular' ? 'selected' : '') + '>😐</option><option value="mala" ' + (satisfaccionValue === 'mala' ? 'selected' : '') + '>😞</option><option value="enojado" ' + (satisfaccionValue === 'enojado' ? 'selected' : '') + '>😠</option><option value="calavera" ' + (satisfaccionValue === 'calavera' ? 'selected' : '') + '>💀</option></select></div>';
                 tablaHTML += '<div class="modern-table-cell"><textarea class="modern-input win-textarea" onchange="actualizarMantenimiento(' + item.id_proyecto + ', \'win\', this.value)">' + (item.win || '') + '</textarea></div>';
                 tablaHTML += '</div>';
             });
@@ -268,18 +313,88 @@
             contenido.innerHTML = tablaHTML;
         } else {
             // Proyectos
+            // Ordenar datos antes de renderizar
+            let datosOrdenados = [...datos];
+            datosOrdenados.sort((a, b) => {
+                let valorA, valorB;
+                
+                if (ordenActual.columna === 'cliente') {
+                    valorA = (a.cliente || '').toLowerCase();
+                    valorB = (b.cliente || '').toLowerCase();
+                } else if (ordenActual.columna === 'proyecto') {
+                    valorA = (a.nombre_proyecto || '').toLowerCase();
+                    valorB = (b.nombre_proyecto || '').toLowerCase();
+                } else if (ordenActual.columna === 'estado') {
+                    const indexA = ordenEstados.indexOf((a.estado || '').toLowerCase());
+                    const indexB = ordenEstados.indexOf((b.estado || '').toLowerCase());
+                    valorA = indexA === -1 ? 999 : indexA;
+                    valorB = indexB === -1 ? 999 : indexB;
+                    // Si tienen el mismo estado, ordenar por cliente
+                    if (valorA === valorB) {
+                        valorA = (a.cliente || '').toLowerCase();
+                        valorB = (b.cliente || '').toLowerCase();
+                    }
+                } else if (ordenActual.columna === 'overall') {
+                    const ordenOverall = { 'verde': 1, 'amarillo': 2, 'rojo': 3, '': 4 };
+                    valorA = ordenOverall[a.overall] || 4;
+                    valorB = ordenOverall[b.overall] || 4;
+                } else if (ordenActual.columna === 'alcance') {
+                    const ordenAlcance = { 'verde': 1, 'amarillo': 2, 'rojo': 3, '': 4 };
+                    valorA = ordenAlcance[a.alcance] || 4;
+                    valorB = ordenAlcance[b.alcance] || 4;
+                } else if (ordenActual.columna === 'costo') {
+                    const ordenCosto = { 'verde': 1, 'amarillo': 2, 'rojo': 3, '': 4 };
+                    valorA = ordenCosto[a.costo] || 4;
+                    valorB = ordenCosto[b.costo] || 4;
+                } else if (ordenActual.columna === 'plazos') {
+                    const ordenPlazos = { 'verde': 1, 'amarillo': 2, 'rojo': 3, '': 4 };
+                    valorA = ordenPlazos[a.plazos] || 4;
+                    valorB = ordenPlazos[b.plazos] || 4;
+                } else if (ordenActual.columna === 'riesgos') {
+                    const ordenRiesgos = { 'ok': 1, 'red flag': 2, '': 3 };
+                    valorA = ordenRiesgos[a.riesgos] || 3;
+                    valorB = ordenRiesgos[b.riesgos] || 3;
+                } else if (ordenActual.columna === 'avance') {
+                    valorA = parseInt(a.avance) || 0;
+                    valorB = parseInt(b.avance) || 0;
+                } else {
+                    return 0;
+                }
+                
+                if (valorA < valorB) return ordenActual.direccion === 'asc' ? -1 : 1;
+                if (valorA > valorB) return ordenActual.direccion === 'asc' ? 1 : -1;
+                // Si son iguales, ordenar por cliente y luego por estado
+                if (ordenActual.columna !== 'cliente' && ordenActual.columna !== 'estado') {
+                    const clienteA = (a.cliente || '').toLowerCase();
+                    const clienteB = (b.cliente || '').toLowerCase();
+                    if (clienteA !== clienteB) {
+                        return clienteA < clienteB ? -1 : 1;
+                    }
+                    const indexA = ordenEstados.indexOf((a.estado || '').toLowerCase());
+                    const indexB = ordenEstados.indexOf((b.estado || '').toLowerCase());
+                    const estadoA = indexA === -1 ? 999 : indexA;
+                    const estadoB = indexB === -1 ? 999 : indexB;
+                    return estadoA - estadoB;
+                }
+                return 0;
+            });
+            
             let tablaHTML = '<div class="modern-table-wrapper"><div class="modern-table proyectos"><div class="modern-table-header">';
-            tablaHTML += '<div class="modern-table-cell header-cell">Cliente</div>';
-            tablaHTML += '<div class="modern-table-cell header-cell">Proyecto</div>';
-            tablaHTML += '<div class="modern-table-cell header-cell">Estado</div>';
-            tablaHTML += '<div class="modern-table-cell header-cell">Overall</div>';
-            tablaHTML += '<div class="modern-table-cell header-cell">Alcance</div>';
-            tablaHTML += '<div class="modern-table-cell header-cell">Costo</div>';
-            tablaHTML += '<div class="modern-table-cell header-cell">Plazos</div>';
-            tablaHTML += '<div class="modern-table-cell header-cell">Riesgos</div>';
-            tablaHTML += '<div class="modern-table-cell header-cell">Avance</div>';
+            const flechaAsc = '▲';
+            const flechaDesc = '▼';
+            tablaHTML += '<div class="modern-table-cell header-cell" onclick="ordenarPor(\'cliente\')" style="cursor: pointer; user-select: none;' + (ordenActual.columna === 'cliente' ? ' color: var(--primary-color);' : '') + '">Cliente' + (ordenActual.columna === 'cliente' ? ' ' + (ordenActual.direccion === 'asc' ? flechaAsc : flechaDesc) : '') + '</div>';
+            tablaHTML += '<div class="modern-table-cell header-cell" onclick="ordenarPor(\'proyecto\')" style="cursor: pointer; user-select: none;' + (ordenActual.columna === 'proyecto' ? ' color: var(--primary-color);' : '') + '">Proyecto' + (ordenActual.columna === 'proyecto' ? ' ' + (ordenActual.direccion === 'asc' ? flechaAsc : flechaDesc) : '') + '</div>';
+            tablaHTML += '<div class="modern-table-cell header-cell" onclick="ordenarPor(\'estado\')" style="cursor: pointer; user-select: none;' + (ordenActual.columna === 'estado' ? ' color: var(--primary-color);' : '') + '">Estado' + (ordenActual.columna === 'estado' ? ' ' + (ordenActual.direccion === 'asc' ? flechaAsc : flechaDesc) : '') + '</div>';
+            tablaHTML += '<div class="modern-table-cell header-cell" onclick="ordenarPor(\'overall\')" style="cursor: pointer; user-select: none;' + (ordenActual.columna === 'overall' ? ' color: var(--primary-color);' : '') + '">Overall' + (ordenActual.columna === 'overall' ? ' ' + (ordenActual.direccion === 'asc' ? flechaAsc : flechaDesc) : '') + '</div>';
+            tablaHTML += '<div class="modern-table-cell header-cell" onclick="ordenarPor(\'alcance\')" style="cursor: pointer; user-select: none;' + (ordenActual.columna === 'alcance' ? ' color: var(--primary-color);' : '') + '">Alcance' + (ordenActual.columna === 'alcance' ? ' ' + (ordenActual.direccion === 'asc' ? flechaAsc : flechaDesc) : '') + '</div>';
+            tablaHTML += '<div class="modern-table-cell header-cell" onclick="ordenarPor(\'costo\')" style="cursor: pointer; user-select: none;' + (ordenActual.columna === 'costo' ? ' color: var(--primary-color);' : '') + '">Costo' + (ordenActual.columna === 'costo' ? ' ' + (ordenActual.direccion === 'asc' ? flechaAsc : flechaDesc) : '') + '</div>';
+            tablaHTML += '<div class="modern-table-cell header-cell" onclick="ordenarPor(\'plazos\')" style="cursor: pointer; user-select: none;' + (ordenActual.columna === 'plazos' ? ' color: var(--primary-color);' : '') + '">Plazos' + (ordenActual.columna === 'plazos' ? ' ' + (ordenActual.direccion === 'asc' ? flechaAsc : flechaDesc) : '') + '</div>';
+            tablaHTML += '<div class="modern-table-cell header-cell" onclick="ordenarPor(\'riesgos\')" style="cursor: pointer; user-select: none;' + (ordenActual.columna === 'riesgos' ? ' color: var(--primary-color);' : '') + '">Riesgos' + (ordenActual.columna === 'riesgos' ? ' ' + (ordenActual.direccion === 'asc' ? flechaAsc : flechaDesc) : '') + '</div>';
+            tablaHTML += '<div class="modern-table-cell header-cell" onclick="ordenarPor(\'avance\')" style="cursor: pointer; user-select: none;' + (ordenActual.columna === 'avance' ? ' color: var(--primary-color);' : '') + '">Avance' + (ordenActual.columna === 'avance' ? ' ' + (ordenActual.direccion === 'asc' ? flechaAsc : flechaDesc) : '') + '</div>';
             tablaHTML += '<div class="modern-table-cell header-cell"></div>';
             tablaHTML += '</div>';
+            
+            datos = datosOrdenados;
             
             // Función para formatear fecha a YYYY-MM-DD
             function formatearFecha(fecha) {
@@ -310,6 +425,23 @@
                 if (nombreProyecto.includes(' | ')) {
                     nombreProyecto = nombreProyecto.split(' | ').slice(1).join(' | ');
                 }
+                // Guardar datos del item para el modal
+                const itemData = {
+                    id_proyecto: item.id_proyecto,
+                    nombre_proyecto: item.nombre_proyecto || '',
+                    codigo_proyecto: item.codigo_proyecto || '',
+                    horas_estimadas: parseFloat(item.horas_estimadas) || 0,
+                    horas_realizadas: parseFloat(item.horas_realizadas) || 0,
+                    fecha_inicio_epics: item.fecha_inicio_epics || item.fecha_inicio || '',
+                    fecha_fin_epics: item.fecha_fin_epics || item.fecha_fin || '',
+                    fecha_inicio: item.fecha_inicio || '',
+                    fecha_fin: item.fecha_fin || '',
+                    win: item.win || '',
+                    tiene_epics: item.tiene_epics || false,
+                    estado: item.estado || ''
+                };
+                const itemDataJson = JSON.stringify(itemData).replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+                
                 tablaHTML += '<div class="modern-table-row">';
                 tablaHTML += '<div class="modern-table-cell item-text">' + (item.cliente || '-') + '</div>';
                 tablaHTML += '<div class="modern-table-cell item-text"><a href="' + redmineUrl + '" target="_blank" style="color: var(--primary-color); text-decoration: none;">' + nombreProyecto + '</a></div>';
@@ -350,7 +482,7 @@
                 } else if (riesgoValue === 'red flag' || riesgoValue === 'redflag') {
                     riesgoClass = 'riesgo-red';
                 }
-                tablaHTML += '<div class="modern-table-cell"><select class="modern-select riesgo-select ' + riesgoClass + '" onchange="actualizarProyecto(' + item.id_proyecto + ', \'riesgos\', this.value); actualizarRiesgoColor(this);"><option value="">-</option><option value="ok" ' + (riesgoValue === 'ok' || riesgoValue === 'okey' ? 'selected' : '') + '>✅</option><option value="red flag" ' + (riesgoValue === 'red flag' || riesgoValue === 'redflag' ? 'selected' : '') + '>🚩</option></select></div>';
+                tablaHTML += '<div class="modern-table-cell"><select class="modern-select riesgo-select ' + riesgoClass + '" onchange="actualizarProyecto(' + item.id_proyecto + ', \'riesgos\', this.value); actualizarRiesgoColor(this);"><option value="">-</option><option value="ok" ' + (riesgoValue === 'ok' || riesgoValue === 'okey' ? 'selected' : '') + '>✓</option><option value="red flag" ' + (riesgoValue === 'red flag' || riesgoValue === 'redflag' ? 'selected' : '') + '>🚩</option></select></div>';
                 
                 const avanceValue = parseInt(item.avance) || 0;
                 let avanceGradient = 'linear-gradient(90deg, #66bb6a 0%, #34a853 100%)';
@@ -363,25 +495,10 @@
                 } else {
                     avanceGradient = 'linear-gradient(90deg, #4caf50 0%, #34a853 50%, #1e8e3e 100%)';
                 }
-                tablaHTML += '<div class="modern-table-cell"><div class="progress-bar-container" data-id="' + item.id_proyecto + '"><div class="progress-bar" style="width: ' + avanceValue + '%; background: ' + avanceGradient + ';"></div><input type="range" min="0" max="100" step="1" value="' + avanceValue + '" class="progress-slider" oninput="actualizarBarraProgreso(this);" onchange="actualizarProyecto(' + item.id_proyecto + ', \'avance\', this.value);" /></div></div>';
+                tablaHTML += '<div class="modern-table-cell"><div class="progress-bar-container" data-id="' + item.id_proyecto + '"><div class="progress-bar" style="width: ' + avanceValue + '%; background: ' + avanceGradient + ';"></div><input type="range" min="0" max="100" step="5" value="' + avanceValue + '" class="progress-slider" oninput="actualizarBarraProgreso(this);" onchange="actualizarProyecto(' + item.id_proyecto + ', \'avance\', this.value);" /></div></div>';
                 
-                // Botón "Ver más" - guardar datos del item en un atributo data
-                const itemData = {
-                    id_proyecto: item.id_proyecto,
-                    nombre_proyecto: item.nombre_proyecto || '',
-                    codigo_proyecto: item.codigo_proyecto || '',
-                    horas_estimadas: parseFloat(item.horas_estimadas) || 0,
-                    horas_realizadas: parseFloat(item.horas_realizadas) || 0,
-                    fecha_inicio_epics: item.fecha_inicio_epics || item.fecha_inicio || '',
-                    fecha_fin_epics: item.fecha_fin_epics || item.fecha_fin || '',
-                    fecha_inicio: item.fecha_inicio || '',
-                    fecha_fin: item.fecha_fin || '',
-                    win: item.win || '',
-                    tiene_epics: item.tiene_epics || false
-                };
-                // Escapar el JSON para usarlo en atributo HTML
-                const itemDataJson = JSON.stringify(itemData).replace(/"/g, '&quot;').replace(/'/g, '&#39;');
-                tablaHTML += '<div class="modern-table-cell"><button class="button button-secondary" onclick="abrirModalDetalle(' + item.id_proyecto + ')" data-item="' + itemDataJson + '" style="padding: 6px 12px; font-size: 13px; border: none;">Ver más</button></div>';
+                // Botón "Ver más" - guardar datos del item en un atributo data, color azul como enlace
+                tablaHTML += '<div class="modern-table-cell"><button class="button button-secondary" onclick="abrirModalDetalle(' + item.id_proyecto + ')" data-item="' + itemDataJson + '" style="padding: 6px 12px; font-size: 13px; border: none; color: var(--primary-color); background: transparent;">Ver más</button></div>';
                 tablaHTML += '</div>';
             });
             
@@ -390,25 +507,33 @@
         }
     }
 
+    // Throttle para mejorar performance de la barra de progreso
+    let throttleTimeout = null;
     function actualizarBarraProgreso(slider) {
-        const container = slider.closest('.progress-bar-container');
-        const bar = container.querySelector('.progress-bar');
-        // Usar el valor exacto (sin redondear)
-        const value = parseInt(slider.value);
-        bar.style.width = value + '%';
-        
-        // Actualizar gradiente verde según el valor (cambia cada 1%)
-        let gradient = 'linear-gradient(90deg, #66bb6a 0%, #34a853 100%)';
-        if (value <= 25) {
-            gradient = 'linear-gradient(90deg, #a5d6a7 0%, #81c784 100%)';
-        } else if (value <= 50) {
-            gradient = 'linear-gradient(90deg, #81c784 0%, #66bb6a 100%)';
-        } else if (value <= 75) {
-            gradient = 'linear-gradient(90deg, #66bb6a 0%, #4caf50 100%)';
-        } else {
-            gradient = 'linear-gradient(90deg, #4caf50 0%, #34a853 50%, #1e8e3e 100%)';
+        if (throttleTimeout) {
+            return;
         }
-        bar.style.background = gradient;
+        throttleTimeout = requestAnimationFrame(() => {
+            const container = slider.closest('.progress-bar-container');
+            const bar = container.querySelector('.progress-bar');
+            // Usar el valor exacto (sin redondear)
+            const value = parseInt(slider.value);
+            bar.style.width = value + '%';
+            
+            // Actualizar gradiente verde según el valor (cambia cada 1%)
+            let gradient = 'linear-gradient(90deg, #66bb6a 0%, #34a853 100%)';
+            if (value <= 25) {
+                gradient = 'linear-gradient(90deg, #a5d6a7 0%, #81c784 100%)';
+            } else if (value <= 50) {
+                gradient = 'linear-gradient(90deg, #81c784 0%, #66bb6a 100%)';
+            } else if (value <= 75) {
+                gradient = 'linear-gradient(90deg, #66bb6a 0%, #4caf50 100%)';
+            } else {
+                gradient = 'linear-gradient(90deg, #4caf50 0%, #34a853 50%, #1e8e3e 100%)';
+            }
+            bar.style.background = gradient;
+            throttleTimeout = null;
+        });
     }
 
     function actualizarEstadoColor(select) {
@@ -716,7 +841,24 @@
                         html += '<div style="font-size: 11px; color: var(--text-secondary); font-weight: 500;">Epic #' + epic.epic_id + '</div>';
                         html += '<div style="font-size: 14px; font-weight: 500; color: var(--text-primary);"><a href="' + epicUrl + '" target="_blank" style="color: var(--primary-color); text-decoration: none;">' + epicTitle + '</a></div>';
                         html += '</div>';
-                        html += '<div style="font-size: 12px; color: var(--text-secondary);">' + (epic.status || '-') + '</div>';
+                        // Agregar fondo de color según el estado del epic
+                        const estadoEpic = epic.status || '';
+                        let estadoEpicClass = '';
+                        let estadoEpicBg = '';
+                        if (estadoEpic.toLowerCase().includes('cerrado') || estadoEpic.toLowerCase().includes('closed')) {
+                            estadoEpicBg = '#e6f4ea';
+                            estadoEpicClass = 'estado-epic-cerrado';
+                        } else if (estadoEpic.toLowerCase().includes('nuevo') || estadoEpic.toLowerCase().includes('new')) {
+                            estadoEpicBg = '#f1f3f4';
+                            estadoEpicClass = 'estado-epic-nuevo';
+                        } else if (estadoEpic.toLowerCase().includes('en progreso') || estadoEpic.toLowerCase().includes('in progress')) {
+                            estadoEpicBg = '#fef7e0';
+                            estadoEpicClass = 'estado-epic-progreso';
+                        } else if (estadoEpic.toLowerCase().includes('resuelto') || estadoEpic.toLowerCase().includes('resolved')) {
+                            estadoEpicBg = '#e8f0fe';
+                            estadoEpicClass = 'estado-epic-resuelto';
+                        }
+                        html += '<div style="font-size: 12px; color: var(--text-secondary); padding: 4px 8px; border-radius: 12px; background: ' + (estadoEpicBg || 'transparent') + '; display: inline-block;">' + (estadoEpic || '-') + '</div>';
                         html += '</div>';
                         html += '<div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; font-size: 13px; color: var(--text-secondary);">';
                         html += '<div>Est.: ' + (parseFloat(epic.total_estimated_hours) || 0).toFixed(1) + 'h</div>';
@@ -735,8 +877,14 @@
                         });
                     }
                     
-                    // Renderizar epics agrupados por proyecto_padre
-                    Object.keys(epicsPorProyecto).forEach(function(proyectoPadreId) {
+                    // Renderizar epics agrupados por proyecto_padre (ordenados alfabéticamente por nombre)
+                    const proyectosPadreOrdenados = Object.keys(epicsPorProyecto).sort(function(a, b) {
+                        const nombreA = epicsPorProyecto[a][0]?.nombre_proyecto_padre || 'Proyecto #' + a;
+                        const nombreB = epicsPorProyecto[b][0]?.nombre_proyecto_padre || 'Proyecto #' + b;
+                        return nombreA.localeCompare(nombreB);
+                    });
+                    
+                    proyectosPadreOrdenados.forEach(function(proyectoPadreId) {
                         const epicsDelSubproyecto = epicsPorProyecto[proyectoPadreId];
                         // Obtener el nombre del proyecto padre del primer epic del grupo
                         const nombreProyectoPadre = epicsDelSubproyecto[0]?.nombre_proyecto_padre || 'Proyecto #' + proyectoPadreId;
@@ -774,23 +922,29 @@
             // Fechas - Mostrar las 3 fechas de los epics
             contenido += '<div><label style="display: block; font-size: 13px; font-weight: 500; color: var(--text-secondary); margin-bottom: 8px;">Fecha Inicio Planificada</label>';
             if (!tieneEpics || !fechaInicioPlanificada) {
-                contenido += '<div style="font-size: 14px; color: var(--text-secondary); font-style: italic;">Sincronizar epics para ver fecha</div></div>';
+                contenido += '<div style="width: 100%; padding: 10px 16px; border-radius: 8px; border: 1px solid var(--border-color); font-size: 14px; font-family: \'Google Sans\', \'Roboto\', sans-serif; background: #f8f9fa; color: var(--text-secondary);">-</div></div>';
             } else {
                 contenido += '<input type="date" class="modern-input date-input" value="' + formatearFecha(fechaInicioPlanificada) + '" readonly style="width: 100%; padding: 10px 16px; border-radius: 8px; border: 1px solid var(--border-color); font-size: 14px; font-family: \'Google Sans\', \'Roboto\', sans-serif; background: #f8f9fa; cursor: not-allowed;"></div>';
             }
             
             contenido += '<div><label style="display: block; font-size: 13px; font-weight: 500; color: var(--text-secondary); margin-bottom: 8px;">Fecha Fin Planificada</label>';
             if (!tieneEpics || !fechaFinPlanificada) {
-                contenido += '<div style="font-size: 14px; color: var(--text-secondary); font-style: italic;">Sincronizar epics para ver fecha</div></div>';
+                contenido += '<div style="width: 100%; padding: 10px 16px; border-radius: 8px; border: 1px solid var(--border-color); font-size: 14px; font-family: \'Google Sans\', \'Roboto\', sans-serif; background: #f8f9fa; color: var(--text-secondary);">-</div></div>';
             } else {
                 contenido += '<input type="date" class="modern-input date-input" value="' + formatearFecha(fechaFinPlanificada) + '" readonly style="width: 100%; padding: 10px 16px; border-radius: 8px; border: 1px solid var(--border-color); font-size: 14px; font-family: \'Google Sans\', \'Roboto\', sans-serif; background: #f8f9fa; cursor: not-allowed;"></div>';
             }
             
-            contenido += '<div><label style="display: block; font-size: 13px; font-weight: 500; color: var(--text-secondary); margin-bottom: 8px;">Fecha Fin Real</label>';
-            if (!tieneEpics || !fechaFinReal) {
-                contenido += '<div style="font-size: 14px; color: var(--text-secondary); font-style: italic;">Sincronizar epics para ver fecha</div></div>';
-            } else {
-                contenido += '<input type="date" class="modern-input date-input" value="' + formatearFecha(fechaFinReal) + '" readonly style="width: 100%; padding: 10px 16px; border-radius: 8px; border: 1px solid var(--border-color); font-size: 14px; font-family: \'Google Sans\', \'Roboto\', sans-serif; background: #f8f9fa; cursor: not-allowed;"></div>';
+            // Solo mostrar Fecha Fin Real si el proyecto está entregado o cerrado
+            const estadoProyecto = (itemData.estado || '').toLowerCase();
+            const mostrarFechaFinReal = estadoProyecto === 'entregado' || estadoProyecto === 'cerrado';
+            
+            if (mostrarFechaFinReal) {
+                contenido += '<div><label style="display: block; font-size: 13px; font-weight: 500; color: var(--text-secondary); margin-bottom: 8px;">Fecha Fin Real</label>';
+                if (!tieneEpics || !fechaFinReal) {
+                    contenido += '<div style="width: 100%; padding: 10px 16px; border-radius: 8px; border: 1px solid var(--border-color); font-size: 14px; font-family: \'Google Sans\', \'Roboto\', sans-serif; background: #f8f9fa; color: var(--text-secondary);">-</div></div>';
+                } else {
+                    contenido += '<input type="date" class="modern-input date-input" value="' + formatearFecha(fechaFinReal) + '" readonly style="width: 100%; padding: 10px 16px; border-radius: 8px; border: 1px solid var(--border-color); font-size: 14px; font-family: \'Google Sans\', \'Roboto\', sans-serif; background: #f8f9fa; cursor: not-allowed;"></div>';
+                }
             }
             
             // Botón de acción
@@ -948,7 +1102,7 @@
         }
     }
 
-    // Búsqueda con sugerencias
+    // Búsqueda con sugerencias - optimizada con debounce más largo
     let timeoutSugerencias;
     async function buscarSugerencias(query) {
         clearTimeout(timeoutSugerencias);
@@ -961,6 +1115,7 @@
             return;
         }
         
+        // Debounce más largo para mejorar performance (500ms en lugar de 300ms)
         timeoutSugerencias = setTimeout(async () => {
             try {
                 const endpoint = '/api/proyectos/sugerencias?q=' + encodeURIComponent(query);
@@ -988,7 +1143,33 @@
                 console.error('Error al obtener sugerencias:', error);
                 suggestionsContainer.style.display = 'none';
             }
-        }, 300);
+        }, 500);
+    }
+    
+    // Función para actualizar visibilidad del botón limpiar
+    function actualizarBotonLimpiar(valor) {
+        const btnLimpiar = document.getElementById('btnLimpiarBusqueda');
+        if (btnLimpiar) {
+            btnLimpiar.style.display = valor && valor.trim().length > 0 ? 'flex' : 'none';
+        }
+    }
+    
+    // Función para limpiar la búsqueda y refrescar
+    function limpiarBusqueda() {
+        const searchInput = document.getElementById('searchInput');
+        if (searchInput) {
+            searchInput.value = '';
+            searchInput.style.height = 'auto';
+            searchInput.style.height = Math.min(searchInput.scrollHeight, 44) + 'px';
+            busquedaActual = '';
+            actualizarBotonLimpiar('');
+            const suggestionsContainer = document.getElementById('searchSuggestions');
+            if (suggestionsContainer) {
+                suggestionsContainer.style.display = 'none';
+            }
+            // Refrescar la página
+            window.location.reload();
+        }
     }
 
     function seleccionarSugerencia(texto) {
@@ -1134,6 +1315,40 @@
         filtrosEstados = [];
         document.querySelectorAll('.filter-checkbox-cliente, .filter-checkbox-estado').forEach(cb => cb.checked = false);
         actualizarFiltrosAplicados();
+        cargarDatos();
+    }
+    
+    function seleccionarTodosClientes() {
+        document.querySelectorAll('.filter-checkbox-cliente').forEach(cb => cb.checked = true);
+        aplicarFiltrosProyectos();
+    }
+    
+    function deseleccionarTodosClientes() {
+        document.querySelectorAll('.filter-checkbox-cliente').forEach(cb => cb.checked = false);
+        aplicarFiltrosProyectos();
+    }
+    
+    function seleccionarTodosEstados() {
+        document.querySelectorAll('.filter-checkbox-estado').forEach(cb => cb.checked = true);
+        aplicarFiltrosProyectos();
+    }
+    
+    function deseleccionarTodosEstados() {
+        document.querySelectorAll('.filter-checkbox-estado').forEach(cb => cb.checked = false);
+        aplicarFiltrosProyectos();
+    }
+    
+    // Variables para ordenamiento
+    let ordenActual = { columna: 'cliente', direccion: 'asc' };
+    const ordenEstados = ['sin comenzar', 'en curso', 'Testing', 'Entregado', 'Cerrado', 'Rework', 'Bloqueado'];
+    
+    function ordenarPor(columna) {
+        if (ordenActual.columna === columna) {
+            ordenActual.direccion = ordenActual.direccion === 'asc' ? 'desc' : 'asc';
+        } else {
+            ordenActual.columna = columna;
+            ordenActual.direccion = 'asc';
+        }
         cargarDatos();
     }
 </script>

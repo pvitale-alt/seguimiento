@@ -307,7 +307,7 @@ h3 {
     background: #f1f3f4;
     color: #1557b0;
     border-color: #bdc1c6;
-    box-shadow: 0 1px 2px 0 rgba(60,64,67,.3), 0 1px 3px 1px rgba(60,64,67,.15);
+    box-shadow: none;
 }
 
 .button.button-secondary:active {
@@ -597,7 +597,7 @@ body {
 /* Proyectos: 10 columnas - Cliente reducido, Proyecto más ancho, Plazos y Riesgos con mismo ancho que Overall/Alcance/Costo */
 .modern-table.proyectos .modern-table-header,
 .modern-table.proyectos .modern-table-row {
-    grid-template-columns: 120px 300px 100px 70px 70px 70px 70px 70px 100px 100px;
+    grid-template-columns: 120px 400px 100px 70px 70px 70px 70px 70px 100px 100px;
 }
 
 /* Celda que ocupa 2 columnas para el botón de sincronizar epics */
@@ -617,6 +617,7 @@ body {
     align-items: center;
     white-space: nowrap;
 }
+
 
 /* Centrar valores en celdas (excepto item-text) */
 .modern-table-row .modern-table-cell:not(.item-text) {
@@ -765,25 +766,112 @@ body {
     outline: none;
 }
 
-/* Colores de fondo suaves para overall-select según el valor (sin bordes) */
+/* Estilo de select similar a filter-btn */
+.modern-select {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 16px;
+    border-radius: 24px;
+    border: none;
+    background: white;
+    font-size: 14px;
+    font-weight: 500;
+    font-family: 'Google Sans', 'Roboto', sans-serif;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    letter-spacing: 0.25px;
+    height: 36px;
+    min-width: auto;
+    box-shadow: none;
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-image: none;
+    padding-right: 16px;
+}
+
+.modern-select:hover {
+    background: var(--hover-bg);
+    border: none;
+    box-shadow: none;
+}
+
+.modern-select:active {
+    transform: scale(0.98);
+}
+
+/* Colores de fondo suaves para overall-select según el valor */
 .modern-select.overall-select.color-verde {
     background-color: #e6f4ea !important;
-    border: none !important;
 }
 
 .modern-select.overall-select.color-amarillo {
     background-color: #fef7e0 !important;
-    border: none !important;
 }
 
 .modern-select.overall-select.color-rojo {
     background-color: #fce8e6 !important;
-    border: none !important;
 }
 
-/* Colores de fondo suaves para icon-select y face-select (sin color específico, mantener gris) */
-.modern-select.icon-select,
-.modern-select.face-select {
+/* Colores de fondo para icon-select según valor de demanda */
+.modern-select.icon-select.demanda-llama {
+    background-color: #fce8e6 !important;
+}
+
+.modern-select.icon-select.demanda-congelado {
+    background-color: #e8f0fe !important;
+}
+
+.modern-select.icon-select.demanda-herramientas {
+    background-color: #fef7e0 !important;
+}
+
+.modern-select.icon-select.demanda-palmera {
+    background-color: #e6f4ea !important;
+}
+
+/* Colores de fondo para icon-select según valor de estabilidad */
+.modern-select.icon-select.estabilidad-llama {
+    background-color: #fce8e6 !important;
+}
+
+.modern-select.icon-select.estabilidad-herramientas {
+    background-color: #fef7e0 !important;
+}
+
+.modern-select.icon-select.estabilidad-cohete {
+    background-color: #e6f4ea !important;
+}
+
+/* Colores de fondo para face-select según valor de satisfacción */
+.modern-select.face-select.satisfaccion-feliz {
+    background-color: #e6f4ea !important;
+}
+
+.modern-select.face-select.satisfaccion-buena {
+    background-color: #c8e6c9 !important;
+}
+
+.modern-select.face-select.satisfaccion-regular {
+    background-color: #fef7e0 !important;
+}
+
+.modern-select.face-select.satisfaccion-mala {
+    background-color: #ffe0b2 !important;
+}
+
+.modern-select.face-select.satisfaccion-enojado {
+    background-color: #fce8e6 !important;
+}
+
+.modern-select.face-select.satisfaccion-calavera {
+    background-color: #f1f3f4 !important;
+}
+
+/* Por defecto, mantener gris si no hay valor */
+.modern-select.icon-select:not([class*="demanda-"]):not([class*="estabilidad-"]),
+.modern-select.face-select:not([class*="satisfaccion-"]) {
     background-color: #f8f9fa;
 }
 
@@ -792,28 +880,35 @@ body {
     border: none;
 }
 
-/* Colores de fondo para riesgo-select según el valor */
+/* Colores de fondo para riesgo-select con círculos de colores */
 .modern-select.riesgo-select.riesgo-ok {
     background-color: #e6f4ea !important;
-    border: none !important;
 }
 
 .modern-select.riesgo-select.riesgo-red {
     background-color: #fce8e6 !important;
-    border: none !important;
 }
 
-/* Selector de estado - fuente igual que headers pero sin bold */
+/* Colores de fondo para riesgo-select según el valor */
+.modern-select.riesgo-select.riesgo-ok {
+    background-color: #e6f4ea !important;
+}
+
+.modern-select.riesgo-select.riesgo-red {
+    background-color: #fce8e6 !important;
+}
+
+/* Selector de estado - fuente igual que headers pero sin bold, color gris oscuro */
 .modern-select.estado-select {
     font-size: 13px;
     font-weight: 400;
     font-family: 'Google Sans', 'Roboto', sans-serif;
-    color: var(--text-primary);
+    color: #3c4043;
     background-color: #f8f9fa;
     border-radius: 16px;
     padding: 8px 12px;
     background-image: none;
-    border: 1px solid transparent;
+    border: none;
     min-width: 100px;
     cursor: pointer;
     transition: all 0.2s;
@@ -821,13 +916,13 @@ body {
 
 .modern-select.estado-select:hover {
     background-color: #e8eaed;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    box-shadow: none;
 }
 
 .modern-select.estado-select:focus {
     background-color: #e8eaed;
     outline: none;
-    box-shadow: 0 0 0 2px rgba(49, 107, 161, 0.2);
+    box-shadow: none;
 }
 
 /* Mejorar estilo del dropdown de estado-select */
@@ -870,7 +965,7 @@ body {
 .win-textarea {
     background-color: #f8f9fa !important;
     border-radius: 8px !important;
-    border: 1px solid var(--border-color) !important;
+    border: none !important;
     padding: 10px 12px !important;
     font-size: 13px !important;
     font-family: 'Google Sans', 'Roboto', sans-serif !important;
@@ -880,8 +975,8 @@ body {
 .win-textarea:focus {
     background-color: white !important;
     outline: none !important;
-    border-color: var(--primary-color) !important;
-    box-shadow: 0 0 0 2px rgba(49, 107, 161, 0.1) !important;
+    border: none !important;
+    box-shadow: none !important;
 }
 
 /* Inputs de fecha y textarea - fuente igual que headers pero sin bold */
@@ -1227,7 +1322,7 @@ input[type="date"] {
     background: #f1f3f4;
     color: #1557b0;
     border-color: #bdc1c6;
-    box-shadow: 0 1px 2px 0 rgba(60,64,67,.3), 0 1px 3px 1px rgba(60,64,67,.15);
+    box-shadow: none;
 }
 
 .button.button-secondary:active {
