@@ -15,8 +15,9 @@
     <!-- Header General -->
     <header class="top-header">
         <div style="display: flex; align-items: center; gap: 12px;">
-            <img src="/images/logo.png" alt="Logo" style="height: 28px; width: auto; display: block;" onerror="this.style.display='none';" />
-            <span style="font-size: 16px; font-weight: 500; color: var(--text-secondary); font-family: 'Google Sans', 'Roboto', sans-serif;">Seguimiento - Administración</span>
+            <a href="/" style="display: flex; align-items: center; text-decoration: none;">
+                <img src="/images/Mercap-logo-horizontal-1920x1080.png" alt="Logo Mercap" style="height: 70px; width: auto; display: block;" onerror="this.style.display='none';" />
+            </a>
         </div>
     </header>
     
@@ -25,7 +26,7 @@
             <div class="content-area">
                 <div class="toolbar">
                     <div class="toolbar-left">
-                        <h1 class="page-title">Administración - Productos y Equipos</h1>
+                        <h1 style="font-size: 32px; font-weight: 500; color: #424242; margin: 0; font-family: 'Google Sans', 'Roboto', sans-serif;">Seguimiento - Administración</h1>
                     </div>
                     <div class="toolbar-right">
                         <button class="btn btn-primary" onclick="mostrarModalCrear()">
@@ -45,6 +46,7 @@
                                 <th>Equipo</th>
                                 <th>ID Equipo Redmine</th>
                                 <th>Producto Redmine</th>
+                                <th>Código Proyecto Padre</th>
                                 <th>Acciones</th>
                             </tr>
                         </thead>
@@ -96,6 +98,12 @@
                         <label style="display: block; margin-bottom: 8px; font-weight: 500;">ID Equipo Redmine (cf_75)</label>
                         <input type="text" id="formIdEquipoRedmine" name="id_equipo_redmine" class="input" required>
                         <small style="color: var(--text-secondary); font-size: 12px;">Este es el valor que viene en el campo cf_75 de Redmine</small>
+                    </div>
+                    
+                    <div style="margin-bottom: 16px;">
+                        <label style="display: block; margin-bottom: 8px; font-weight: 500;">Código Proyecto Padre (Opcional)</label>
+                        <input type="text" id="formCodigoProyectoPadre" name="codigo_proyecto_padre" class="input" placeholder="Código del proyecto padre en Redmine (ej: ut-mercap)">
+                        <small style="color: var(--text-secondary); font-size: 12px;">Código del proyecto padre para filtrar proyectos en Redmine. Si está vacío, no se aplicará este filtro.</small>
                     </div>
                     
                     <div style="display: flex; gap: 12px; justify-content: flex-end; margin-top: 24px;">
@@ -209,6 +217,7 @@
                         <td>${equipo.equipo}</td>
                         <td>${equipo.id_equipo_redmine}</td>
                         <td>${producto.producto_redmine || producto.producto}</td>
+                        <td>${equipo.codigo_proyecto_padre || '-'}</td>
                         <td>
                             <button class="btn" onclick="editarProductoEquipo(${equipo.id})" style="padding: 6px 12px; font-size: 13px;">Editar</button>
                             <button class="btn" onclick="eliminarProductoEquipo(${equipo.id})" style="padding: 6px 12px; font-size: 13px; background: #fce8e6; color: #d93025;">Eliminar</button>
@@ -227,6 +236,7 @@
             document.getElementById('formProductoNuevo').style.display = 'none';
             document.getElementById('formEquipoNuevo').style.display = 'none';
             document.getElementById('formProductoRedmine').value = '';
+            document.getElementById('formCodigoProyectoPadre').value = '';
             actualizarSelects();
             document.getElementById('modalProductoEquipo').style.display = 'flex';
         }
@@ -291,6 +301,8 @@
                                 } else {
                                     document.getElementById('formProductoRedmine').value = '';
                                 }
+                                // Establecer codigo_proyecto_padre del equipo
+                                document.getElementById('formCodigoProyectoPadre').value = encontrado.codigo_proyecto_padre || '';
                                 document.getElementById('formProductoNuevo').style.display = 'none';
                                 document.getElementById('formEquipoNuevo').style.display = 'none';
                             }, 100);
@@ -332,7 +344,8 @@
                 producto: producto,
                 equipo: equipo,
                 id_equipo_redmine: document.getElementById('formIdEquipoRedmine').value,
-                producto_redmine: document.getElementById('formProductoRedmine').value.trim() || null
+                producto_redmine: document.getElementById('formProductoRedmine').value.trim() || null,
+                codigo_proyecto_padre: document.getElementById('formCodigoProyectoPadre').value.trim() || null
             };
             
             const id = document.getElementById('formId').value;

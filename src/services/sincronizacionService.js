@@ -1,6 +1,7 @@
 // Servicio para sincronizar datos de Redmine con la base de datos local
 const { pool, query, transaction } = require('../config/database');
 const redmineService = require('./redmineService');
+const ProductosEquiposModel = require('../models/ProductosEquiposModel');
 
 /**
  * Sincronizar proyectos de mantenimiento desde Redmine
@@ -23,12 +24,42 @@ async function sincronizarMantenimiento(producto = null, equipo = null, maxTotal
         // 1. Obtener proyectos de Redmine con filtros (hacer dos llamados: Mantenimiento y On-Site)
         console.log('📥 Paso 1: Obteniendo proyectos de Redmine...');
         
+        // Obtener código de proyecto padre si existe
+        let codigoProyectoPadre = null;
+        if (producto) {
+            try {
+                const productosEquipos = await ProductosEquiposModel.obtenerTodos();
+                const productoData = productosEquipos.find(p => p.producto === producto);
+                if (productoData && productoData.equipos) {
+                    // Si hay un equipo específico, buscar en ese equipo
+                    if (equipo && equipo !== '*') {
+                        const equipoData = productoData.equipos.find(e => e.id_equipo_redmine === equipo);
+                        if (equipoData && equipoData.codigo_proyecto_padre) {
+                            codigoProyectoPadre = equipoData.codigo_proyecto_padre;
+                        }
+                    } else {
+                        // Si equipo es '*' o null, buscar el primer equipo del producto que tenga codigo_proyecto_padre
+                        const equipoConPadre = productoData.equipos.find(e => e.codigo_proyecto_padre);
+                        if (equipoConPadre && equipoConPadre.codigo_proyecto_padre) {
+                            codigoProyectoPadre = equipoConPadre.codigo_proyecto_padre;
+                        }
+                    }
+                    if (codigoProyectoPadre) {
+                        console.log(`   🔍 Usando código proyecto padre: ${codigoProyectoPadre}`);
+                    }
+                }
+            } catch (error) {
+                console.warn(`   ⚠️ Error al obtener código proyecto padre: ${error.message}`);
+            }
+        }
+        
         // Llamado para categoría "Mantenimiento"
         console.log('   📋 Obteniendo proyectos de categoría "Mantenimiento"...');
         const proyectosMantenimiento = await redmineService.obtenerProyectosMapeados({
             producto,
             equipo,
             categoria: 'Mantenimiento',
+            codigo_proyecto_padre: codigoProyectoPadre,
             maxTotal
         });
         console.log(`   ✅ ${proyectosMantenimiento.length} proyectos de categoría "Mantenimiento" obtenidos`);
@@ -39,6 +70,7 @@ async function sincronizarMantenimiento(producto = null, equipo = null, maxTotal
             producto,
             equipo,
             categoria: 'On-Site',
+            codigo_proyecto_padre: codigoProyectoPadre,
             maxTotal
         });
         console.log(`   ✅ ${proyectosOnSite.length} proyectos de categoría "On-Site" obtenidos\n`);
@@ -194,12 +226,42 @@ async function sincronizarProyectos(producto = null, equipo = null, maxTotal = n
     console.log(`   Límite: ${maxTotal || 'sin límite'}\n`);
     
     try {
+        // Obtener código de proyecto padre si existe
+        let codigoProyectoPadre = null;
+        if (producto) {
+            try {
+                const productosEquipos = await ProductosEquiposModel.obtenerTodos();
+                const productoData = productosEquipos.find(p => p.producto === producto);
+                if (productoData && productoData.equipos) {
+                    // Si hay un equipo específico, buscar en ese equipo
+                    if (equipo && equipo !== '*') {
+                        const equipoData = productoData.equipos.find(e => e.id_equipo_redmine === equipo);
+                        if (equipoData && equipoData.codigo_proyecto_padre) {
+                            codigoProyectoPadre = equipoData.codigo_proyecto_padre;
+                        }
+                    } else {
+                        // Si equipo es '*' o null, buscar el primer equipo del producto que tenga codigo_proyecto_padre
+                        const equipoConPadre = productoData.equipos.find(e => e.codigo_proyecto_padre);
+                        if (equipoConPadre && equipoConPadre.codigo_proyecto_padre) {
+                            codigoProyectoPadre = equipoConPadre.codigo_proyecto_padre;
+                        }
+                    }
+                    if (codigoProyectoPadre) {
+                        console.log(`   🔍 Usando código proyecto padre: ${codigoProyectoPadre}`);
+                    }
+                }
+            } catch (error) {
+                console.warn(`   ⚠️ Error al obtener código proyecto padre: ${error.message}`);
+            }
+        }
+        
         // 1. Obtener proyectos de Redmine (sin filtrar por categoría, luego filtrar en código)
         // Nota: Redmine no permite filtrar por "categoría != Mantenimiento", así que obtenemos todos y filtramos
         console.log('📥 Paso 1: Obteniendo proyectos de Redmine...');
         const proyectosMapeados = await redmineService.obtenerProyectosMapeados({
             producto,
             equipo,
+            codigo_proyecto_padre: codigoProyectoPadre,
             // No pasamos categoría aquí, la filtramos después
             maxTotal
         });

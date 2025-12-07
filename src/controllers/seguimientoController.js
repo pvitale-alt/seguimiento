@@ -120,7 +120,15 @@ async function obtenerProyectos(req, res) {
             direccion: req.query.direccion || 'asc'
         };
         
+        console.log('📊 Obteniendo proyectos con filtros:', {
+            producto: filtros.producto,
+            equipo: filtros.equipo,
+            busqueda: filtros.busqueda
+        });
+        
         const proyectos = await ProyectosExternosModel.obtenerTodos(filtros);
+        
+        console.log(`✅ Proyectos obtenidos de BD: ${proyectos.length}`);
         
         res.json({
             success: true,

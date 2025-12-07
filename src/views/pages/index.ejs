@@ -16,7 +16,7 @@
     <header class="top-header">
         <div style="display: flex; align-items: center; gap: 12px;">
             <a href="/" style="display: flex; align-items: center; text-decoration: none;">
-                <img src="/images/Mercap-logo-horizontal-1920x1080.png" alt="Logo Mercap" style="height: 50px; width: auto; display: block;" onerror="this.style.display='none';" />
+                <img src="/images/Mercap-logo-horizontal-1920x1080.png" alt="Logo Mercap" style="height: 70px; width: auto; display: block;" onerror="this.style.display='none';" />
             </a>
         </div>
     </header>
@@ -29,7 +29,7 @@
                 <% if (productoActual) { %>
                 <!-- Título y Botón Actualizar (solo cuando hay producto seleccionado) -->
                 <div style="padding: 16px 24px; display: flex; justify-content: space-between; align-items: center;">
-                    <h1 style="font-size: 24px; font-weight: 500; color: var(--text-primary); margin: 0; font-family: 'Google Sans', 'Roboto', sans-serif;">
+                    <h1 style="font-size: 32px; font-weight: 500; color: #424242; margin: 0; font-family: 'Google Sans', 'Roboto', sans-serif;">
                         Seguimiento<% if (equipoNombre) { %> - <%= equipoNombre %><% } %>
                     </h1>
                     <button class="button button-secondary" onclick="sincronizar()" id="btnSincronizar">
@@ -57,7 +57,7 @@
 
                 <!-- Filtros y buscador solo para proyectos -->
                 <% if (productoActual && tipoActual === 'proyectos') { %>
-                <div id="filtrosProyectos" style="padding: 16px 24px; background: white; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; gap: 12px; flex-wrap: wrap; justify-content: space-between;">
+                <div id="filtrosProyectos" style="padding: 16px 24px; background: white; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
                     <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
                     <!-- Filtro Cliente -->
                     <button class="filter-btn" onclick="toggleFilterClientes(this)" title="Filtrar por Cliente">
@@ -105,10 +105,11 @@
                             <span style="font-size: 13px;">Bloqueado</span>
                         </label>
                     </div>
+                    </div>
                     
-                    <!-- Buscador -->
-                    <div style="position: relative; flex: 1; max-width: 900px; min-width: 500px; margin: 0 auto;">
-                        <form onsubmit="buscar(event)" class="google-search-box" style="position: relative;">
+                    <!-- Buscador (centrado) -->
+                    <div style="position: relative; flex: 1; max-width: 900px; min-width: 500px; margin: 0 auto; display: flex; justify-content: center;">
+                        <form onsubmit="buscar(event)" class="google-search-box" style="position: relative; width: 100%;">
                             <div class="google-search-box-container" id="searchBoxContainer" style="display: flex; align-items: center;">
                                 <svg style="width: 20px; height: 20px; color: #9aa0a6; margin-right: 12px; flex-shrink: 0;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
                                     <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
@@ -143,11 +144,12 @@
                             <div id="searchSuggestions" class="google-search-suggestions"></div>
                         </form>
                     </div>
-                    </div>
+                    
                     <!-- Checkbox "Incluir cerrados" -->
                     <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; user-select: none; margin-left: auto;">
                         <input type="checkbox" id="incluirCerrados" style="cursor: pointer;" onchange="aplicarFiltrosProyectos()" />
                         <span style="font-size: 13px; color: var(--text-secondary);">Incluir cerrados</span>
+                        <span id="contadorProyectos" style="font-size: 13px; color: var(--text-secondary); font-weight: 500; margin-left: 4px;">total proyectos: 0</span>
                     </label>
                 </div>
                 <!-- Chips de filtros aplicados (debajo del panel de filtros) -->
@@ -171,6 +173,8 @@
     let busquedaActual = '';
     let filtrosClientes = [];
     let filtrosEstados = [];
+    let datosTablaActual = []; // Almacenar datos actuales de la tabla para el filtro de clientes
+    let datosOriginales = []; // Almacenar datos originales (sin filtros de clientes/estados) para el filtro de clientes
 
     // Cargar datos al iniciar
     document.addEventListener('DOMContentLoaded', () => {
@@ -207,31 +211,32 @@
     }
 
     async function cargarClientesParaFiltro() {
+        // Esta función se mantiene para compatibilidad, pero ahora usa actualizarFiltroClientesDesdeTabla
+        actualizarFiltroClientesDesdeTabla();
+    }
+
+    function actualizarFiltroClientesDesdeTabla() {
         try {
-            const response = await fetch('/api/proyectos?producto=' + encodeURIComponent(productoActual));
-            const result = await response.json();
-            
-            if (result.success && result.data.length > 0) {
-                const clientes = [...new Set(result.data.map(p => p.cliente).filter(c => c))].sort();
-                const filterClientes = document.getElementById('filterClientes');
-                if (filterClientes) {
-                    let html = '<div style="padding: 8px 16px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">';
-                    html += '<button onclick="seleccionarTodosClientes()" style="background: none; border: none; color: var(--primary-color); font-size: 13px; font-weight: 500; cursor: pointer; padding: 4px 8px;">Todos</button>';
-                    html += '<button onclick="deseleccionarTodosClientes()" style="background: none; border: none; color: var(--text-secondary); font-size: 13px; cursor: pointer; padding: 4px 8px;">Borrar todos</button>';
-                    html += '</div>';
-                    html += clientes.map(cliente => `
-                        <label style="display: flex; align-items: center; padding: 10px 16px; cursor: pointer; transition: background 0.2s;" 
-                               onmouseover="this.style.background='#f1f3f4'" 
-                               onmouseout="this.style.background='white'">
-                            <input type="checkbox" class="filter-checkbox-cliente" value="${cliente}" style="margin-right: 8px; cursor: pointer;" onchange="aplicarFiltrosProyectos()" />
-                            <span style="font-size: 13px;">${cliente}</span>
-                        </label>
-                    `).join('');
-                    filterClientes.innerHTML = html;
-                }
+            // Usar los datos de la tabla actual en lugar de hacer una consulta separada
+            const clientes = [...new Set(datosTablaActual.map(p => p.cliente).filter(c => c))].sort();
+            const filterClientes = document.getElementById('filterClientes');
+            if (filterClientes) {
+                let html = '<div style="padding: 8px 16px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">';
+                html += '<button onclick="seleccionarTodosClientes()" style="background: none; border: none; color: var(--primary-color); font-size: 13px; font-weight: 500; cursor: pointer; padding: 4px 8px;">Todos</button>';
+                html += '<button onclick="deseleccionarTodosClientes()" style="background: none; border: none; color: var(--text-secondary); font-size: 13px; cursor: pointer; padding: 4px 8px;">Borrar todos</button>';
+                html += '</div>';
+                html += clientes.map(cliente => `
+                    <label style="display: flex; align-items: center; padding: 10px 16px; cursor: pointer; transition: background 0.2s;" 
+                           onmouseover="this.style.background='#f1f3f4'" 
+                           onmouseout="this.style.background='white'">
+                        <input type="checkbox" class="filter-checkbox-cliente" value="${cliente}" style="margin-right: 8px; cursor: pointer;" onchange="aplicarFiltrosProyectos()" />
+                        <span style="font-size: 13px;">${cliente}</span>
+                    </label>
+                `).join('');
+                filterClientes.innerHTML = html;
             }
         } catch (error) {
-            console.error('Error al cargar clientes:', error);
+            console.error('Error al actualizar filtro de clientes:', error);
         }
     }
 
@@ -255,11 +260,66 @@
                 endpoint = '/api/proyectos?' + params;
             }
 
-            const response = await fetch(endpoint);
+            // Agregar timeout de 30 segundos
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 30000);
+
+            let response;
+            try {
+                response = await fetch(endpoint, { signal: controller.signal });
+            } catch (fetchError) {
+                clearTimeout(timeoutId);
+                if (fetchError.name === 'AbortError') {
+                    throw new Error('La solicitud tardó demasiado tiempo. Verifica tu conexión a internet o el estado del servidor.');
+                } else if (fetchError.message.includes('Failed to fetch') || fetchError.message.includes('NetworkError')) {
+                    throw new Error('Error de conexión con el servidor. Verifica tu conexión a internet o que el servidor esté funcionando.');
+                } else {
+                    throw new Error('Error al conectar con el servidor: ' + fetchError.message);
+                }
+            }
+            clearTimeout(timeoutId);
+
+            // Verificar si la respuesta es OK
+            if (!response.ok) {
+                const errorText = await response.text();
+                let errorMessage = 'Error del servidor';
+                try {
+                    const errorJson = JSON.parse(errorText);
+                    errorMessage = errorJson.error || errorMessage;
+                } catch (e) {
+                    errorMessage = `Error HTTP ${response.status}: ${response.statusText}`;
+                }
+                throw new Error(errorMessage);
+            }
+
             const result = await response.json();
 
-            if (result.success && result.data.length > 0) {
+            // Verificar si la respuesta indica error
+            if (!result.success) {
+                throw new Error(result.error || 'Error al obtener los datos');
+            }
+
+            // Verificar si result.data existe
+            if (!result.data) {
+                throw new Error('No se recibieron datos del servidor');
+            }
+
+            if (result.data.length > 0) {
                 let datosFiltrados = result.data;
+                
+                // Guardar datos originales (sin filtros de clientes/estados) para el filtro de clientes
+                if (tipoActual === 'proyectos') {
+                    datosOriginales = result.data;
+                    // Aplicar solo el filtro de cerrados a los datos originales para el filtro de clientes
+                    const incluirCerrados = document.getElementById('incluirCerrados')?.checked || false;
+                    let datosParaFiltro = [...datosOriginales];
+                    if (!incluirCerrados) {
+                        datosParaFiltro = datosParaFiltro.filter(d => (d.estado || '').toLowerCase() !== 'cerrado');
+                    }
+                    // Actualizar filtro de clientes con los datos disponibles (sin filtros de clientes/estados)
+                    datosTablaActual = datosParaFiltro;
+                    actualizarFiltroClientesDesdeTabla();
+                }
                 
                 // Aplicar filtros de clientes y estados para proyectos
                 if (tipoActual === 'proyectos') {
@@ -295,11 +355,56 @@
                 
                 renderizarTabla(datosFiltrados);
             } else {
+                datosTablaActual = [];
+                datosOriginales = [];
                 contenido.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📭</div><div class="empty-state-text">No hay datos disponibles</div><div class="empty-state-subtext">Haz clic en "Actualizar" para sincronizar</div></div>';
+                // Actualizar filtro de clientes (vacío) cuando no hay datos
+                if (tipoActual === 'proyectos') {
+                    actualizarFiltroClientesDesdeTabla();
+                    // Actualizar contador de proyectos
+                    const contadorProyectos = document.getElementById('contadorProyectos');
+                    if (contadorProyectos) {
+                        contadorProyectos.textContent = 'total proyectos: 0';
+                    }
+                }
             }
         } catch (error) {
             console.error('Error al cargar datos:', error);
-            contenido.innerHTML = '<div class="empty-state"><div class="empty-state-icon">❌</div><div class="empty-state-text">Error al cargar datos</div><div class="empty-state-subtext">' + error.message + '</div></div>';
+            
+            // Determinar el tipo de error y mostrar mensaje apropiado
+            let mensajeError = 'Error al cargar datos';
+            let mensajeDetalle = error.message || 'Error desconocido';
+            
+            // Detectar errores específicos de conexión
+            if (mensajeDetalle.includes('conexión') || mensajeDetalle.includes('connection') || 
+                mensajeDetalle.includes('ECONNREFUSED') || mensajeDetalle.includes('timeout') ||
+                mensajeDetalle.includes('NetworkError') || mensajeDetalle.includes('Failed to fetch')) {
+                mensajeError = 'Error de conexión';
+                mensajeDetalle = 'No se pudo conectar con el servidor. Verifica que el servidor esté funcionando y tu conexión a internet.';
+            } else if (mensajeDetalle.includes('base de datos') || mensajeDetalle.includes('database') ||
+                       mensajeDetalle.includes('relation') || mensajeDetalle.includes('does not exist')) {
+                mensajeError = 'Error de base de datos';
+                mensajeDetalle = 'Error al conectar con la base de datos. Contacta al administrador del sistema.';
+            }
+            
+            contenido.innerHTML = '<div class="empty-state">' +
+                '<div class="empty-state-icon">❌</div>' +
+                '<div class="empty-state-text">' + mensajeError + '</div>' +
+                '<div class="empty-state-subtext">' + mensajeDetalle + '</div>' +
+                '<button class="button" onclick="cargarDatos()" style="margin-top: 16px;">Reintentar</button>' +
+                '</div>';
+            
+            // Actualizar contador de proyectos en caso de error
+            if (tipoActual === 'proyectos') {
+                const contadorProyectos = document.getElementById('contadorProyectos');
+                if (contadorProyectos) {
+                    contadorProyectos.textContent = 'total proyectos: 0';
+                }
+            }
+            
+            // Limpiar datos de filtros cuando hay error
+            datosTablaActual = [];
+            datosOriginales = [];
         }
     }
 
@@ -534,6 +639,12 @@
             
             tablaHTML += '</div></div>';
             contenido.innerHTML = tablaHTML;
+            
+            // Actualizar contador de proyectos
+            const contadorProyectos = document.getElementById('contadorProyectos');
+            if (contadorProyectos) {
+                contadorProyectos.textContent = 'Total proyectos: ' + datos.length;
+            }
         }
     }
 

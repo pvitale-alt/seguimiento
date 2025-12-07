@@ -577,8 +577,8 @@ body {
 }
 
 .modern-table-row .modern-table-cell.item-text {
-    justify-content: flex-start;
-    text-align: left;
+    justify-content: center;
+    text-align: center;
 }
 
 .modern-table-row .modern-table-cell:has(.modern-select),
@@ -597,7 +597,7 @@ body {
 /* Proyectos: 10 columnas - Cliente reducido, Proyecto más ancho, Plazos y Riesgos con mismo ancho que Overall/Alcance/Costo */
 .modern-table.proyectos .modern-table-header,
 .modern-table.proyectos .modern-table-row {
-    grid-template-columns: 120px 400px 100px 70px 70px 70px 70px 70px 100px 100px;
+    grid-template-columns: 200px 400px 120px 70px 70px 70px 70px 70px 100px 100px;
 }
 
 /* Celda que ocupa 2 columnas para el botón de sincronizar epics */
@@ -626,8 +626,8 @@ body {
 }
 
 .modern-table-row .modern-table-cell.item-text {
-    justify-content: flex-start;
-    text-align: left;
+    justify-content: center;
+    text-align: center;
 }
 
 .modern-table-row:hover {
@@ -728,13 +728,33 @@ body {
     text-align: center;
     padding: 8px 12px;
     background-image: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .icon-select option,
 .face-select option {
     font-size: 20px;
     text-align: center;
-    padding: 8px;
+    padding: 12px 16px;
+    background: white;
+    color: var(--text-primary);
+    transition: background 0.2s;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.icon-select option:hover,
+.face-select option:hover {
+    background: #f1f3f4;
+}
+
+.icon-select option:checked,
+.face-select option:checked {
+    background: #e8f0fe;
+    color: var(--primary-color);
+    font-weight: 500;
 }
 
 /* Selectores estilo tag (sin flecha) */
@@ -928,16 +948,24 @@ body {
 
 /* Mejorar estilo del dropdown de estado-select */
 .modern-select.estado-select option {
-    padding: 10px 12px;
+    padding: 12px 16px;
     font-size: 13px;
     font-weight: 400;
     font-family: 'Google Sans', 'Roboto', sans-serif;
     background: white;
     color: var(--text-primary);
+    transition: background 0.2s;
+    text-align: center;
 }
 
 .modern-select.estado-select option:hover {
     background: #f1f3f4;
+}
+
+.modern-select.estado-select option:checked {
+    background: #e8f0fe;
+    color: var(--primary-color);
+    font-weight: 500;
 }
 
 
@@ -1002,6 +1030,28 @@ textarea.modern-input {
     background-color: #f8f9fa;
     border-radius: 4px;
     padding: 8px 12px;
+}
+
+/* Estilos modernos para opciones de overall-select */
+.overall-select option {
+    padding: 12px 16px;
+    font-size: 20px;
+    text-align: center;
+    background: white;
+    color: var(--text-primary);
+    transition: background 0.2s;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.overall-select option:hover {
+    background: #f1f3f4;
+}
+
+.overall-select option:checked {
+    background: #e8f0fe;
+    color: var(--primary-color);
+    font-weight: 500;
 }
 
 /* Selector de Overall (colores) - aplicar color según valor seleccionado */
@@ -1234,7 +1284,28 @@ input[type="date"] {
     border-bottom: none;
 }
 
+/* Estilos modernos para opciones de riesgo-select */
 .riesgo-select option {
+    padding: 12px 16px;
+    font-size: 18px;
+    text-align: center;
+    background: white;
+    color: var(--text-primary);
+    transition: background 0.2s;
+}
+
+.riesgo-select option:hover {
+    background: #f1f3f4;
+}
+
+.riesgo-select option:checked {
+    background: #e8f0fe;
+    color: var(--primary-color);
+    font-weight: 500;
+}
+
+/* Estilos antiguos mantenidos para compatibilidad */
+.riesgo-select option.old {
     font-size: 20px;
     text-align: center;
 }

@@ -15,7 +15,8 @@ class ProductosEquiposModel {
                         json_build_object(
                             'id', id,
                             'equipo', equipo,
-                            'id_equipo_redmine', id_equipo_redmine
+                            'id_equipo_redmine', id_equipo_redmine,
+                            'codigo_proyecto_padre', codigo_proyecto_padre
                         ) ORDER BY equipo
                     ) as equipos
                 FROM productos_equipos
@@ -97,15 +98,16 @@ class ProductosEquiposModel {
     static async crear(datos) {
         try {
             const query = `
-                INSERT INTO productos_equipos (producto, equipo, id_equipo_redmine, producto_redmine)
-                VALUES ($1, $2, $3, $4)
+                INSERT INTO productos_equipos (producto, equipo, id_equipo_redmine, producto_redmine, codigo_proyecto_padre)
+                VALUES ($1, $2, $3, $4, $5)
                 RETURNING *
             `;
             const result = await pool.query(query, [
                 datos.producto,
                 datos.equipo,
                 datos.id_equipo_redmine,
-                datos.producto_redmine || null
+                datos.producto_redmine || null,
+                datos.codigo_proyecto_padre || null
             ]);
             return result.rows[0];
         } catch (error) {
@@ -128,8 +130,9 @@ class ProductosEquiposModel {
                     equipo = $2,
                     id_equipo_redmine = $3,
                     producto_redmine = $4,
+                    codigo_proyecto_padre = $5,
                     updated_at = CURRENT_TIMESTAMP
-                WHERE id = $5
+                WHERE id = $6
                 RETURNING *
             `;
             const result = await pool.query(query, [
@@ -137,6 +140,7 @@ class ProductosEquiposModel {
                 datos.equipo,
                 datos.id_equipo_redmine,
                 datos.producto_redmine || null,
+                datos.codigo_proyecto_padre || null,
                 id
             ]);
             return result.rows[0];

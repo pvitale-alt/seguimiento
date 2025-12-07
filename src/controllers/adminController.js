@@ -70,7 +70,7 @@ async function obtenerProductosYEquiposUnicos(req, res) {
  */
 async function crearProductoEquipo(req, res) {
     try {
-        const { producto, equipo, id_equipo_redmine, producto_redmine } = req.body;
+        const { producto, equipo, id_equipo_redmine, producto_redmine, codigo_proyecto_padre } = req.body;
         
         if (!producto || !equipo || !id_equipo_redmine) {
             return res.status(400).json({
@@ -83,7 +83,8 @@ async function crearProductoEquipo(req, res) {
             producto,
             equipo,
             id_equipo_redmine,
-            producto_redmine: producto_redmine || null
+            producto_redmine: producto_redmine || null,
+            codigo_proyecto_padre: codigo_proyecto_padre || null
         });
         
         res.json({
@@ -105,13 +106,14 @@ async function crearProductoEquipo(req, res) {
 async function actualizarProductoEquipo(req, res) {
     try {
         const { id } = req.params;
-        const { producto, equipo, id_equipo_redmine, producto_redmine } = req.body;
+        const { producto, equipo, id_equipo_redmine, producto_redmine, codigo_proyecto_padre } = req.body;
         
         const resultado = await ProductosEquiposModel.actualizar(id, {
             producto,
             equipo,
             id_equipo_redmine,
-            producto_redmine: producto_redmine || null
+            producto_redmine: producto_redmine || null,
+            codigo_proyecto_padre: codigo_proyecto_padre || null
         });
         
         if (!resultado) {

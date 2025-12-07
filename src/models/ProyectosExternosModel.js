@@ -29,8 +29,8 @@ class ProyectosExternosModel {
                 paramCount++;
             }
 
-            // Filtro por equipo
-            if (filtros.equipo) {
+            // Filtro por equipo (solo si se especifica y no es '*')
+            if (filtros.equipo && filtros.equipo !== '*' && filtros.equipo !== 'null') {
                 query += ` AND equipo = $${paramCount}`;
                 params.push(filtros.equipo);
                 paramCount++;

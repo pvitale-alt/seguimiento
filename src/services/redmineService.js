@@ -109,11 +109,48 @@ async function normalizarProductoParaRedmine(producto) {
 }
 
 /**
+ * Obtener ID del proyecto por su código (identifier)
+ * @param {string} codigoProyecto - Código del proyecto (identifier)
+ * @returns {Promise<number|null>} - ID del proyecto o null si no se encuentra
+ */
+async function obtenerIdProyectoPorCodigo(codigoProyecto) {
+    if (!codigoProyecto) return null;
+    
+    validarCredenciales();
+    
+    try {
+        const baseUrl = REDMINE_URL.replace(/\/+$/, '');
+        const url = `${baseUrl}/projects/${codigoProyecto}.json?key=${REDMINE_TOKEN}`;
+        
+        const response = await fetch(url, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'User-Agent': 'Seguimiento-NodeJS/1.0'
+            }
+        });
+        
+        if (!response.ok) {
+            console.warn(`⚠️ No se pudo obtener el proyecto con código "${codigoProyecto}": ${response.status}`);
+            return null;
+        }
+        
+        const data = await response.json();
+        return data.project?.id || null;
+    } catch (error) {
+        console.error(`❌ Error al obtener ID del proyecto "${codigoProyecto}":`, error.message);
+        return null;
+    }
+}
+
+/**
  * Obtener proyectos desde Redmine
  * @param {Object} options - Opciones de búsqueda
  * @param {string} options.producto - Filtrar por producto (cf_19)
  * @param {string} options.equipo - Filtrar por equipo (cf_75) - ID del equipo en Redmine
  * @param {string} options.categoria - Filtrar por categoría (cf_29): "Mantenimiento" o cualquier otro valor
+ * @param {string} options.codigo_proyecto_padre - Código del proyecto padre para filtrar (identifier)
  * @param {number} options.limit - Límite de resultados (default: 100)
  * @param {number} options.offset - Offset para paginación (default: 0)
  * @returns {Promise<Object>} - Datos de Redmine
@@ -168,8 +205,44 @@ async function obtenerProyectos(options = {}) {
         }
         
         const data = await response.json();
-        console.log(`✅ Proyectos obtenidos: ${data.projects?.length || 0} (total Redmine: ${data.total_count || data.projects?.length || 0})`);
-        return data;
+        let proyectos = data.projects || [];
+        
+        // Filtrar por proyecto padre si se especifica
+        if (options.codigo_proyecto_padre) {
+            const parentId = await obtenerIdProyectoPorCodigo(options.codigo_proyecto_padre);
+            if (parentId) {
+                // Filtrar proyectos que tienen el proyecto padre especificado
+                // La API de Redmine puede devolver parent como objeto {id, name} o solo id
+                proyectos = proyectos.filter(p => {
+                    if (p.parent) {
+                        // Si parent es un objeto con id
+                        if (typeof p.parent === 'object' && p.parent.id) {
+                            return p.parent.id === parentId;
+                        }
+                        // Si parent es solo un número
+                        if (typeof p.parent === 'number') {
+                            return p.parent === parentId;
+                        }
+                    }
+                    return false;
+                });
+                console.log(`   🔍 Filtrado por proyecto padre (ID: ${parentId}, código: ${options.codigo_proyecto_padre}): ${proyectos.length} proyectos de ${data.projects?.length || 0} totales`);
+            } else {
+                console.warn(`   ⚠️ No se encontró el proyecto padre con código "${options.codigo_proyecto_padre}", no se aplicará el filtro`);
+            }
+        }
+        
+        // Actualizar total_count si se filtró
+        const totalCount = proyectos.length;
+        
+        console.log(`✅ Proyectos obtenidos: ${proyectos.length} (total Redmine: ${data.total_count || proyectos.length})`);
+        
+        return {
+            projects: proyectos,
+            total_count: totalCount,
+            offset: data.offset || offset,
+            limit: data.limit || limit
+        };
     } catch (error) {
         console.error('❌ Error al obtener proyectos de Redmine:', error.message);
         throw error;
@@ -182,6 +255,7 @@ async function obtenerProyectos(options = {}) {
  * @param {string} options.producto - Filtrar por producto (cf_19)
  * @param {string} options.equipo - Filtrar por equipo (cf_75) - ID del equipo en Redmine
  * @param {string} options.categoria - Filtrar por categoría (cf_29)
+ * @param {string} options.codigo_proyecto_padre - Código del proyecto padre para filtrar (identifier)
  * @param {number} options.maxTotal - Límite máximo de proyectos (null = sin límite)
  * @returns {Promise<Array>} - Array de proyectos mapeados
  */
@@ -205,6 +279,7 @@ async function obtenerProyectosMapeados(options = {}) {
             producto: options.producto,
             equipo: options.equipo,
             categoria: options.categoria,
+            codigo_proyecto_padre: options.codigo_proyecto_padre,
             limit: limitActual,
             offset
         });

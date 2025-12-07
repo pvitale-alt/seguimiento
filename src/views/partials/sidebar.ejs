@@ -32,6 +32,12 @@
                 </div>
             </div>
         <% }); %>
+        
+        <!-- Proyectos Internos -->
+        <a href="#" class="nav-item" style="margin-top: 16px; border-top: 1px solid var(--border-color); padding-top: 16px; opacity: 0.6; cursor: default;" onclick="event.preventDefault();" title="Próximamente">
+            <span>Proyectos Internos</span>
+        </a>
+        
         <% if (typeof isAdmin !== 'undefined' && isAdmin) { %>
         <a href="/admin" class="nav-item <%= activeMenu === 'admin' ? 'active' : '' %>" style="margin-top: 16px; border-top: 1px solid var(--border-color); padding-top: 16px;">
             <svg class="nav-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
