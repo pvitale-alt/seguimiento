@@ -88,26 +88,52 @@ class MantenimientoModel {
      */
     static async actualizar(id_proyecto, datos) {
         try {
+            // Construir dinámicamente los campos a actualizar usando EXCLUDED
+            const campos = [];
+            
+            // Solo incluir campos que están presentes en datos
+            if ('estado' in datos) {
+                campos.push(`estado = EXCLUDED.estado`);
+            }
+            if ('demanda' in datos) {
+                campos.push(`demanda = EXCLUDED.demanda`);
+            }
+            if ('estabilidad' in datos) {
+                campos.push(`estabilidad = EXCLUDED.estabilidad`);
+            }
+            if ('satisfaccion' in datos) {
+                campos.push(`satisfaccion = EXCLUDED.satisfaccion`);
+            }
+            if ('win' in datos) {
+                campos.push(`win = EXCLUDED.win`);
+            }
+            
+            if (campos.length === 0) {
+                return await this.obtenerPorId(id_proyecto);
+            }
+            
+            // Construir valores para INSERT (todos los campos, usando los valores de datos o null)
+            const insertValores = [
+                id_proyecto,
+                'estado' in datos ? (datos.estado || null) : null,
+                'demanda' in datos ? (datos.demanda || null) : null,
+                'estabilidad' in datos ? (datos.estabilidad || null) : null,
+                'satisfaccion' in datos ? (datos.satisfaccion || null) : null,
+                'win' in datos ? (datos.win || null) : null
+            ];
+            
+            // Usar UPSERT (INSERT ... ON CONFLICT DO UPDATE) para crear o actualizar
             const query = `
-                UPDATE mantenimiento
-                SET estado = $1,
-                    demanda = $2,
-                    estabilidad = $3,
-                    satisfaccion = $4,
-                    win = $5,
+                INSERT INTO mantenimiento (id_proyecto, estado, demanda, estabilidad, satisfaccion, win, created_at, updated_at)
+                VALUES ($1, $2, $3, $4, $5, $6, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+                ON CONFLICT (id_proyecto) 
+                DO UPDATE SET
+                    ${campos.join(', ')},
                     updated_at = CURRENT_TIMESTAMP
-                WHERE id_proyecto = $6
                 RETURNING *
             `;
-            const values = [
-                datos.estado || null,
-                datos.demanda || null,
-                datos.estabilidad || null,
-                datos.satisfaccion || null,
-                datos.win || null,
-                id_proyecto
-            ];
-            const result = await pool.query(query, values);
+            
+            const result = await pool.query(query, insertValores);
             
             if (!result.rows[0]) {
                 return null;

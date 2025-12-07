@@ -42,6 +42,7 @@ function mapearProyecto(proyecto) {
     const cliente = extraerCustomField(customFields, 20) || extraerCustomField(customFields, 'Cliente');
     const lineaServicio = extraerCustomField(customFields, 28) || extraerCustomField(customFields, 'Línea de Servicio');
     const categoria = extraerCustomField(customFields, 29) || extraerCustomField(customFields, 'Categoría');
+    const limiteHoras = extraerCustomField(customFields, 30) || extraerCustomField(customFields, 'Límite de Horas');
     const equipo = extraerCustomField(customFields, 75) || extraerCustomField(customFields, 'Equipo');
     const reventa = extraerCustomField(customFields, 93) || extraerCustomField(customFields, 'Es Reventa');
     const proyectoSponsor = extraerCustomField(customFields, 94) || extraerCustomField(customFields, 'Proyecto Sponsor');
@@ -69,6 +70,7 @@ function mapearProyecto(proyecto) {
         cliente: cliente || null,
         linea_servicio: lineaServicio || null,
         categoria: categoria || null,
+        limite_horas: limiteHoras || null,
         equipo: equipo || null,
         reventa: reventaNormalizada,
         proyecto_sponsor: proyectoSponsor || null,
@@ -77,10 +79,29 @@ function mapearProyecto(proyecto) {
 }
 
 /**
+ * Normalizar nombre de producto para Redmine
+ * @param {string} producto - Nombre del producto
+ * @returns {string} - Nombre normalizado para Redmine
+ */
+function normalizarProductoParaRedmine(producto) {
+    const mapeo = {
+        'Order Management': 'OMS',
+        'Portfolio': 'portfolio',
+        'Portfolio Cloud': 'portfolio cloud',
+        'Trading Room': 'Trading Room',
+        'Abbaco': 'Abbaco',
+        'Unitrade': 'Unitrade',
+        'Pepper': 'Pepper'
+    };
+    return mapeo[producto] || producto;
+}
+
+/**
  * Obtener proyectos desde Redmine
  * @param {Object} options - Opciones de búsqueda
- * @param {string} options.producto - Filtrar por producto (opcional)
- * @param {string} options.linea_servicio - Filtrar por línea de servicio (opcional)
+ * @param {string} options.producto - Filtrar por producto (cf_19)
+ * @param {string} options.equipo - Filtrar por equipo (cf_75) - ID del equipo en Redmine
+ * @param {string} options.categoria - Filtrar por categoría (cf_29): "Mantenimiento" o cualquier otro valor
  * @param {number} options.limit - Límite de resultados (default: 100)
  * @param {number} options.offset - Offset para paginación (default: 0)
  * @returns {Promise<Object>} - Datos de Redmine
@@ -99,11 +120,18 @@ async function obtenerProyectos(options = {}) {
     
     // Agregar filtros por custom fields si se especifican
     if (options.producto) {
-        params.set('cf_19', options.producto);
+        const productoNormalizado = normalizarProductoParaRedmine(options.producto);
+        params.set('cf_19', productoNormalizado);
     }
-    if (options.linea_servicio) {
-        params.set('cf_28', options.linea_servicio);
+    if (options.equipo) {
+        params.set('cf_75', options.equipo);
     }
+    if (options.categoria) {
+        params.set('cf_29', options.categoria);
+    }
+    
+    // SIEMPRE filtrar por línea de servicio "Si" (cf_28)
+    params.set('cf_28', 'Si');
     
     const baseUrl = REDMINE_URL.replace(/\/+$/, '');
     const url = `${baseUrl}/projects.json?${params.toString()}`;
@@ -139,8 +167,9 @@ async function obtenerProyectos(options = {}) {
 /**
  * Obtener todos los proyectos mapeados (con paginación automática)
  * @param {Object} options - Opciones de búsqueda
- * @param {string} options.producto - Filtrar por producto (opcional)
- * @param {string} options.linea_servicio - Filtrar por línea de servicio (opcional)
+ * @param {string} options.producto - Filtrar por producto (cf_19)
+ * @param {string} options.equipo - Filtrar por equipo (cf_75) - ID del equipo en Redmine
+ * @param {string} options.categoria - Filtrar por categoría (cf_29)
  * @param {number} options.maxTotal - Límite máximo de proyectos (null = sin límite)
  * @returns {Promise<Array>} - Array de proyectos mapeados
  */
@@ -161,7 +190,9 @@ async function obtenerProyectosMapeados(options = {}) {
         const limitActual = Math.min(restantes, 100);
         
         const data = await obtenerProyectos({
-            ...options,
+            producto: options.producto,
+            equipo: options.equipo,
+            categoria: options.categoria,
             limit: limitActual,
             offset
         });
@@ -190,9 +221,9 @@ async function obtenerProyectosMapeados(options = {}) {
 }
 
 /**
- * Filtrar proyectos por tipo (mantenimiento, proyectos externos, proyectos internos)
+ * Filtrar proyectos por tipo (mantenimiento, proyectos)
  * @param {Array} proyectos - Array de proyectos mapeados
- * @param {string} tipo - Tipo de proyecto: 'mantenimiento', 'externos', 'internos'
+ * @param {string} tipo - Tipo de proyecto: 'mantenimiento', 'proyectos'
  * @returns {Array} - Proyectos filtrados
  */
 function filtrarProyectosPorTipo(proyectos, tipo) {
@@ -200,23 +231,102 @@ function filtrarProyectosPorTipo(proyectos, tipo) {
     
     switch (tipo) {
         case 'mantenimiento':
-            // Mantenimiento: línea_servicio = "Si"
-            return proyectos.filter(p => p.linea_servicio === 'Si' || p.linea_servicio === '1');
+            // Mantenimiento: categoría = "Mantenimiento"
+            return proyectos.filter(p => p.categoria === 'Mantenimiento');
         
-        case 'externos':
-            // Proyectos externos: línea_servicio != "Si" y reventa = "No"
-            return proyectos.filter(p => 
-                (p.linea_servicio !== 'Si' && p.linea_servicio !== '1') && 
-                (p.reventa === 'No' || p.reventa === '0')
-            );
-        
-        case 'internos':
-            // Proyectos internos: reventa = "Si"
-            return proyectos.filter(p => p.reventa === 'Si' || p.reventa === '1');
+        case 'proyectos':
+            // Proyectos: categoría != "Mantenimiento"
+            return proyectos.filter(p => p.categoria !== 'Mantenimiento' && p.categoria !== null && p.categoria !== '');
         
         default:
             return proyectos;
     }
+}
+
+/**
+ * Obtener epics de un proyecto desde Redmine
+ * @param {string|number} projectId - ID o identifier del proyecto
+ * @returns {Promise<Array>} - Array de epics
+ */
+async function obtenerEpics(projectId) {
+    validarCredenciales();
+    
+    const epics = [];
+    let offset = 0;
+    const limit = 100;
+    let hasMore = true;
+    
+    while (hasMore) {
+        const url = new URL(`${REDMINE_URL}/issues.json`);
+        url.searchParams.set('project_id', projectId.toString());
+        url.searchParams.set('tracker_id', '19'); // Tracker de Epics
+        url.searchParams.set('limit', limit.toString());
+        url.searchParams.set('offset', offset.toString());
+        url.searchParams.set('status_id', '*'); // Todos los estados
+        
+        const response = await fetch(url.toString(), {
+            headers: {
+                'X-Redmine-API-Key': REDMINE_TOKEN
+            }
+        });
+        
+        if (!response.ok) {
+            throw new Error(`Error al obtener epics: ${response.status} ${response.statusText}`);
+        }
+        
+        const data = await response.json();
+        const items = data.issues || [];
+        epics.push(...items);
+        
+        const totalCount = data.total_count || items.length;
+        hasMore = totalCount > (offset + limit);
+        offset += limit;
+        
+        if (!hasMore) {
+            break;
+        }
+        
+        // Pausa entre requests
+        if (hasMore) {
+            await new Promise(resolve => setTimeout(resolve, 200));
+        }
+    }
+    
+    console.log(`✅ Epics obtenidos para proyecto ${projectId}: ${epics.length}`);
+    return epics;
+}
+
+/**
+ * Mapear epic de Redmine al formato de la base de datos
+ * @param {Object} epic - Epic de Redmine
+ * @returns {Object} - Epic mapeado
+ */
+function mapearEpic(epic) {
+    const customFields = epic.custom_fields || [];
+    
+    const cf_23 = extraerCustomField(customFields, 23) || extraerCustomField(customFields, 'id_services');
+    const cf_21 = extraerCustomField(customFields, 21) || extraerCustomField(customFields, 'fecha planificada inicio');
+    const cf_22 = extraerCustomField(customFields, 22) || extraerCustomField(customFields, 'fecha planificada fin');
+    const cf_15 = extraerCustomField(customFields, 15) || extraerCustomField(customFields, 'fecha real finalización');
+    
+    // Convertir fechas
+    const fecha21 = cf_21 ? new Date(cf_21) : null;
+    const fecha22 = cf_22 ? new Date(cf_22) : null;
+    const fecha15 = cf_15 ? new Date(cf_15) : null;
+    
+    return {
+        epic_id: epic.id,
+        subject: epic.subject || null,
+        status: epic.status?.name || null,
+        total_estimated_hours: epic.total_estimated_hours || null,
+        total_spent_hours: epic.total_spent_hours || null,
+        proyecto_padre: epic.project?.id || null,
+        nombre_proyecto_padre: epic.project?.name || null,
+        cf_23: cf_23 || null,
+        cf_21: fecha21 && !isNaN(fecha21.getTime()) ? fecha21.toISOString().split('T')[0] : null,
+        cf_22: fecha22 && !isNaN(fecha22.getTime()) ? fecha22.toISOString().split('T')[0] : null,
+        cf_15: fecha15 && !isNaN(fecha15.getTime()) ? fecha15.toISOString().split('T')[0] : null
+    };
 }
 
 module.exports = {
@@ -224,6 +334,9 @@ module.exports = {
     obtenerProyectosMapeados,
     mapearProyecto,
     filtrarProyectosPorTipo,
-    validarCredenciales
+    normalizarProductoParaRedmine,
+    validarCredenciales,
+    obtenerEpics,
+    mapearEpic
 };
 

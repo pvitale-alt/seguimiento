@@ -88,36 +88,72 @@ class ProyectosExternosModel {
      */
     static async actualizar(id_proyecto, datos) {
         try {
+            // Construir dinámicamente los campos a actualizar usando EXCLUDED
+            const campos = [];
+            
+            // Solo incluir campos que están presentes en datos
+            if ('estado' in datos) {
+                campos.push(`estado = EXCLUDED.estado`);
+            }
+            if ('overall' in datos) {
+                campos.push(`overall = EXCLUDED.overall`);
+            }
+            if ('alcance' in datos) {
+                campos.push(`alcance = EXCLUDED.alcance`);
+            }
+            if ('costo' in datos) {
+                campos.push(`costo = EXCLUDED.costo`);
+            }
+            if ('plazos' in datos) {
+                campos.push(`plazos = EXCLUDED.plazos`);
+            }
+            if ('avance' in datos) {
+                campos.push(`avance = EXCLUDED.avance`);
+            }
+            if ('fecha_inicio' in datos) {
+                campos.push(`fecha_inicio = EXCLUDED.fecha_inicio`);
+            }
+            if ('fecha_fin' in datos) {
+                campos.push(`fecha_fin = EXCLUDED.fecha_fin`);
+            }
+            if ('win' in datos) {
+                campos.push(`win = EXCLUDED.win`);
+            }
+            if ('riesgos' in datos) {
+                campos.push(`riesgos = EXCLUDED.riesgos`);
+            }
+            
+            if (campos.length === 0) {
+                return await this.obtenerPorId(id_proyecto);
+            }
+            
+            // Construir valores para INSERT (todos los campos, usando los valores de datos o null)
+            const insertValores = [
+                id_proyecto,
+                'estado' in datos ? (datos.estado || null) : null,
+                'overall' in datos ? (datos.overall || null) : null,
+                'alcance' in datos ? (datos.alcance || null) : null,
+                'costo' in datos ? (datos.costo || null) : null,
+                'plazos' in datos ? (datos.plazos || null) : null,
+                'avance' in datos ? (datos.avance ? parseInt(datos.avance) : null) : null,
+                'fecha_inicio' in datos ? (datos.fecha_inicio || null) : null,
+                'fecha_fin' in datos ? (datos.fecha_fin || null) : null,
+                'win' in datos ? (datos.win || null) : null,
+                'riesgos' in datos ? (datos.riesgos || null) : null
+            ];
+            
+            // Usar UPSERT (INSERT ... ON CONFLICT DO UPDATE) para crear o actualizar
             const query = `
-                UPDATE proyectos_externos
-                SET estado = $1,
-                    overall = $2,
-                    alcance = $3,
-                    costo = $4,
-                    plazos = $5,
-                    avance = $6,
-                    fecha_inicio = $7,
-                    fecha_fin = $8,
-                    win = $9,
-                    riesgos = $10,
+                INSERT INTO proyectos_externos (id_proyecto, estado, overall, alcance, costo, plazos, avance, fecha_inicio, fecha_fin, win, riesgos, created_at, updated_at)
+                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+                ON CONFLICT (id_proyecto) 
+                DO UPDATE SET
+                    ${campos.join(', ')},
                     updated_at = CURRENT_TIMESTAMP
-                WHERE id_proyecto = $11
                 RETURNING *
             `;
-            const values = [
-                datos.estado || null,
-                datos.overall || null,
-                datos.alcance || null,
-                datos.costo ? parseFloat(datos.costo) : null,
-                datos.plazos || null,
-                datos.avance || null,
-                datos.fecha_inicio || null,
-                datos.fecha_fin || null,
-                datos.win || null,
-                datos.riesgos || null,
-                id_proyecto
-            ];
-            const result = await pool.query(query, values);
+            
+            const result = await pool.query(query, insertValores);
             
             if (!result.rows[0]) {
                 return null;

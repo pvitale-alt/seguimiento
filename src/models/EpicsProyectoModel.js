@@ -1,0 +1,160 @@
+const { pool } = require('../config/database');
+
+class EpicsProyectoModel {
+    /**
+     * Obtener todos los epics de un proyecto
+     * @param {number} id_proyecto - ID del proyecto
+     * @returns {Promise<Array>} - Array de epics
+     */
+    static async obtenerPorProyecto(id_proyecto) {
+        try {
+            const query = `
+                SELECT *
+                FROM epics_proyecto
+                WHERE id_proyecto = $1
+                ORDER BY epic_id ASC
+            `;
+            const result = await pool.query(query, [id_proyecto]);
+            return result.rows;
+        } catch (error) {
+            console.error('Error al obtener epics del proyecto:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Obtener totales de horas por proyecto
+     * @param {number} id_proyecto - ID del proyecto
+     * @returns {Promise<Object>} - Totales de horas
+     */
+    static async obtenerTotalesPorProyecto(id_proyecto) {
+        try {
+            const query = `
+                SELECT 
+                    COUNT(*) as total_epics,
+                    COALESCE(SUM(total_estimated_hours), 0) as horas_estimadas,
+                    COALESCE(SUM(total_spent_hours), 0) as horas_realizadas,
+                    MIN(cf_21) as fecha_inicio_minima,
+                    MAX(cf_15) as fecha_fin_maxima
+                FROM epics_proyecto
+                WHERE id_proyecto = $1
+            `;
+            const result = await pool.query(query, [id_proyecto]);
+            return result.rows[0] || {
+                total_epics: 0,
+                horas_estimadas: 0,
+                horas_realizadas: 0,
+                fecha_inicio_minima: null,
+                fecha_fin_maxima: null
+            };
+        } catch (error) {
+            console.error('Error al obtener totales de epics:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Guardar o actualizar epics de un proyecto
+     * @param {number} id_proyecto - ID del proyecto
+     * @param {Array} epics - Array de epics mapeados
+     * @returns {Promise<Object>} - Resultado de la operación
+     */
+    static async guardarEpics(id_proyecto, epics) {
+        const client = await pool.connect();
+        try {
+            await client.query('BEGIN');
+            
+            let insertados = 0;
+            let actualizados = 0;
+            
+            for (const epic of epics) {
+                // Primero verificar si el epic ya existe
+                const checkQuery = `SELECT created_at, updated_at FROM epics_proyecto WHERE id_proyecto = $1 AND epic_id = $2`;
+                const checkResult = await client.query(checkQuery, [id_proyecto, epic.epic_id]);
+                const existe = checkResult.rows.length > 0;
+                
+                const query = `
+                    INSERT INTO epics_proyecto (
+                        id_proyecto, epic_id, subject, status, total_estimated_hours, 
+                        total_spent_hours, proyecto_padre, nombre_proyecto_padre, cf_23, cf_21, cf_22, cf_15,
+                        created_at, updated_at
+                    )
+                    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+                    ON CONFLICT (id_proyecto, epic_id)
+                    DO UPDATE SET
+                        subject = EXCLUDED.subject,
+                        status = EXCLUDED.status,
+                        total_estimated_hours = EXCLUDED.total_estimated_hours,
+                        total_spent_hours = EXCLUDED.total_spent_hours,
+                        proyecto_padre = EXCLUDED.proyecto_padre,
+                        nombre_proyecto_padre = EXCLUDED.nombre_proyecto_padre,
+                        cf_23 = EXCLUDED.cf_23,
+                        cf_21 = EXCLUDED.cf_21,
+                        cf_22 = EXCLUDED.cf_22,
+                        cf_15 = EXCLUDED.cf_15,
+                        updated_at = CURRENT_TIMESTAMP
+                `;
+                
+                await client.query(query, [
+                    id_proyecto,
+                    epic.epic_id,
+                    epic.subject,
+                    epic.status,
+                    epic.total_estimated_hours,
+                    epic.total_spent_hours,
+                    epic.proyecto_padre,
+                    epic.nombre_proyecto_padre,
+                    epic.cf_23,
+                    epic.cf_21,
+                    epic.cf_22,
+                    epic.cf_15
+                ]);
+                
+                if (existe) {
+                    actualizados++;
+                } else {
+                    insertados++;
+                }
+            }
+            
+            await client.query('COMMIT');
+            
+            return {
+                success: true,
+                insertados,
+                actualizados,
+                total: epics.length
+            };
+        } catch (error) {
+            await client.query('ROLLBACK');
+            console.error('Error al guardar epics:', error);
+            throw error;
+        } finally {
+            client.release();
+        }
+    }
+
+    /**
+     * Verificar si un proyecto tiene epics
+     * @param {number} id_proyecto - ID del proyecto
+     * @returns {Promise<boolean>} - true si tiene epics
+     */
+    static async tieneEpics(id_proyecto) {
+        try {
+            const query = `
+                SELECT COUNT(*) as count
+                FROM epics_proyecto
+                WHERE id_proyecto = $1
+            `;
+            const result = await pool.query(query, [id_proyecto]);
+            return parseInt(result.rows[0].count) > 0;
+        } catch (error) {
+            console.error('Error al verificar epics:', error);
+            throw error;
+        }
+    }
+}
+
+module.exports = EpicsProyectoModel;
+
+

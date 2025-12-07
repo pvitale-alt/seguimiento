@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Administración - Productos y Equipos | Seguimiento</title>
+    
+    <!-- CSS -->
+    <link rel="stylesheet" href="/css/main.css?v=<%= Date.now() %>">
+    
+    <!-- Favicon -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚙️</text></svg>">
+</head>
+<body>
+    <!-- Header General -->
+    <header class="top-header">
+        <div style="display: flex; align-items: center; gap: 12px;">
+            <img src="/images/logo.png" alt="Logo" style="height: 28px; width: auto; display: block;" onerror="this.style.display='none';" />
+            <span style="font-size: 16px; font-weight: 500; color: var(--text-secondary); font-family: 'Google Sans', 'Roboto', sans-serif;">Seguimiento - Administración</span>
+        </div>
+    </header>
+    
+    <div class="app-container">
+        <div class="main-content" style="margin-left: 0;">
+            <div class="content-area">
+                <div class="toolbar">
+                    <div class="toolbar-left">
+                        <h1 class="page-title">Administración - Productos y Equipos</h1>
+                    </div>
+                    <div class="toolbar-right">
+                        <button class="btn btn-primary" onclick="mostrarModalCrear()">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
+                            </svg>
+                            <span>Agregar Producto/Equipo</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div id="contenido" class="table-container">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Producto</th>
+                                <th>Equipo</th>
+                                <th>ID Equipo Redmine</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tablaProductosEquipos">
+                            <!-- Se llena dinámicamente -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para crear/editar -->
+    <div id="modalProductoEquipo" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitulo">Agregar Producto/Equipo</h2>
+                <button class="modal-close" onclick="cerrarModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="formProductoEquipo" onsubmit="guardarProductoEquipo(event)">
+                    <input type="hidden" id="formId" name="id">
+                    
+                    <div style="margin-bottom: 16px;">
+                        <label style="display: block; margin-bottom: 8px; font-weight: 500;">Producto</label>
+                        <select id="formProducto" name="producto" class="input" required>
+                            <option value="">Seleccionar...</option>
+                            <option value="Abbaco">Abbaco</option>
+                            <option value="Unitrade">Unitrade</option>
+                            <option value="Order Management">Order Management</option>
+                            <option value="Portfolio">Portfolio</option>
+                            <option value="Portfolio Cloud">Portfolio Cloud</option>
+                            <option value="Pepper">Pepper</option>
+                            <option value="Trading Room">Trading Room</option>
+                        </select>
+                    </div>
+                    
+                    <div style="margin-bottom: 16px;">
+                        <label style="display: block; margin-bottom: 8px; font-weight: 500;">Equipo</label>
+                        <input type="text" id="formEquipo" name="equipo" class="input" required>
+                    </div>
+                    
+                    <div style="margin-bottom: 16px;">
+                        <label style="display: block; margin-bottom: 8px; font-weight: 500;">ID Equipo Redmine (cf_75)</label>
+                        <input type="text" id="formIdEquipoRedmine" name="id_equipo_redmine" class="input" required>
+                        <small style="color: var(--text-secondary); font-size: 12px;">Este es el valor que viene en el campo cf_75 de Redmine</small>
+                    </div>
+                    
+                    <div style="display: flex; gap: 12px; justify-content: flex-end; margin-top: 24px;">
+                        <button type="button" class="btn" onclick="cerrarModal()">Cancelar</button>
+                        <button type="submit" class="btn btn-primary">Guardar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let productoEquipoEditando = null;
+
+        // Cargar datos al iniciar
+        document.addEventListener('DOMContentLoaded', () => {
+            cargarProductosEquipos();
+        });
+
+        async function cargarProductosEquipos() {
+            try {
+                const response = await fetch('/api/admin/productos-equipos');
+                const result = await response.json();
+                
+                if (result.success) {
+                    renderizarTabla(result.data);
+                } else {
+                    alert('Error al cargar datos: ' + result.error);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error al cargar datos: ' + error.message);
+            }
+        }
+
+        function renderizarTabla(datos) {
+            const tbody = document.getElementById('tablaProductosEquipos');
+            tbody.innerHTML = '';
+            
+            datos.forEach(producto => {
+                producto.equipos.forEach(equipo => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>${producto.producto}</td>
+                        <td>${equipo.equipo}</td>
+                        <td>${equipo.id_equipo_redmine}</td>
+                        <td>
+                            <button class="btn" onclick="editarProductoEquipo(${equipo.id})" style="padding: 6px 12px; font-size: 13px;">Editar</button>
+                            <button class="btn" onclick="eliminarProductoEquipo(${equipo.id})" style="padding: 6px 12px; font-size: 13px; background: #fce8e6; color: #d93025;">Eliminar</button>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            });
+        }
+
+        function mostrarModalCrear() {
+            productoEquipoEditando = null;
+            document.getElementById('modalTitulo').textContent = 'Agregar Producto/Equipo';
+            document.getElementById('formProductoEquipo').reset();
+            document.getElementById('formId').value = '';
+            document.getElementById('modalProductoEquipo').style.display = 'flex';
+        }
+
+        function editarProductoEquipo(id) {
+            // Buscar el producto/equipo en los datos
+            fetch('/api/admin/productos-equipos')
+                .then(res => res.json())
+                .then(result => {
+                    if (result.success) {
+                        let encontrado = null;
+                        result.data.forEach(producto => {
+                            const equipo = producto.equipos.find(e => e.id === id);
+                            if (equipo) {
+                                encontrado = { ...equipo, producto: producto.producto };
+                            }
+                        });
+                        
+                        if (encontrado) {
+                            productoEquipoEditando = encontrado;
+                            document.getElementById('modalTitulo').textContent = 'Editar Producto/Equipo';
+                            document.getElementById('formId').value = encontrado.id;
+                            document.getElementById('formProducto').value = encontrado.producto;
+                            document.getElementById('formEquipo').value = encontrado.equipo;
+                            document.getElementById('formIdEquipoRedmine').value = encontrado.id_equipo_redmine;
+                            document.getElementById('modalProductoEquipo').style.display = 'flex';
+                        }
+                    }
+                });
+        }
+
+        function cerrarModal() {
+            document.getElementById('modalProductoEquipo').style.display = 'none';
+            productoEquipoEditando = null;
+        }
+
+        async function guardarProductoEquipo(event) {
+            event.preventDefault();
+            
+            const formData = {
+                producto: document.getElementById('formProducto').value,
+                equipo: document.getElementById('formEquipo').value,
+                id_equipo_redmine: document.getElementById('formIdEquipoRedmine').value
+            };
+            
+            const id = document.getElementById('formId').value;
+            let response;
+            
+            try {
+                if (id) {
+                    // Actualizar
+                    response = await fetch('/api/admin/productos-equipos/' + id, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(formData)
+                    });
+                } else {
+                    // Crear
+                    response = await fetch('/api/admin/productos-equipos', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(formData)
+                    });
+                }
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    alert('Guardado correctamente');
+                    cerrarModal();
+                    cargarProductosEquipos();
+                } else {
+                    alert('Error: ' + result.error);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error al guardar: ' + error.message);
+            }
+        }
+
+        async function eliminarProductoEquipo(id) {
+            if (!confirm('¿Estás seguro de eliminar este producto/equipo?')) {
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/admin/productos-equipos/' + id, {
+                    method: 'DELETE'
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    alert('Eliminado correctamente');
+                    cargarProductosEquipos();
+                } else {
+                    alert('Error: ' + result.error);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error al eliminar: ' + error.message);
+            }
+        }
+
+        // Cerrar modal al hacer clic fuera
+        document.getElementById('modalProductoEquipo').addEventListener('click', (e) => {
+            if (e.target.id === 'modalProductoEquipo') {
+                cerrarModal();
+            }
+        });
+    </script>
+
+    <style>
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .modal-header h2 {
+            margin: 0;
+            font-size: 20px;
+            font-weight: 500;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 28px;
+            cursor: pointer;
+            color: var(--text-secondary);
+            padding: 0;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-close:hover {
+            color: var(--text-primary);
+        }
+
+        .modal-body {
+            padding: 20px;
+        }
+    </style>
+    
+    <!-- JavaScript -->
+    <script src="/js/main.js"></script>
+</body>
+</html>
+
+

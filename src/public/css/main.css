@@ -8,6 +8,14 @@
     box-sizing: border-box;
 }
 
+/* Asegurar que los botones no sean afectados por el reset */
+button.btn,
+button.btn-primary,
+.btn,
+.btn-primary {
+    margin: 0;
+}
+
 :root {
     --sidebar-width: 256px;
     --header-height: 64px;
@@ -46,7 +54,7 @@ body {
     box-shadow: 0 1px 3px rgba(0,0,0,0.1);
 }
 
-/* Tipografía */
+/* Tipografía moderna */
 h1, h2, h3, h4, h5, h6 {
     font-family: 'Google Sans', 'Roboto', sans-serif;
     font-weight: 500;
@@ -72,6 +80,7 @@ h3 {
     line-height: 28px;
 }
 
+/* Mejorar títulos de página */
 .page-title {
     font-size: 28px;
     font-weight: 500;
@@ -80,27 +89,14 @@ h3 {
     letter-spacing: 0;
 }
 
-/* Layout principal */
+/* Layout principal tipo Drive */
 .app-container {
     display: flex;
     height: calc(100vh - 56px);
     overflow: hidden;
 }
 
-.main-content {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-}
-
-.content-area {
-    flex: 1;
-    overflow-y: auto;
-    padding: 24px;
-}
-
-/* Sidebar */
+/* Sidebar (menú lateral izquierdo) */
 .sidebar {
     width: var(--sidebar-width);
     background: var(--bg-white);
@@ -112,21 +108,17 @@ h3 {
 }
 
 .sidebar-header {
-    padding: 20px 24px;
+    padding: 12px 16px;
     display: flex;
     align-items: center;
     gap: 12px;
-}
-
-.sidebar-title {
-    font-size: 22px;
-    font-weight: 400;
-    color: var(--text-primary);
+    position: relative;
 }
 
 .sidebar-nav {
     flex: 1;
     padding: 8px 0;
+    overflow-y: auto;
 }
 
 .nav-item {
@@ -164,43 +156,35 @@ h3 {
     opacity: 1;
 }
 
-/* Productos en sidebar */
-.producto-section {
-    margin-bottom: 8px;
+/* Contenido principal */
+.main-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
 }
 
-.producto-header {
-    padding: 8px 24px;
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--text-secondary);
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
+/* Área de contenido scrolleable */
+.content-area {
+    flex: 1;
+    overflow-y: auto;
+    padding: 24px;
 }
 
-.producto-submenu {
-    padding-left: 24px;
+/* Toolbar (filtros y acciones) */
+.toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 24px;
+    background: var(--bg-white);
+    border-bottom: 1px solid var(--border-color);
 }
 
-.producto-submenu-item {
-    padding: 8px 20px;
-    font-size: 14px;
-    color: var(--text-primary);
-    text-decoration: none;
-    display: block;
-    transition: all 0.2s;
-    border-left: 3px solid transparent;
-}
-
-.producto-submenu-item:hover {
-    background-color: var(--hover-bg);
-}
-
-.producto-submenu-item.active {
-    background-color: #e8f0fe;
-    border-left-color: var(--primary-color);
-    color: var(--primary-color);
-    font-weight: 500;
+.toolbar-left, .toolbar-right {
+    display: flex;
+    gap: 12px;
+    align-items: center;
 }
 
 /* Solapas (tabs) */
@@ -233,11 +217,61 @@ h3 {
     font-weight: 500;
 }
 
-/* Botones */
+/* Botones de filtro estilo Material Design */
+.filter-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 16px;
+    border-radius: 24px;
+    border: 1px solid var(--border-color);
+    background: white;
+    font-size: 14px;
+    font-weight: 500;
+    font-family: 'Google Sans', 'Roboto', sans-serif;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    gap: 6px;
+    letter-spacing: 0.25px;
+    height: 36px;
+    min-width: auto;
+    box-shadow: 0 1px 2px 0 rgba(60,64,67,.3), 0 1px 3px 1px rgba(60,64,67,.15);
+}
+
+.filter-btn:hover {
+    background: var(--hover-bg);
+    border-color: #bdc1c6;
+    box-shadow: 0 1px 2px 0 rgba(60,64,67,.3), 0 1px 3px 1px rgba(60,64,67,.15);
+}
+
+.filter-btn:active {
+    transform: scale(0.98);
+}
+
+.filter-btn.filter-btn-active {
+    background: #e8f0fe;
+    color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.filter-btn.filter-btn-active svg {
+    color: var(--primary-color);
+}
+
+.filter-btn svg {
+    width: 18px;
+    height: 18px;
+    color: var(--text-secondary);
+}
+
+/* Botón estándar estilo Google (según reglas de cursor) */
 .button {
-    display: inline-block;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
     padding: 10px 24px;
-    border-radius: 4px;
+    border-radius: 24px;
     background: #1a73e8;
     color: white;
     font-size: 14px;
@@ -248,6 +282,7 @@ h3 {
     transition: all 0.2s ease;
     border: none;
     line-height: 1.5;
+    min-height: 40px;
 }
 
 .button:hover {
@@ -261,6 +296,26 @@ h3 {
     background: #0d47a1;
 }
 
+/* Variante blanca con letras azules */
+.button.button-secondary {
+    background: white;
+    color: #1a73e8;
+    border: 1px solid #dadce0;
+}
+
+.button.button-secondary:hover {
+    background: #f1f3f4;
+    color: #1557b0;
+    border-color: #bdc1c6;
+    box-shadow: 0 1px 2px 0 rgba(60,64,67,.3), 0 1px 3px 1px rgba(60,64,67,.15);
+}
+
+.button.button-secondary:active {
+    background: #e8eaed;
+    color: #0d47a1;
+}
+
+/* Botón estándar - Estilo Google Drive/Material Design */
 .btn {
     padding: 10px 24px;
     border-radius: 24px;
@@ -278,29 +333,817 @@ h3 {
     letter-spacing: 0.25px;
     height: 40px;
     min-width: 100px;
+    box-shadow: none;
+    outline: none;
+    position: relative;
+    overflow: hidden;
+    color: var(--text-primary);
+    text-transform: none;
 }
 
 .btn:hover {
     background: #f1f3f4;
     border-color: #bdc1c6;
     box-shadow: 0 1px 2px 0 rgba(60,64,67,.3), 0 1px 3px 1px rgba(60,64,67,.15);
+    opacity: 0.9;
 }
 
-.btn-primary {
+.btn:active {
+    transform: scale(0.98);
+    opacity: 0.8;
+}
+
+.btn:focus {
+    outline: none;
+}
+
+.btn:disabled,
+.btn[disabled] {
+    opacity: 0.6;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+/* Botón primario - Estilo Google Drive/Material Design */
+button.btn-primary,
+button.btn.btn-primary,
+.btn.btn-primary {
     background: var(--primary-color);
     color: white;
     border-color: var(--primary-color);
     font-weight: 600;
     box-shadow: 0 1px 2px 0 rgba(60,64,67,.3), 0 1px 3px 1px rgba(60,64,67,.15);
+    padding: 10px 24px;
+    border-radius: 24px;
+    border: 1px solid var(--primary-color);
+    height: 40px;
+    min-width: 100px;
+    font-size: 14px;
+    font-family: 'Google Sans', 'Roboto', sans-serif;
+    letter-spacing: 0.25px;
+    text-transform: none;
 }
 
-.btn-primary:hover {
-    background: #0A4887;
-    border-color: #0A4887;
+button.btn-primary:hover,
+button.btn.btn-primary:hover,
+.btn.btn-primary:hover {
+    background: #1f4f80;
+    border-color: #2f5b88;
     box-shadow: 0 1px 3px 0 rgba(60,64,67,.3), 0 4px 8px 3px rgba(60,64,67,.15);
+    opacity: 0.9;
 }
 
-/* Tablas */
+button.btn-primary:active,
+button.btn.btn-primary:active,
+.btn.btn-primary:active {
+    background: #08396C;
+    transform: scale(0.98);
+    opacity: 0.85;
+}
+
+button.btn-primary:focus,
+button.btn.btn-primary:focus,
+.btn.btn-primary:focus {
+    outline: none;
+}
+
+button.btn-primary:disabled,
+button.btn.btn-primary:disabled,
+.btn.btn-primary:disabled,
+button.btn-primary[disabled],
+button.btn.btn-primary[disabled],
+.btn.btn-primary[disabled] {
+    opacity: 0.6;
+    cursor: not-allowed;
+    pointer-events: none;
+    background: rgba(55, 111, 163, 0.6);
+    border-color: rgba(67, 114, 158, 0.6);
+}
+
+/* Buscador estilo Google */
+.google-search-box {
+    position: relative;
+}
+
+.google-search-box-container {
+    display: flex;
+    align-items: center;
+    background: white;
+    border: 1px solid #dfe1e5;
+    border-radius: 24px;
+    padding: 0 16px;
+    height: 44px;
+    box-shadow: 0 2px 5px 1px rgba(64,60,67,.16);
+    transition: all 0.2s;
+}
+
+.google-search-box-container:focus-within {
+    box-shadow: 0 2px 8px 1px rgba(64,60,67,.24);
+    border-color: transparent;
+}
+
+.google-search-input {
+    flex: 1;
+    border: none;
+    outline: none;
+    font-size: 16px;
+    font-family: 'Google Sans', 'Roboto', sans-serif;
+    background: transparent;
+    padding: 0;
+    margin: 0;
+    resize: none;
+    overflow: hidden;
+}
+
+.google-search-suggestions {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: white;
+    border: 1px solid #dfe1e5;
+    border-top: none;
+    border-radius: 0 0 24px 24px;
+    box-shadow: 0 4px 6px rgba(32,33,36,.28);
+    max-height: 400px;
+    overflow-y: auto;
+    z-index: 1000;
+    margin-top: -1px;
+    display: none;
+}
+
+.google-suggestion-item {
+    padding: 12px 16px;
+    cursor: pointer;
+    transition: background 0.15s;
+    display: flex;
+    align-items: center;
+    min-height: 56px;
+    font-size: 14px;
+    color: var(--text-primary);
+    gap: 12px;
+}
+
+.google-suggestion-item:hover {
+    background: #f1f3f4;
+}
+
+.google-suggestion-item:first-child {
+    padding-top: 8px;
+}
+
+.google-suggestion-item:last-child {
+    padding-bottom: 8px;
+}
+
+.suggestion-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--primary-color);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 14px;
+    flex-shrink: 0;
+}
+
+.suggestion-text {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.suggestion-title {
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.suggestion-subtitle {
+    font-size: 12px;
+    color: var(--text-secondary);
+}
+
+/* Contenedor de tabla con scroll horizontal a nivel navegador */
+body {
+    overflow-x: auto;
+}
+
+.modern-table-wrapper {
+    background: white;
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+    overflow-x: visible;
+    overflow-y: hidden;
+    width: 100%;
+}
+
+.modern-table {
+    display: flex;
+    flex-direction: column;
+    min-width: max-content;
+}
+
+.modern-table-header {
+    display: grid;
+    gap: 12px;
+    padding: 12px 16px;
+    background: #f8f9fa;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    border-bottom: none;
+    white-space: nowrap;
+}
+
+.modern-table-header .modern-table-cell {
+    justify-content: center;
+    text-align: center;
+}
+
+.modern-table-cell.header-cell {
+    text-align: center;
+    justify-content: center;
+    align-items: center;
+}
+
+/* Mejorar alineación de valores con headers */
+.modern-table-row .modern-table-cell {
+    justify-content: center;
+    text-align: center;
+}
+
+.modern-table-row .modern-table-cell.item-text {
+    justify-content: flex-start;
+    text-align: left;
+}
+
+.modern-table-row .modern-table-cell:has(.modern-select),
+.modern-table-row .modern-table-cell:has(.modern-input),
+.modern-table-row .modern-table-cell:has(.progress-bar-container) {
+    justify-content: center;
+    text-align: center;
+}
+
+/* Mantenimiento: 7 columnas - WIN llena el espacio restante */
+.modern-table.mantenimiento .modern-table-header,
+.modern-table.mantenimiento .modern-table-row {
+    grid-template-columns: 140px 90px 70px 70px 70px 70px 1fr;
+}
+
+/* Proyectos: 10 columnas - Cliente reducido, Proyecto más ancho, Plazos y Riesgos con mismo ancho que Overall/Alcance/Costo */
+.modern-table.proyectos .modern-table-header,
+.modern-table.proyectos .modern-table-row {
+    grid-template-columns: 120px 300px 100px 70px 70px 70px 70px 70px 100px 100px;
+}
+
+/* Celda que ocupa 2 columnas para el botón de sincronizar epics */
+.modern-table.proyectos .modern-table-cell.sync-epics-cell {
+    grid-column: span 2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.modern-table-row {
+    display: grid;
+    gap: 12px;
+    padding: 12px 16px;
+    border-bottom: none;
+    transition: all 0.2s;
+    align-items: center;
+    white-space: nowrap;
+}
+
+/* Centrar valores en celdas (excepto item-text) */
+.modern-table-row .modern-table-cell:not(.item-text) {
+    justify-content: center;
+    text-align: center;
+}
+
+.modern-table-row .modern-table-cell.item-text {
+    justify-content: flex-start;
+    text-align: left;
+}
+
+.modern-table-row:hover {
+    background: #f8f9fa;
+}
+
+.modern-table-row:not(:last-child) {
+    border-bottom: 1px solid #f1f3f4;
+}
+
+.modern-table-cell {
+    font-size: 13px;
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    min-height: 40px;
+    font-family: 'Google Sans', 'Roboto', sans-serif;
+}
+
+.modern-table-cell.item-text {
+    color: var(--text-secondary);
+    font-size: 13px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    word-wrap: break-word;
+    max-width: 100%;
+}
+
+.modern-table-cell.item-text a {
+    color: var(--primary-color);
+    text-decoration: none;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    display: block;
+    width: 100%;
+}
+
+.modern-table-cell.item-text a:hover {
+    text-decoration: underline;
+}
+
+.modern-input {
+    border: none;
+    border-bottom: 2px solid transparent;
+    padding: 8px 4px;
+    font-size: 14px;
+    font-family: 'Google Sans', 'Roboto', sans-serif;
+    width: 100%;
+    background: transparent;
+    transition: all 0.2s;
+    resize: none;
+}
+
+.modern-input:focus {
+    outline: none;
+    border-bottom-color: var(--primary-color);
+    background: #f8f9fa;
+    border-radius: 4px;
+    padding: 8px 8px;
+}
+
+.modern-input:hover {
+    background: #f8f9fa;
+    border-radius: 4px;
+    padding: 8px 8px;
+}
+
+/* Selectores modernos */
+.modern-select {
+    border: none;
+    border-bottom: 2px solid transparent;
+    padding: 8px 4px;
+    font-size: 20px;
+    font-family: 'Google Sans', 'Roboto', sans-serif;
+    width: 100%;
+    background: transparent;
+    transition: all 0.2s;
+    cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='%235f6368'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 4px center;
+    background-size: 16px;
+    padding-right: 24px;
+    color: var(--text-primary);
+    text-align: center;
+    line-height: 1.2;
+}
+
+/* Selectores de iconos y caras - solo mostrar iconos grandes */
+.icon-select,
+.face-select {
+    font-size: 20px;
+    text-align: center;
+    padding: 8px 12px;
+    background-image: none;
+}
+
+.icon-select option,
+.face-select option {
+    font-size: 20px;
+    text-align: center;
+    padding: 8px;
+}
+
+/* Selectores estilo tag (sin flecha) */
+.modern-select.overall-select,
+.modern-select.icon-select,
+.modern-select.face-select,
+.modern-select.riesgo-select {
+    background-image: none;
+    padding: 8px 12px;
+    border-radius: 16px;
+    background-color: #f8f9fa;
+    border: 1px solid transparent;
+}
+
+.modern-select.overall-select:hover,
+.modern-select.icon-select:hover,
+.modern-select.face-select:hover,
+.modern-select.riesgo-select:hover {
+    background-color: #e8eaed;
+    border-color: var(--border-color);
+}
+
+.modern-select.overall-select:focus,
+.modern-select.icon-select:focus,
+.modern-select.face-select:focus,
+.modern-select.riesgo-select:focus {
+    background-color: #e8eaed;
+    border-color: var(--primary-color);
+    outline: none;
+}
+
+/* Colores de fondo suaves para overall-select según el valor (sin bordes) */
+.modern-select.overall-select.color-verde {
+    background-color: #e6f4ea !important;
+    border: none !important;
+}
+
+.modern-select.overall-select.color-amarillo {
+    background-color: #fef7e0 !important;
+    border: none !important;
+}
+
+.modern-select.overall-select.color-rojo {
+    background-color: #fce8e6 !important;
+    border: none !important;
+}
+
+/* Colores de fondo suaves para icon-select y face-select (sin color específico, mantener gris) */
+.modern-select.icon-select,
+.modern-select.face-select {
+    background-color: #f8f9fa;
+}
+
+.modern-select.riesgo-select {
+    background-color: #f8f9fa;
+    border: none;
+}
+
+/* Colores de fondo para riesgo-select según el valor */
+.modern-select.riesgo-select.riesgo-ok {
+    background-color: #e6f4ea !important;
+    border: none !important;
+}
+
+.modern-select.riesgo-select.riesgo-red {
+    background-color: #fce8e6 !important;
+    border: none !important;
+}
+
+/* Selector de estado - fuente igual que headers pero sin bold */
+.modern-select.estado-select {
+    font-size: 13px;
+    font-weight: 400;
+    font-family: 'Google Sans', 'Roboto', sans-serif;
+    color: var(--text-primary);
+    background-color: #f8f9fa;
+    border-radius: 16px;
+    padding: 8px 12px;
+    background-image: none;
+    border: 1px solid transparent;
+    min-width: 100px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.modern-select.estado-select:hover {
+    background-color: #e8eaed;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.modern-select.estado-select:focus {
+    background-color: #e8eaed;
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(49, 107, 161, 0.2);
+}
+
+/* Mejorar estilo del dropdown de estado-select */
+.modern-select.estado-select option {
+    padding: 10px 12px;
+    font-size: 13px;
+    font-weight: 400;
+    font-family: 'Google Sans', 'Roboto', sans-serif;
+    background: white;
+    color: var(--text-primary);
+}
+
+.modern-select.estado-select option:hover {
+    background: #f1f3f4;
+}
+
+
+/* Colores de fondo para estado-select según el valor (igual que overall-select) */
+.modern-select.estado-select.estado-entregado {
+    background-color: #e6f4ea !important;
+    border: none !important;
+}
+
+.modern-select.estado-select.estado-progreso {
+    background-color: #fef7e0 !important;
+    border: none !important;
+}
+
+.modern-select.estado-select.estado-bloqueado {
+    background-color: #fce8e6 !important;
+    border: none !important;
+}
+
+.modern-select.estado-select.estado-sin-comenzar {
+    background-color: #f1f3f4 !important;
+    border: none !important;
+}
+
+/* Textarea de WIN con fondo gris redondeado */
+.win-textarea {
+    background-color: #f8f9fa !important;
+    border-radius: 8px !important;
+    border: 1px solid var(--border-color) !important;
+    padding: 10px 12px !important;
+    font-size: 13px !important;
+    font-family: 'Google Sans', 'Roboto', sans-serif !important;
+    resize: vertical !important;
+}
+
+.win-textarea:focus {
+    background-color: white !important;
+    outline: none !important;
+    border-color: var(--primary-color) !important;
+    box-shadow: 0 0 0 2px rgba(49, 107, 161, 0.1) !important;
+}
+
+/* Inputs de fecha y textarea - fuente igual que headers pero sin bold */
+.modern-input[type="date"],
+textarea.modern-input {
+    font-size: 13px;
+    font-weight: 400;
+    font-family: 'Google Sans', 'Roboto', sans-serif;
+    color: var(--text-primary);
+}
+
+.modern-select:focus {
+    outline: none;
+    border-bottom-color: var(--primary-color);
+    background-color: #f8f9fa;
+    background-image: none;
+    border-radius: 4px;
+    padding: 8px 12px;
+}
+
+.modern-select:hover {
+    background-color: #f8f9fa;
+    border-radius: 4px;
+    padding: 8px 12px;
+}
+
+/* Selector de Overall (colores) - aplicar color según valor seleccionado */
+.overall-select option[value="verde"]:checked,
+.overall-select[value="verde"] {
+    color: #1e8e3e;
+    font-weight: 500;
+}
+
+.overall-select option[value="amarillo"]:checked,
+.overall-select[value="amarillo"] {
+    color: #f9ab00;
+    font-weight: 500;
+}
+
+.overall-select option[value="rojo"]:checked,
+.overall-select[value="rojo"] {
+    color: #d93025;
+    font-weight: 500;
+}
+
+/* Aplicar color dinámicamente con JavaScript inline */
+.overall-select.color-verde {
+    color: #1e8e3e;
+    font-weight: 500;
+}
+
+.overall-select.color-amarillo {
+    color: #f9ab00;
+    font-weight: 500;
+}
+
+.overall-select.color-rojo {
+    color: #d93025;
+    font-weight: 500;
+}
+
+/* Estilos para opciones de Overall */
+.overall-select option[value="verde"] {
+    background: #e6f4ea;
+    color: #1e8e3e;
+}
+
+.overall-select option[value="amarillo"] {
+    background: #fef7e0;
+    color: #f9ab00;
+}
+
+.overall-select option[value="rojo"] {
+    background: #fce8e6;
+    color: #d93025;
+}
+
+/* Barra de progreso editable - estilo minimalista y creativo */
+.progress-bar-container {
+    position: relative;
+    width: 100%;
+    height: 20px;
+    background: linear-gradient(to bottom, #e8eaed 0%, #f1f3f4 100%);
+    border-radius: 8px;
+    overflow: hidden;
+    cursor: pointer;
+    box-shadow: inset 0 1px 3px rgba(0,0,0,0.08);
+    border: 1px solid #dadce0;
+}
+
+.progress-bar {
+    height: 100%;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1), background 0.3s ease;
+    position: relative;
+    min-width: 20px;
+    background: linear-gradient(135deg, #34a853 0%, #1e8e3e 50%, #137333 100%);
+    box-shadow: inset 0 1px 2px rgba(255,255,255,0.3);
+}
+
+.progress-text {
+    color: white;
+    font-size: 11px;
+    font-weight: 600;
+    z-index: 2;
+    position: relative;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+    letter-spacing: 0.3px;
+    font-family: 'Google Sans', 'Roboto', sans-serif;
+}
+
+.progress-slider {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    cursor: pointer;
+    z-index: 3;
+    margin: 0;
+    padding: 0;
+    -webkit-appearance: none;
+    appearance: none;
+}
+
+.progress-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: white;
+    cursor: pointer;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2), 0 0 0 1px #dadce0;
+    border: none;
+    transition: all 0.2s ease;
+}
+
+.progress-slider::-webkit-slider-thumb:hover {
+    box-shadow: 0 2px 4px rgba(0,0,0,0.25), 0 0 0 1px #1e8e3e;
+    transform: scale(1.1);
+}
+
+.progress-slider::-moz-range-thumb {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: white;
+    cursor: pointer;
+    border: none;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2), 0 0 0 1px #dadce0;
+    transition: all 0.2s ease;
+}
+
+.progress-slider::-moz-range-thumb:hover {
+    box-shadow: 0 2px 4px rgba(0,0,0,0.25), 0 0 0 1px #1e8e3e;
+    transform: scale(1.1);
+}
+
+/* Selector de riesgo */
+.riesgo-select {
+    font-size: 20px;
+    text-align: center;
+}
+
+/* Modal de detalle del proyecto */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+    padding: 20px;
+}
+
+.modal-content {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+    max-width: 1200px;
+    width: 95%;
+    max-height: 90vh;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+}
+
+.modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 24px 32px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.modal-body {
+    padding: 32px;
+    flex: 1;
+}
+
+.modal-close {
+    transition: all 0.2s;
+}
+
+.modal-close:hover {
+    background: var(--hover-bg) !important;
+}
+
+/* Quitar icono de calendario en inputs date */
+input[type="date"]::-webkit-calendar-picker-indicator {
+    display: none;
+    -webkit-appearance: none;
+}
+
+input[type="date"] {
+    -webkit-appearance: none;
+    appearance: none;
+}
+
+/* Estilo para WIN con fondo gris */
+.win-container {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 24px;
+}
+
+/* Lista de epics */
+.epics-list {
+    max-height: 500px;
+    overflow-y: auto;
+}
+
+.epic-item {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border-color);
+    transition: background 0.2s;
+}
+
+.epic-item:hover {
+    background: var(--hover-bg);
+}
+
+.epic-item:last-child {
+    border-bottom: none;
+}
+
+.riesgo-select option {
+    font-size: 20px;
+    text-align: center;
+}
+
+/* Tablas legacy (mantener compatibilidad) */
 .table-container {
     background: white;
     border-radius: 12px;
@@ -341,6 +1184,57 @@ h3 {
     border-bottom: none;
 }
 
+/* Botón estándar estilo Google */
+.button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 10px 24px;
+    border-radius: 24px;
+    background: #1a73e8;
+    color: white;
+    font-size: 14px;
+    font-weight: 500;
+    font-family: 'Google Sans', 'Roboto', sans-serif;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: none;
+    line-height: 1.5;
+    min-height: 40px;
+}
+
+.button:hover {
+    background: #1557b0;
+    box-shadow: 0 1px 2px 0 rgba(60,64,67,.3), 0 1px 3px 1px rgba(60,64,67,.15);
+    text-decoration: none;
+    color: white;
+}
+
+.button:active {
+    background: #0d47a1;
+}
+
+/* Variante blanca con letras azules */
+.button.button-secondary {
+    background: white;
+    color: #1a73e8;
+    border: 1px solid #dadce0;
+}
+
+.button.button-secondary:hover {
+    background: #f1f3f4;
+    color: #1557b0;
+    border-color: #bdc1c6;
+    box-shadow: 0 1px 2px 0 rgba(60,64,67,.3), 0 1px 3px 1px rgba(60,64,67,.15);
+}
+
+.button.button-secondary:active {
+    background: #e8eaed;
+    color: #0d47a1;
+}
+
 /* Inputs */
 .input {
     border: 1px solid var(--border-color);
@@ -356,23 +1250,6 @@ h3 {
     outline: none;
     border-color: var(--primary-color);
     box-shadow: 0 0 0 2px rgba(49, 107, 161, 0.1);
-}
-
-/* Toolbar */
-.toolbar {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 16px 24px;
-    background: var(--bg-white);
-    border-bottom: 1px solid var(--border-color);
-    margin-bottom: 24px;
-}
-
-.toolbar-left, .toolbar-right {
-    display: flex;
-    gap: 12px;
-    align-items: center;
 }
 
 /* Loading spinner */
@@ -414,4 +1291,3 @@ h3 {
     font-size: 14px;
     color: var(--text-secondary);
 }
-

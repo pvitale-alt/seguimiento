@@ -2,8 +2,9 @@ const express = require('express');
 const router = express.Router();
 const { generateToken, verifyToken } = require('../middleware/authJWT');
 
-// Contraseña de login desde variables de entorno
+// Contraseñas de login desde variables de entorno
 const LOGIN_PASSWORD = process.env.LOGIN_PASSWORD;
+const LOGIN_PASSWORD_ADMIN = process.env.LOGIN_PASSWORD_ADMIN;
 
 // Validar que la contraseña esté configurada
 if (!LOGIN_PASSWORD) {
@@ -55,9 +56,15 @@ router.post('/', (req, res) => {
         });
     }
     
-    if (password === LOGIN_PASSWORD) {
-        // Generar token JWT
-        const token = generateToken(false);
+    // Verificar si es admin
+    const isAdmin = LOGIN_PASSWORD_ADMIN && password === LOGIN_PASSWORD_ADMIN;
+    
+    // Verificar si es usuario normal
+    const isUser = password === LOGIN_PASSWORD;
+    
+    if (isAdmin || isUser) {
+        // Generar token JWT con flag de admin
+        const token = generateToken(isAdmin);
         
         // Establecer cookie con el token
         const isSecure = process.env.NODE_ENV === 'production' || process.env.VERCEL === '1';
@@ -69,7 +76,7 @@ router.post('/', (req, res) => {
             path: '/'
         });
         
-        console.log('✅ Login exitoso');
+        console.log(`✅ Login exitoso${isAdmin ? ' (Admin)' : ' (Usuario)'}`);
         
         // Redirigir a inicio
         res.redirect('/');

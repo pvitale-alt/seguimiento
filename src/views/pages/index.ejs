@@ -1,62 +1,193 @@
-<%- include('../layouts/main', { 
-    title: 'Seguimiento de Proyectos',
-    productos: productos,
-    productoActual: productoActual,
-    tipoActual: tipoActual
-}) %>
-
-<% body %>
-    <div class="toolbar">
-        <div class="toolbar-left">
-            <h1 class="page-title">Seguimiento - <%= productoActual %></h1>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Seguimiento de Proyectos | Seguimiento</title>
+    
+    <!-- CSS -->
+    <link rel="stylesheet" href="/css/main.css?v=<%= Date.now() %>">
+    
+    <!-- Favicon -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📊</text></svg>">
+</head>
+<body>
+    <!-- Header General -->
+    <header class="top-header">
+        <div style="display: flex; align-items: center; gap: 12px;">
+            <img src="/images/logo.png" alt="Logo" style="height: 28px; width: auto; display: block;" onerror="this.style.display='none';" />
+            <span style="font-size: 16px; font-weight: 500; color: var(--text-secondary); font-family: 'Google Sans', 'Roboto', sans-serif;">Seguimiento</span>
         </div>
-        <div class="toolbar-right">
-            <button class="btn btn-primary" onclick="sincronizar()" id="btnSincronizar">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/>
-                </svg>
-                <span>Actualizar desde Redmine</span>
-            </button>
+    </header>
+    
+    <div class="app-container">
+        <%- include('../partials/sidebar', { productosEquipos, productoActual, equipoActual, tipoActual, isAdmin }) %>
+        
+        <div class="main-content">
+            <div class="content-area">
+                <div class="toolbar">
+                    <div class="toolbar-left" style="display: flex; align-items: center; gap: 12px;">
+                        <h1 class="page-title">Seguimiento<% if (productoActual) { %> - <%= productoActual === 'OMS' ? 'Order Management' : productoActual %><% } %></h1>
+                    </div>
+                    <div class="toolbar-right" style="display: flex; align-items: center; gap: 12px;">
+                        <!-- Botón Actualizar -->
+                        <button class="button button-secondary" onclick="sincronizar()" id="btnSincronizar">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/>
+                            </svg>
+                            <span>Actualizar</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="tabs" style="padding: 0 24px; margin-top: 0;">
+                    <a 
+                        href="/?producto=<%= encodeURIComponent(productoActual || '') %>&equipo=<%= encodeURIComponent(equipoActual || '') %>&tipo=mantenimiento" 
+                        class="tab <%= tipoActual === 'mantenimiento' ? 'active' : '' %>"
+                    >
+                        Mantenimiento
+                    </a>
+                    <a 
+                        href="/?producto=<%= encodeURIComponent(productoActual || '') %>&equipo=<%= encodeURIComponent(equipoActual || '') %>&tipo=proyectos" 
+                        class="tab <%= tipoActual === 'proyectos' ? 'active' : '' %>"
+                    >
+                        Proyectos
+                    </a>
+                </div>
+
+                <!-- Filtros y buscador solo para proyectos -->
+                <% if (tipoActual === 'proyectos') { %>
+                <div id="filtrosProyectos" style="padding: 16px 24px; background: white; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+                    <!-- Filtro Cliente -->
+                    <button class="filter-btn" onclick="toggleFilterClientes(this)" title="Filtrar por Cliente">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" style="width: 18px; height: 18px;">
+                            <path d="M10 18h4v-2h-4v2zM3 6v2h18V6H3zm3 7h12v-2H6v2z"/>
+                        </svg>
+                        <span style="margin-left: 6px; font-size: 13px;">Cliente</span>
+                    </button>
+                    <div class="filter-dropdown" id="filterClientes" style="display: none;"></div>
+                    
+                    <!-- Filtro Estado -->
+                    <button class="filter-btn" onclick="toggleFilterEstados(this)" title="Filtrar por Estado">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" style="width: 18px; height: 18px;">
+                            <path d="M10 18h4v-2h-4v2zM3 6v2h18V6H3zm3 7h12v-2H6v2z"/>
+                        </svg>
+                        <span style="margin-left: 6px; font-size: 13px;">Estado</span>
+                    </button>
+                    <div class="filter-dropdown" id="filterEstados" style="display: none;">
+                        <label style="display: flex; align-items: center; padding: 10px 16px; cursor: pointer; transition: background 0.2s;" onmouseover="this.style.background='#f1f3f4'" onmouseout="this.style.background='white'">
+                            <input type="checkbox" class="filter-checkbox-estado" value="sin comenzar" style="margin-right: 8px; cursor: pointer;" onchange="aplicarFiltrosProyectos()" />
+                            <span style="font-size: 13px;">Sin comenzar</span>
+                        </label>
+                        <label style="display: flex; align-items: center; padding: 10px 16px; cursor: pointer; transition: background 0.2s;" onmouseover="this.style.background='#f1f3f4'" onmouseout="this.style.background='white'">
+                            <input type="checkbox" class="filter-checkbox-estado" value="en curso" style="margin-right: 8px; cursor: pointer;" onchange="aplicarFiltrosProyectos()" />
+                            <span style="font-size: 13px;">En curso</span>
+                        </label>
+                        <label style="display: flex; align-items: center; padding: 10px 16px; cursor: pointer; transition: background 0.2s;" onmouseover="this.style.background='#f1f3f4'" onmouseout="this.style.background='white'">
+                            <input type="checkbox" class="filter-checkbox-estado" value="Testing" style="margin-right: 8px; cursor: pointer;" onchange="aplicarFiltrosProyectos()" />
+                            <span style="font-size: 13px;">Testing</span>
+                        </label>
+                        <label style="display: flex; align-items: center; padding: 10px 16px; cursor: pointer; transition: background 0.2s;" onmouseover="this.style.background='#f1f3f4'" onmouseout="this.style.background='white'">
+                            <input type="checkbox" class="filter-checkbox-estado" value="Entregado" style="margin-right: 8px; cursor: pointer;" onchange="aplicarFiltrosProyectos()" />
+                            <span style="font-size: 13px;">Entregado</span>
+                        </label>
+                        <label style="display: flex; align-items: center; padding: 10px 16px; cursor: pointer; transition: background 0.2s;" onmouseover="this.style.background='#f1f3f4'" onmouseout="this.style.background='white'">
+                            <input type="checkbox" class="filter-checkbox-estado" value="Rework" style="margin-right: 8px; cursor: pointer;" onchange="aplicarFiltrosProyectos()" />
+                            <span style="font-size: 13px;">Rework</span>
+                        </label>
+                        <label style="display: flex; align-items: center; padding: 10px 16px; cursor: pointer; transition: background 0.2s;" onmouseover="this.style.background='#f1f3f4'" onmouseout="this.style.background='white'">
+                            <input type="checkbox" class="filter-checkbox-estado" value="Cerrado" style="margin-right: 8px; cursor: pointer;" onchange="aplicarFiltrosProyectos()" />
+                            <span style="font-size: 13px;">Cerrado</span>
+                        </label>
+                        <label style="display: flex; align-items: center; padding: 10px 16px; cursor: pointer; transition: background 0.2s;" onmouseover="this.style.background='#f1f3f4'" onmouseout="this.style.background='white'">
+                            <input type="checkbox" class="filter-checkbox-estado" value="Bloqueado" style="margin-right: 8px; cursor: pointer;" onchange="aplicarFiltrosProyectos()" />
+                            <span style="font-size: 13px;">Bloqueado</span>
+                        </label>
+                    </div>
+                    
+                    <!-- Buscador -->
+                    <div style="position: relative; flex: 1; max-width: 600px; margin: 0 auto;">
+                        <form onsubmit="buscar(event)" class="google-search-box" style="position: relative;">
+                            <div class="google-search-box-container" id="searchBoxContainer">
+                                <svg style="width: 20px; height: 20px; color: #9aa0a6; margin-right: 12px; flex-shrink: 0;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
+                                </svg>
+                                <textarea 
+                                    id="searchInput" 
+                                    class="google-search-input"
+                                    rows="1"
+                                    placeholder="Buscar proyectos..."
+                                    autocomplete="off"
+                                    autocapitalize="off"
+                                    autocorrect="off"
+                                    spellcheck="false"
+                                    style="flex: 1; border: none; outline: none; font-size: 16px; font-family: 'Google Sans', 'Roboto', sans-serif; resize: none; overflow: hidden; padding: 0; margin: 0; background: transparent; line-height: 44px; max-height: 44px;"
+                                    oninput="this.style.height='auto'; this.style.height=Math.min(this.scrollHeight, 44)+'px'; buscarSugerencias(this.value);"
+                                    onkeydown="if(event.key === 'Enter') { event.preventDefault(); buscar(event); }"
+                                ></textarea>
+                            </div>
+                            <!-- Sugerencias -->
+                            <div id="searchSuggestions" class="google-search-suggestions"></div>
+                        </form>
+                    </div>
+                </div>
+                <!-- Chips de filtros aplicados (debajo del panel de filtros) -->
+                <div id="filtrosAplicados" style="display: none; padding: 12px 24px; background: white; border-bottom: 1px solid var(--border-color); flex-wrap: wrap; gap: 8px; align-items: center;"></div>
+                <% } %>
+
+                <div id="contenido" class="table-container">
+                    <div class="empty-state">
+                        <div class="spinner"></div>
+                        <div class="empty-state-text">Cargando datos...</div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
-
-    <div class="tabs">
-        <a 
-            href="/?producto=<%= encodeURIComponent(productoActual) %>&tipo=mantenimiento" 
-            class="tab <%= tipoActual === 'mantenimiento' ? 'active' : '' %>"
-        >
-            Mantenimiento
-        </a>
-        <a 
-            href="/?producto=<%= encodeURIComponent(productoActual) %>&tipo=externos" 
-            class="tab <%= tipoActual === 'externos' ? 'active' : '' %>"
-        >
-            Proyectos Externos
-        </a>
-        <a 
-            href="/?producto=<%= encodeURIComponent(productoActual) %>&tipo=internos" 
-            class="tab <%= tipoActual === 'internos' ? 'active' : '' %>"
-        >
-            Proyectos Internos
-        </a>
-    </div>
-
-    <div id="contenido" class="table-container">
-        <div class="empty-state">
-            <div class="spinner"></div>
-            <div class="empty-state-text">Cargando datos...</div>
-        </div>
-    </div>
-<% /body %>
 
 <script>
-    const productoActual = '<%= productoActual %>';
-    const tipoActual = '<%= tipoActual %>';
+    const productoActual = '<%= productoActual || '' %>';
+    const equipoActual = '<%= equipoActual || '' %>';
+    const tipoActual = '<%= tipoActual || 'mantenimiento' %>';
+    let busquedaActual = '';
+    let filtrosClientes = [];
+    let filtrosEstados = [];
 
     // Cargar datos al iniciar
     document.addEventListener('DOMContentLoaded', () => {
-        cargarDatos();
+        if (productoActual) {
+            cargarDatos();
+            if (tipoActual === 'proyectos') {
+                cargarClientesParaFiltro();
+            }
+        } else {
+            document.getElementById('contenido').innerHTML = '<div class="empty-state"><div class="empty-state-icon">📋</div><div class="empty-state-text">Selecciona un producto del menú lateral</div></div>';
+        }
     });
+
+    async function cargarClientesParaFiltro() {
+        try {
+            const response = await fetch('/api/proyectos?producto=' + encodeURIComponent(productoActual));
+            const result = await response.json();
+            
+            if (result.success && result.data.length > 0) {
+                const clientes = [...new Set(result.data.map(p => p.cliente).filter(c => c))].sort();
+                const filterClientes = document.getElementById('filterClientes');
+                if (filterClientes) {
+                    filterClientes.innerHTML = clientes.map(cliente => `
+                        <label style="display: flex; align-items: center; padding: 10px 16px; cursor: pointer; transition: background 0.2s;" 
+                               onmouseover="this.style.background='#f1f3f4'" 
+                               onmouseout="this.style.background='white'">
+                            <input type="checkbox" class="filter-checkbox-cliente" value="${cliente}" style="margin-right: 8px; cursor: pointer;" onchange="aplicarFiltrosProyectos()" />
+                            <span style="font-size: 13px;">${cliente}</span>
+                        </label>
+                    `).join('');
+                }
+            }
+        } catch (error) {
+            console.error('Error al cargar clientes:', error);
+        }
+    }
 
     async function cargarDatos() {
         const contenido = document.getElementById('contenido');
@@ -64,37 +195,44 @@
 
         try {
             let endpoint = '';
+            let params = 'producto=' + encodeURIComponent(productoActual);
+            if (equipoActual) {
+                params += '&equipo=' + encodeURIComponent(equipoActual);
+            }
+            if (busquedaActual) {
+                params += '&busqueda=' + encodeURIComponent(busquedaActual);
+            }
+            
             if (tipoActual === 'mantenimiento') {
-                endpoint = `/api/mantenimiento?producto=${encodeURIComponent(productoActual)}`;
-            } else if (tipoActual === 'externos') {
-                endpoint = `/api/proyectos-externos?producto=${encodeURIComponent(productoActual)}`;
-            } else if (tipoActual === 'internos') {
-                endpoint = `/api/proyectos-internos?producto=${encodeURIComponent(productoActual)}`;
+                endpoint = '/api/mantenimiento?' + params;
+            } else if (tipoActual === 'proyectos') {
+                endpoint = '/api/proyectos?' + params;
             }
 
             const response = await fetch(endpoint);
             const result = await response.json();
 
             if (result.success && result.data.length > 0) {
-                renderizarTabla(result.data);
+                let datosFiltrados = result.data;
+                
+                // Aplicar filtros de clientes y estados para proyectos
+                if (tipoActual === 'proyectos') {
+                    if (filtrosClientes.length > 0) {
+                        datosFiltrados = datosFiltrados.filter(d => filtrosClientes.includes(d.cliente));
+                    }
+                    if (filtrosEstados.length > 0) {
+                        datosFiltrados = datosFiltrados.filter(d => filtrosEstados.includes(d.estado));
+                    }
+                    actualizarFiltrosAplicados();
+                }
+                
+                renderizarTabla(datosFiltrados);
             } else {
-                contenido.innerHTML = `
-                    <div class="empty-state">
-                        <div class="empty-state-icon">📭</div>
-                        <div class="empty-state-text">No hay datos disponibles</div>
-                        <div class="empty-state-subtext">Haz clic en "Actualizar desde Redmine" para sincronizar</div>
-                    </div>
-                `;
+                contenido.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📭</div><div class="empty-state-text">No hay datos disponibles</div><div class="empty-state-subtext">Haz clic en "Actualizar" para sincronizar</div></div>';
             }
         } catch (error) {
             console.error('Error al cargar datos:', error);
-            contenido.innerHTML = `
-                <div class="empty-state">
-                    <div class="empty-state-icon">❌</div>
-                    <div class="empty-state-text">Error al cargar datos</div>
-                    <div class="empty-state-subtext">${error.message}</div>
-                </div>
-            `;
+            contenido.innerHTML = '<div class="empty-state"><div class="empty-state-icon">❌</div><div class="empty-state-text">Error al cargar datos</div><div class="empty-state-subtext">' + error.message + '</div></div>';
         }
     }
 
@@ -102,125 +240,272 @@
         const contenido = document.getElementById('contenido');
         
         if (tipoActual === 'mantenimiento') {
-            contenido.innerHTML = `
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th>Línea de Servicio</th>
-                            <th>Equipo</th>
-                            <th>Cliente</th>
-                            <th>Producto</th>
-                            <th>Proyecto</th>
-                            <th>Estado</th>
-                            <th>Demanda</th>
-                            <th>Estabilidad</th>
-                            <th>Satisfacción</th>
-                            <th>WIN</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${datos.map(item => `
-                            <tr>
-                                <td>${item.linea_servicio || '-'}</td>
-                                <td>${item.equipo || '-'}</td>
-                                <td>${item.cliente || '-'}</td>
-                                <td>${item.producto || '-'}</td>
-                                <td>${item.nombre_proyecto || '-'}</td>
-                                <td><input type="text" class="input" value="${item.estado || ''}" onchange="actualizarMantenimiento(${item.id_proyecto}, 'estado', this.value)" style="width: 100px;"></td>
-                                <td><textarea class="input" onchange="actualizarMantenimiento(${item.id_proyecto}, 'demanda', this.value)" style="min-height: 40px;">${item.demanda || ''}</textarea></td>
-                                <td><input type="text" class="input" value="${item.estabilidad || ''}" onchange="actualizarMantenimiento(${item.id_proyecto}, 'estabilidad', this.value)" style="width: 100px;"></td>
-                                <td><input type="text" class="input" value="${item.satisfaccion || ''}" onchange="actualizarMantenimiento(${item.id_proyecto}, 'satisfaccion', this.value)" style="width: 100px;"></td>
-                                <td><textarea class="input" onchange="actualizarMantenimiento(${item.id_proyecto}, 'win', this.value)" style="min-height: 40px;">${item.win || ''}</textarea></td>
-                            </tr>
-                        `).join('')}
-                    </tbody>
-                </table>
-            `;
+            let tablaHTML = '<div class="modern-table-wrapper"><div class="modern-table mantenimiento"><div class="modern-table-header">';
+            tablaHTML += '<div class="modern-table-cell header-cell">Cliente</div>';
+            tablaHTML += '<div class="modern-table-cell header-cell">Límite Horas</div>';
+            tablaHTML += '<div class="modern-table-cell header-cell">Overall</div>';
+            tablaHTML += '<div class="modern-table-cell header-cell">Demanda</div>';
+            tablaHTML += '<div class="modern-table-cell header-cell">Estabilidad</div>';
+            tablaHTML += '<div class="modern-table-cell header-cell">Satisfacción</div>';
+            tablaHTML += '<div class="modern-table-cell header-cell" style="flex: 1;">WIN</div>';
+            tablaHTML += '</div>';
+            
+            datos.forEach(function(item) {
+                tablaHTML += '<div class="modern-table-row">';
+                tablaHTML += '<div class="modern-table-cell item-text">' + (item.cliente || '-') + '</div>';
+                tablaHTML += '<div class="modern-table-cell item-text">' + (item.limite_horas || '-') + '</div>';
+                const estadoValue = item.estado || '';
+                const estadoClass = estadoValue ? 'color-' + estadoValue : '';
+                tablaHTML += '<div class="modern-table-cell"><select class="modern-select overall-select ' + estadoClass + '" onchange="actualizarMantenimiento(' + item.id_proyecto + ', \'estado\', this.value); this.className=\'modern-select overall-select \' + (this.value ? \'color-\' + this.value : \'\');"><option value="">-</option><option value="verde" ' + (estadoValue === 'verde' ? 'selected' : '') + '>🟢</option><option value="amarillo" ' + (estadoValue === 'amarillo' ? 'selected' : '') + '>🟡</option><option value="rojo" ' + (estadoValue === 'rojo' ? 'selected' : '') + '>🔴</option></select></div>';
+                tablaHTML += '<div class="modern-table-cell"><select class="modern-select icon-select" onchange="actualizarMantenimiento(' + item.id_proyecto + ', \'demanda\', this.value)"><option value="">-</option><option value="llama" ' + (item.demanda === 'llama' ? 'selected' : '') + '>🔥</option><option value="congelado" ' + (item.demanda === 'congelado' ? 'selected' : '') + '>❄️</option><option value="herramientas" ' + (item.demanda === 'herramientas' ? 'selected' : '') + '>🔧</option><option value="palmera" ' + (item.demanda === 'palmera' ? 'selected' : '') + '>🌴</option></select></div>';
+                tablaHTML += '<div class="modern-table-cell"><select class="modern-select icon-select" onchange="actualizarMantenimiento(' + item.id_proyecto + ', \'estabilidad\', this.value)"><option value="">-</option><option value="llama" ' + (item.estabilidad === 'llama' ? 'selected' : '') + '>🔥</option><option value="herramientas" ' + (item.estabilidad === 'herramientas' ? 'selected' : '') + '>🔧</option><option value="cohete" ' + (item.estabilidad === 'cohete' ? 'selected' : '') + '>🚀</option></select></div>';
+                tablaHTML += '<div class="modern-table-cell"><select class="modern-select face-select" onchange="actualizarMantenimiento(' + item.id_proyecto + ', \'satisfaccion\', this.value)"><option value="">-</option><option value="feliz" ' + (item.satisfaccion === 'feliz' ? 'selected' : '') + '>😄</option><option value="buena" ' + (item.satisfaccion === 'buena' ? 'selected' : '') + '>😊</option><option value="regular" ' + (item.satisfaccion === 'regular' ? 'selected' : '') + '>😐</option><option value="mala" ' + (item.satisfaccion === 'mala' ? 'selected' : '') + '>😞</option><option value="enojado" ' + (item.satisfaccion === 'enojado' ? 'selected' : '') + '>😠</option><option value="calavera" ' + (item.satisfaccion === 'calavera' ? 'selected' : '') + '>💀</option></select></div>';
+                tablaHTML += '<div class="modern-table-cell"><textarea class="modern-input win-textarea" onchange="actualizarMantenimiento(' + item.id_proyecto + ', \'win\', this.value)">' + (item.win || '') + '</textarea></div>';
+                tablaHTML += '</div>';
+            });
+            
+            tablaHTML += '</div></div>';
+            contenido.innerHTML = tablaHTML;
         } else {
-            contenido.innerHTML = `
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th>Línea de Servicio</th>
-                            <th>Proyecto</th>
-                            <th>Equipo</th>
-                            <th>Estado</th>
-                            <th>Overall</th>
-                            <th>Alcance</th>
-                            <th>Costo</th>
-                            <th>Plazos</th>
-                            <th>Avance</th>
-                            <th>Fecha Inicio</th>
-                            <th>Fecha Fin</th>
-                            <th>WIN</th>
-                            <th>Riesgos</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${datos.map(item => `
-                            <tr>
-                                <td>${item.linea_servicio || '-'}</td>
-                                <td>${item.nombre_proyecto || '-'}</td>
-                                <td>${item.equipo || '-'}</td>
-                                <td><input type="text" class="input" value="${item.estado || ''}" onchange="actualizarProyecto(${item.id_proyecto}, 'estado', this.value)" style="width: 100px;"></td>
-                                <td><input type="text" class="input" value="${item.overall || ''}" onchange="actualizarProyecto(${item.id_proyecto}, 'overall', this.value)" style="width: 100px;"></td>
-                                <td><textarea class="input" onchange="actualizarProyecto(${item.id_proyecto}, 'alcance', this.value)" style="min-height: 40px;">${item.alcance || ''}</textarea></td>
-                                <td><input type="number" class="input" value="${item.costo || ''}" onchange="actualizarProyecto(${item.id_proyecto}, 'costo', this.value)" style="width: 120px;"></td>
-                                <td><input type="text" class="input" value="${item.plazos || ''}" onchange="actualizarProyecto(${item.id_proyecto}, 'plazos', this.value)" style="width: 100px;"></td>
-                                <td><input type="text" class="input" value="${item.avance || ''}" onchange="actualizarProyecto(${item.id_proyecto}, 'avance', this.value)" style="width: 100px;"></td>
-                                <td><input type="date" class="input" value="${item.fecha_inicio || ''}" onchange="actualizarProyecto(${item.id_proyecto}, 'fecha_inicio', this.value)" style="width: 150px;"></td>
-                                <td><input type="date" class="input" value="${item.fecha_fin || ''}" onchange="actualizarProyecto(${item.id_proyecto}, 'fecha_fin', this.value)" style="width: 150px;"></td>
-                                <td><textarea class="input" onchange="actualizarProyecto(${item.id_proyecto}, 'win', this.value)" style="min-height: 40px;">${item.win || ''}</textarea></td>
-                                <td><textarea class="input" onchange="actualizarProyecto(${item.id_proyecto}, 'riesgos', this.value)" style="min-height: 40px;">${item.riesgos || ''}</textarea></td>
-                            </tr>
-                        `).join('')}
-                    </tbody>
-                </table>
-            `;
+            // Proyectos
+            let tablaHTML = '<div class="modern-table-wrapper"><div class="modern-table proyectos"><div class="modern-table-header">';
+            tablaHTML += '<div class="modern-table-cell header-cell">Cliente</div>';
+            tablaHTML += '<div class="modern-table-cell header-cell">Proyecto</div>';
+            tablaHTML += '<div class="modern-table-cell header-cell">Estado</div>';
+            tablaHTML += '<div class="modern-table-cell header-cell">Overall</div>';
+            tablaHTML += '<div class="modern-table-cell header-cell">Alcance</div>';
+            tablaHTML += '<div class="modern-table-cell header-cell">Costo</div>';
+            tablaHTML += '<div class="modern-table-cell header-cell">Plazos</div>';
+            tablaHTML += '<div class="modern-table-cell header-cell">Riesgos</div>';
+            tablaHTML += '<div class="modern-table-cell header-cell">Avance</div>';
+            tablaHTML += '<div class="modern-table-cell header-cell"></div>';
+            tablaHTML += '</div>';
+            
+            // Función para formatear fecha a YYYY-MM-DD
+            function formatearFecha(fecha) {
+                if (!fecha) return '';
+                // Si es un objeto Date
+                if (fecha instanceof Date) {
+                    const year = fecha.getFullYear();
+                    const month = String(fecha.getMonth() + 1).padStart(2, '0');
+                    const day = String(fecha.getDate()).padStart(2, '0');
+                    return year + '-' + month + '-' + day;
+                }
+                // Si es un string, verificar si ya está en formato YYYY-MM-DD
+                if (typeof fecha === 'string') {
+                    // Si viene como "2024-12-07T00:00:00.000Z" o similar, extraer solo la fecha
+                    const match = fecha.match(/^(\d{4}-\d{2}-\d{2})/);
+                    if (match) {
+                        return match[1];
+                    }
+                    return fecha;
+                }
+                return '';
+            }
+            
+            datos.forEach(function(item) {
+                const redmineUrl = 'https://redmine.mercap.net/projects/' + (item.codigo_proyecto || '');
+                // Truncar el nombre del proyecto: quitar lo que está a la izquierda de " | "
+                let nombreProyecto = item.nombre_proyecto || '-';
+                if (nombreProyecto.includes(' | ')) {
+                    nombreProyecto = nombreProyecto.split(' | ').slice(1).join(' | ');
+                }
+                tablaHTML += '<div class="modern-table-row">';
+                tablaHTML += '<div class="modern-table-cell item-text">' + (item.cliente || '-') + '</div>';
+                tablaHTML += '<div class="modern-table-cell item-text"><a href="' + redmineUrl + '" target="_blank" style="color: var(--primary-color); text-decoration: none;">' + nombreProyecto + '</a></div>';
+                
+                const estadoValue = item.estado || '';
+                let estadoClass = '';
+                if (estadoValue === 'Entregado' || estadoValue === 'Cerrado') {
+                    estadoClass = 'estado-entregado';
+                } else if (estadoValue === 'sin comenzar') {
+                    estadoClass = 'estado-sin-comenzar';
+                } else if (estadoValue === 'en curso' || estadoValue === 'Testing') {
+                    estadoClass = 'estado-progreso';
+                } else if (estadoValue === 'Rework' || estadoValue === 'Bloqueado') {
+                    estadoClass = 'estado-bloqueado';
+                }
+                tablaHTML += '<div class="modern-table-cell"><select class="modern-select estado-select ' + estadoClass + '" onchange="actualizarProyecto(' + item.id_proyecto + ', \'estado\', this.value); actualizarEstadoColor(this);"><option value="">-</option><option value="sin comenzar" ' + (estadoValue === 'sin comenzar' ? 'selected' : '') + '>Sin comenzar</option><option value="en curso" ' + (estadoValue === 'en curso' ? 'selected' : '') + '>En curso</option><option value="Testing" ' + (estadoValue === 'Testing' ? 'selected' : '') + '>Testing</option><option value="Entregado" ' + (estadoValue === 'Entregado' ? 'selected' : '') + '>Entregado</option><option value="Cerrado" ' + (estadoValue === 'Cerrado' ? 'selected' : '') + '>Cerrado</option><option value="Rework" ' + (estadoValue === 'Rework' ? 'selected' : '') + '>Rework</option><option value="Bloqueado" ' + (estadoValue === 'Bloqueado' ? 'selected' : '') + '>Bloqueado</option></select></div>';
+                
+                const overallValue = item.overall || '';
+                const overallClass = overallValue ? 'color-' + overallValue : '';
+                tablaHTML += '<div class="modern-table-cell"><select class="modern-select overall-select ' + overallClass + '" onchange="actualizarProyecto(' + item.id_proyecto + ', \'overall\', this.value); this.className=\'modern-select overall-select \' + (this.value ? \'color-\' + this.value : \'\');"><option value="">-</option><option value="verde" ' + (overallValue === 'verde' ? 'selected' : '') + '>🟢</option><option value="amarillo" ' + (overallValue === 'amarillo' ? 'selected' : '') + '>🟡</option><option value="rojo" ' + (overallValue === 'rojo' ? 'selected' : '') + '>🔴</option></select></div>';
+                
+                const alcanceValue = item.alcance || '';
+                const alcanceClass = alcanceValue ? 'color-' + alcanceValue : '';
+                tablaHTML += '<div class="modern-table-cell"><select class="modern-select overall-select ' + alcanceClass + '" onchange="actualizarProyecto(' + item.id_proyecto + ', \'alcance\', this.value); this.className=\'modern-select overall-select \' + (this.value ? \'color-\' + this.value : \'\');"><option value="">-</option><option value="verde" ' + (alcanceValue === 'verde' ? 'selected' : '') + '>🟢</option><option value="amarillo" ' + (alcanceValue === 'amarillo' ? 'selected' : '') + '>🟡</option><option value="rojo" ' + (alcanceValue === 'rojo' ? 'selected' : '') + '>🔴</option></select></div>';
+                
+                const costoValue = item.costo || '';
+                const costoClass = costoValue ? 'color-' + costoValue : '';
+                tablaHTML += '<div class="modern-table-cell"><select class="modern-select overall-select ' + costoClass + '" onchange="actualizarProyecto(' + item.id_proyecto + ', \'costo\', this.value); this.className=\'modern-select overall-select \' + (this.value ? \'color-\' + this.value : \'\');"><option value="">-</option><option value="verde" ' + (costoValue === 'verde' ? 'selected' : '') + '>🟢</option><option value="amarillo" ' + (costoValue === 'amarillo' ? 'selected' : '') + '>🟡</option><option value="rojo" ' + (costoValue === 'rojo' ? 'selected' : '') + '>🔴</option></select></div>';
+                
+                const plazosValue = item.plazos || '';
+                const plazosClass = plazosValue ? 'color-' + plazosValue : '';
+                tablaHTML += '<div class="modern-table-cell"><select class="modern-select overall-select ' + plazosClass + '" onchange="actualizarProyecto(' + item.id_proyecto + ', \'plazos\', this.value); this.className=\'modern-select overall-select \' + (this.value ? \'color-\' + this.value : \'\');"><option value="">-</option><option value="verde" ' + (plazosValue === 'verde' ? 'selected' : '') + '>🟢</option><option value="amarillo" ' + (plazosValue === 'amarillo' ? 'selected' : '') + '>🟡</option><option value="rojo" ' + (plazosValue === 'rojo' ? 'selected' : '') + '>🔴</option></select></div>';
+                
+                const riesgoValue = item.riesgos || '';
+                let riesgoClass = '';
+                if (riesgoValue === 'ok' || riesgoValue === 'okey') {
+                    riesgoClass = 'riesgo-ok';
+                } else if (riesgoValue === 'red flag' || riesgoValue === 'redflag') {
+                    riesgoClass = 'riesgo-red';
+                }
+                tablaHTML += '<div class="modern-table-cell"><select class="modern-select riesgo-select ' + riesgoClass + '" onchange="actualizarProyecto(' + item.id_proyecto + ', \'riesgos\', this.value); actualizarRiesgoColor(this);"><option value="">-</option><option value="ok" ' + (riesgoValue === 'ok' || riesgoValue === 'okey' ? 'selected' : '') + '>✅</option><option value="red flag" ' + (riesgoValue === 'red flag' || riesgoValue === 'redflag' ? 'selected' : '') + '>🚩</option></select></div>';
+                
+                const avanceValue = parseInt(item.avance) || 0;
+                let avanceGradient = 'linear-gradient(90deg, #66bb6a 0%, #34a853 100%)';
+                if (avanceValue <= 25) {
+                    avanceGradient = 'linear-gradient(90deg, #a5d6a7 0%, #81c784 100%)';
+                } else if (avanceValue <= 50) {
+                    avanceGradient = 'linear-gradient(90deg, #81c784 0%, #66bb6a 100%)';
+                } else if (avanceValue <= 75) {
+                    avanceGradient = 'linear-gradient(90deg, #66bb6a 0%, #4caf50 100%)';
+                } else {
+                    avanceGradient = 'linear-gradient(90deg, #4caf50 0%, #34a853 50%, #1e8e3e 100%)';
+                }
+                tablaHTML += '<div class="modern-table-cell"><div class="progress-bar-container" data-id="' + item.id_proyecto + '"><div class="progress-bar" style="width: ' + avanceValue + '%; background: ' + avanceGradient + ';"></div><input type="range" min="0" max="100" step="1" value="' + avanceValue + '" class="progress-slider" oninput="actualizarBarraProgreso(this);" onchange="actualizarProyecto(' + item.id_proyecto + ', \'avance\', this.value);" /></div></div>';
+                
+                // Botón "Ver más" - guardar datos del item en un atributo data
+                const itemData = {
+                    id_proyecto: item.id_proyecto,
+                    nombre_proyecto: item.nombre_proyecto || '',
+                    codigo_proyecto: item.codigo_proyecto || '',
+                    horas_estimadas: parseFloat(item.horas_estimadas) || 0,
+                    horas_realizadas: parseFloat(item.horas_realizadas) || 0,
+                    fecha_inicio_epics: item.fecha_inicio_epics || item.fecha_inicio || '',
+                    fecha_fin_epics: item.fecha_fin_epics || item.fecha_fin || '',
+                    fecha_inicio: item.fecha_inicio || '',
+                    fecha_fin: item.fecha_fin || '',
+                    win: item.win || '',
+                    tiene_epics: item.tiene_epics || false
+                };
+                // Escapar el JSON para usarlo en atributo HTML
+                const itemDataJson = JSON.stringify(itemData).replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+                tablaHTML += '<div class="modern-table-cell"><button class="button button-secondary" onclick="abrirModalDetalle(' + item.id_proyecto + ')" data-item="' + itemDataJson + '" style="padding: 6px 12px; font-size: 13px; border: none;">Ver más</button></div>';
+                tablaHTML += '</div>';
+            });
+            
+            tablaHTML += '</div></div>';
+            contenido.innerHTML = tablaHTML;
+        }
+    }
+
+    function actualizarBarraProgreso(slider) {
+        const container = slider.closest('.progress-bar-container');
+        const bar = container.querySelector('.progress-bar');
+        // Usar el valor exacto (sin redondear)
+        const value = parseInt(slider.value);
+        bar.style.width = value + '%';
+        
+        // Actualizar gradiente verde según el valor (cambia cada 1%)
+        let gradient = 'linear-gradient(90deg, #66bb6a 0%, #34a853 100%)';
+        if (value <= 25) {
+            gradient = 'linear-gradient(90deg, #a5d6a7 0%, #81c784 100%)';
+        } else if (value <= 50) {
+            gradient = 'linear-gradient(90deg, #81c784 0%, #66bb6a 100%)';
+        } else if (value <= 75) {
+            gradient = 'linear-gradient(90deg, #66bb6a 0%, #4caf50 100%)';
+        } else {
+            gradient = 'linear-gradient(90deg, #4caf50 0%, #34a853 50%, #1e8e3e 100%)';
+        }
+        bar.style.background = gradient;
+    }
+
+    function actualizarEstadoColor(select) {
+        const value = select.value;
+        select.className = 'modern-select estado-select';
+        if (value === 'Entregado' || value === 'Cerrado') {
+            select.classList.add('estado-entregado');
+        } else if (value === 'sin comenzar') {
+            select.classList.add('estado-sin-comenzar');
+        } else if (value === 'en curso' || value === 'Testing') {
+            select.classList.add('estado-progreso');
+        } else if (value === 'Rework' || value === 'Bloqueado') {
+            select.classList.add('estado-bloqueado');
+        }
+    }
+
+    function actualizarRiesgoColor(select) {
+        const value = select.value;
+        select.className = 'modern-select riesgo-select';
+        if (value === 'ok' || value === 'okey') {
+            select.classList.add('riesgo-ok');
+        } else if (value === 'red flag' || value === 'redflag') {
+            select.classList.add('riesgo-red');
         }
     }
 
     async function actualizarMantenimiento(id_proyecto, campo, valor) {
         try {
+            const endpoint = '/api/mantenimiento/' + id_proyecto;
+            
             const datos = { [campo]: valor };
-            const response = await fetch(`/api/mantenimiento/${id_proyecto}`, {
+            console.log('Actualizando mantenimiento:', { id_proyecto, campo, valor });
+            
+            const response = await fetch(endpoint, {
                 method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 
+                    'Content-Type': 'application/json'
+                },
+                credentials: 'include', // Incluir cookies en la petición
                 body: JSON.stringify(datos)
             });
+            
             const result = await response.json();
+            
             if (result.success) {
-                console.log('Actualizado correctamente');
+                console.log('✅ Mantenimiento actualizado correctamente:', result.data);
+            } else {
+                console.error('❌ Error al actualizar mantenimiento:', result.error);
+                alert('Error al actualizar: ' + (result.error || 'Error desconocido'));
             }
         } catch (error) {
-            console.error('Error al actualizar:', error);
+            console.error('❌ Error al actualizar mantenimiento:', error);
             alert('Error al actualizar: ' + error.message);
         }
     }
 
     async function actualizarProyecto(id_proyecto, campo, valor) {
         try {
-            const endpoint = tipoActual === 'externos' 
-                ? `/api/proyectos-externos/${id_proyecto}`
-                : `/api/proyectos-internos/${id_proyecto}`;
+            const endpoint = '/api/proyectos/' + id_proyecto;
             
             const datos = { [campo]: valor };
+            console.log('Actualizando proyecto:', { id_proyecto, campo, valor });
+            
             const response = await fetch(endpoint, {
                 method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 
+                    'Content-Type': 'application/json'
+                },
+                credentials: 'include', // Incluir cookies en la petición
                 body: JSON.stringify(datos)
             });
+            
             const result = await response.json();
+            
             if (result.success) {
-                console.log('Actualizado correctamente');
+                console.log('✅ Proyecto actualizado correctamente:', result.data);
+            } else {
+                console.error('❌ Error al actualizar proyecto:', result.error);
+                alert('Error al actualizar: ' + (result.error || 'Error desconocido'));
             }
         } catch (error) {
-            console.error('Error al actualizar:', error);
+            console.error('❌ Error al actualizar proyecto:', error);
             alert('Error al actualizar: ' + error.message);
         }
     }
 
+    let progresoSincronizacion = 0;
+    let intervaloProgreso = null;
+
     async function sincronizar() {
+        if (!productoActual) {
+            alert('Por favor selecciona un producto primero');
+            return;
+        }
+        
+        mostrarPopupSincronizacion();
+        
         const btnSincronizar = document.getElementById('btnSincronizar');
         const textoOriginal = btnSincronizar.innerHTML;
         btnSincronizar.disabled = true;
@@ -228,35 +513,645 @@
 
         try {
             let endpoint = '';
+            const bodyData = {
+                producto: productoActual,
+                equipo: equipoActual || null
+            };
+            
             if (tipoActual === 'mantenimiento') {
                 endpoint = '/api/sincronizar/mantenimiento';
-            } else if (tipoActual === 'externos') {
-                endpoint = '/api/sincronizar/proyectos-externos';
-            } else if (tipoActual === 'internos') {
-                endpoint = '/api/sincronizar/proyectos-internos';
+            } else if (tipoActual === 'proyectos') {
+                endpoint = '/api/sincronizar/proyectos';
             }
 
             const response = await fetch(endpoint, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ producto: productoActual })
+                credentials: 'include',
+                body: JSON.stringify(bodyData)
             });
 
             const result = await response.json();
             
-            if (result.success) {
-                alert('Sincronización completada exitosamente');
-                cargarDatos();
-            } else {
-                alert('Error en la sincronización: ' + (result.error || 'Error desconocido'));
-            }
+            // Completar barra de progreso
+            actualizarProgresoSincronizacion(100);
+            
+            setTimeout(() => {
+                ocultarPopupSincronizacion();
+                if (result.success) {
+                    cargarDatos();
+                } else {
+                    alert('Error en la sincronización: ' + (result.error || 'Error desconocido'));
+                }
+            }, 500);
         } catch (error) {
             console.error('Error al sincronizar:', error);
+            ocultarPopupSincronizacion();
             alert('Error al sincronizar: ' + error.message);
         } finally {
             btnSincronizar.disabled = false;
             btnSincronizar.innerHTML = textoOriginal;
         }
     }
-</script>
 
+    function mostrarPopupSincronizacion() {
+        progresoSincronizacion = 0;
+        
+        // Crear overlay
+        const overlay = document.createElement('div');
+        overlay.id = 'syncOverlay';
+        overlay.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 9999; display: flex; align-items: center; justify-content: center;';
+        
+        // Crear popup
+        const popup = document.createElement('div');
+        popup.id = 'syncPopup';
+        popup.style.cssText = 'background: white; border-radius: 12px; padding: 24px; min-width: 320px; max-width: 400px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);';
+        
+        popup.innerHTML = '<div style="text-align: center;"><div style="font-size: 16px; font-weight: 500; color: #202124; margin-bottom: 16px; font-family: \'Google Sans\', \'Roboto\', sans-serif;">Sincronizando</div><div style="width: 100%; height: 8px; background: #f1f3f4; border-radius: 4px; overflow: hidden; margin-bottom: 8px;"><div id="syncProgressBar" style="height: 100%; background: #0D5AA2; width: 0%; transition: width 0.3s ease; border-radius: 4px;"></div></div><div id="syncProgressText" style="font-size: 13px; color: #5f6368; font-family: \'Roboto\', sans-serif;">0%</div></div>';
+        
+        overlay.appendChild(popup);
+        document.body.appendChild(overlay);
+        
+        // Simular progreso
+        intervaloProgreso = setInterval(() => {
+            const incremento = 1 + Math.random() * 2;
+            progresoSincronizacion += incremento;
+            if (progresoSincronizacion > 90) {
+                progresoSincronizacion = 90;
+            }
+            actualizarProgresoSincronizacion(progresoSincronizacion);
+        }, 300);
+    }
+
+    function actualizarProgresoSincronizacion(porcentaje) {
+        porcentaje = Math.max(0, Math.min(100, porcentaje));
+        progresoSincronizacion = porcentaje;
+        
+        const progressBar = document.getElementById('syncProgressBar');
+        const progressText = document.getElementById('syncProgressText');
+        
+        if (progressBar) {
+            progressBar.style.width = porcentaje + '%';
+        }
+        if (progressText) {
+            progressText.textContent = Math.round(porcentaje) + '%';
+        }
+        
+        if (porcentaje >= 100 && intervaloProgreso) {
+            clearInterval(intervaloProgreso);
+            intervaloProgreso = null;
+        }
+    }
+
+    function ocultarPopupSincronizacion() {
+        if (intervaloProgreso) {
+            clearInterval(intervaloProgreso);
+            intervaloProgreso = null;
+        }
+        const overlay = document.getElementById('syncOverlay');
+        if (overlay) {
+            overlay.remove();
+        }
+        progresoSincronizacion = 0;
+    }
+
+    // Abrir modal de detalle del proyecto
+    async function abrirModalDetalle(id_proyecto) {
+        try {
+            // Buscar el botón con los datos del proyecto
+            // Usar window.tempModalButton si existe (para recargas), sino usar event normal
+            let btn = window.tempModalButton || (typeof event !== 'undefined' && event?.target) || document.querySelector('button[data-item][onclick*="' + id_proyecto + '"]');
+            if (!btn) {
+                console.error('No se encontró el botón del proyecto');
+                return;
+            }
+            const itemDataJson = btn.getAttribute('data-item');
+            if (!itemDataJson) {
+                console.error('No se encontraron datos del proyecto');
+                return;
+            }
+            // Restaurar el JSON desde el atributo HTML
+            const itemData = JSON.parse(itemDataJson.replace(/&quot;/g, '"').replace(/&#39;/g, "'"));
+            const modal = document.getElementById('modalDetalle');
+            const modalTitulo = document.getElementById('modalTitulo');
+            const modalBody = document.getElementById('modalBody');
+            
+            modalTitulo.textContent = itemData.nombre_proyecto || 'Detalle del Proyecto';
+            
+            // Formatear fecha
+            function formatearFecha(fecha) {
+                if (!fecha) return '';
+                if (typeof fecha === 'string') {
+                    const match = fecha.match(/^(\d{4}-\d{2}-\d{2})/);
+                    if (match) return match[1];
+                    return fecha;
+                }
+                return '';
+            }
+            
+            const horasEstimadas = parseFloat(itemData.horas_estimadas) || 0;
+            const horasRealizadas = parseFloat(itemData.horas_realizadas) || 0;
+            const fechaInicio = formatearFecha(itemData.fecha_inicio_epics || itemData.fecha_inicio || '');
+            const fechaFin = formatearFecha(itemData.fecha_fin_epics || itemData.fecha_fin || '');
+            const tieneEpics = itemData.tiene_epics || false;
+            
+            // Obtener fechas de los epics (mínima de inicio, máxima de fin planificada, máxima de fin real)
+            let fechaInicioPlanificada = null;
+            let fechaFinPlanificada = null;
+            let fechaFinReal = null;
+            
+            // Cargar epics
+            let epicsHTML = '<div style="color: var(--text-secondary); font-style: italic; padding: 20px; text-align: center;">Cargando epics...</div>';
+            
+            try {
+                const epicsResponse = await fetch('/api/epics/' + id_proyecto);
+                const epicsData = await epicsResponse.json();
+                const epics = epicsData.success ? epicsData.data : [];
+                
+                if (epics.length === 0) {
+                    epicsHTML = '<div style="color: var(--text-secondary); font-style: italic; padding: 20px; text-align: center;">No hay epics sincronizados</div>';
+                } else {
+                    // Calcular fechas mínimas y máximas de los epics
+                    const fechasInicio = epics.map(e => e.cf_21).filter(f => f);
+                    const fechasFinPlanificada = epics.map(e => e.cf_22).filter(f => f);
+                    const fechasFinReal = epics.map(e => e.cf_15).filter(f => f);
+                    
+                    if (fechasInicio.length > 0) {
+                        fechaInicioPlanificada = fechasInicio.sort()[0]; // Mínima
+                    }
+                    if (fechasFinPlanificada.length > 0) {
+                        fechaFinPlanificada = fechasFinPlanificada.sort().reverse()[0]; // Máxima
+                    }
+                    if (fechasFinReal.length > 0) {
+                        fechaFinReal = fechasFinReal.sort().reverse()[0]; // Máxima
+                    }
+                    
+                    // Agrupar epics por proyecto_padre si es diferente al id_proyecto
+                    const epicsPorProyecto = {};
+                    const epicsDelProyecto = [];
+                    
+                    epics.forEach(function(epic) {
+                        const proyectoPadre = epic.proyecto_padre;
+                        // Si proyecto_padre existe y es diferente al id_proyecto, agrupar
+                        if (proyectoPadre && proyectoPadre !== id_proyecto) {
+                            if (!epicsPorProyecto[proyectoPadre]) {
+                                epicsPorProyecto[proyectoPadre] = [];
+                            }
+                            epicsPorProyecto[proyectoPadre].push(epic);
+                        } else {
+                            // Si proyecto_padre == id_proyecto o no existe, agregar directamente
+                            epicsDelProyecto.push(epic);
+                        }
+                    });
+                    
+                    epicsHTML = '<div class="epics-list">';
+                    
+                    // Función para renderizar un epic
+                    function renderizarEpic(epic) {
+                        const epicUrl = 'https://redmine.mercap.net/issues/' + epic.epic_id;
+                        const epicTitle = epic.subject || 'Epic #' + epic.epic_id;
+                        let html = '<div class="epic-item" style="background: white; border: 1px solid var(--border-color); border-radius: 8px; padding: 16px; margin-bottom: 12px;">';
+                        html += '<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">';
+                        html += '<div style="display: flex; flex-direction: column; gap: 4px;">';
+                        html += '<div style="font-size: 11px; color: var(--text-secondary); font-weight: 500;">Epic #' + epic.epic_id + '</div>';
+                        html += '<div style="font-size: 14px; font-weight: 500; color: var(--text-primary);"><a href="' + epicUrl + '" target="_blank" style="color: var(--primary-color); text-decoration: none;">' + epicTitle + '</a></div>';
+                        html += '</div>';
+                        html += '<div style="font-size: 12px; color: var(--text-secondary);">' + (epic.status || '-') + '</div>';
+                        html += '</div>';
+                        html += '<div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; font-size: 13px; color: var(--text-secondary);">';
+                        html += '<div>Est.: ' + (parseFloat(epic.total_estimated_hours) || 0).toFixed(1) + 'h</div>';
+                        html += '<div>Real.: ' + (parseFloat(epic.total_spent_hours) || 0).toFixed(1) + 'h</div>';
+                        html += '<div>Inicio: ' + (epic.cf_21 ? formatearFecha(epic.cf_21) : '-') + '</div>';
+                        html += '<div>Fin Real: ' + (epic.cf_15 ? formatearFecha(epic.cf_15) : '-') + '</div>';
+                        html += '</div>';
+                        html += '</div>';
+                        return html;
+                    }
+                    
+                    // Renderizar epics del proyecto principal (si hay)
+                    if (epicsDelProyecto.length > 0) {
+                        epicsDelProyecto.forEach(function(epic) {
+                            epicsHTML += renderizarEpic(epic);
+                        });
+                    }
+                    
+                    // Renderizar epics agrupados por proyecto_padre
+                    Object.keys(epicsPorProyecto).forEach(function(proyectoPadreId) {
+                        const epicsDelSubproyecto = epicsPorProyecto[proyectoPadreId];
+                        // Obtener el nombre del proyecto padre del primer epic del grupo
+                        const nombreProyectoPadre = epicsDelSubproyecto[0]?.nombre_proyecto_padre || 'Proyecto #' + proyectoPadreId;
+                        epicsHTML += '<div style="margin-top: 24px; margin-bottom: 16px; padding-top: 16px; border-top: 2px solid var(--border-color);">';
+                        epicsHTML += '<div style="font-size: 14px; font-weight: 600; color: var(--text-primary); margin-bottom: 12px;">' + nombreProyectoPadre + '</div>';
+                        epicsDelSubproyecto.forEach(function(epic) {
+                            epicsHTML += renderizarEpic(epic);
+                        });
+                        epicsHTML += '</div>';
+                    });
+                    
+                    epicsHTML += '</div>';
+                }
+            } catch (error) {
+                console.error('Error al cargar epics:', error);
+                epicsHTML = '<div style="color: #d93025; padding: 20px; text-align: center;">Error al cargar epics</div>';
+            }
+            
+            let contenido = '<div style="display: flex; flex-direction: column; gap: 24px;">';
+            
+            // Dos columnas principales - columna izquierda más estrecha, derecha más ancha
+            contenido += '<div style="display: grid; grid-template-columns: 0.8fr 1.2fr; gap: 32px;">';
+            
+            // Columna izquierda: Información del proyecto
+            contenido += '<div style="display: flex; flex-direction: column; gap: 20px;">';
+            contenido += '<h3 style="font-size: 18px; font-weight: 500; color: var(--text-primary); margin-bottom: 16px;">Información del Proyecto</h3>';
+            
+            // Horas estimadas y realizadas
+            contenido += '<div><label style="display: block; font-size: 13px; font-weight: 500; color: var(--text-secondary); margin-bottom: 8px;">Horas Estimadas</label>';
+            contenido += '<div style="font-size: 16px; color: var(--text-primary); font-weight: 500;">' + (horasEstimadas > 0 ? horasEstimadas.toFixed(1) : '-') + 'h</div></div>';
+            
+            contenido += '<div><label style="display: block; font-size: 13px; font-weight: 500; color: var(--text-secondary); margin-bottom: 8px;">Horas Realizadas</label>';
+            contenido += '<div style="font-size: 16px; color: var(--text-primary); font-weight: 500;">' + (horasRealizadas > 0 ? horasRealizadas.toFixed(1) : '-') + 'h</div></div>';
+            
+            // Fechas - Mostrar las 3 fechas de los epics
+            contenido += '<div><label style="display: block; font-size: 13px; font-weight: 500; color: var(--text-secondary); margin-bottom: 8px;">Fecha Inicio Planificada</label>';
+            if (!tieneEpics || !fechaInicioPlanificada) {
+                contenido += '<div style="font-size: 14px; color: var(--text-secondary); font-style: italic;">Sincronizar epics para ver fecha</div></div>';
+            } else {
+                contenido += '<input type="date" class="modern-input date-input" value="' + formatearFecha(fechaInicioPlanificada) + '" readonly style="width: 100%; padding: 10px 16px; border-radius: 8px; border: 1px solid var(--border-color); font-size: 14px; font-family: \'Google Sans\', \'Roboto\', sans-serif; background: #f8f9fa; cursor: not-allowed;"></div>';
+            }
+            
+            contenido += '<div><label style="display: block; font-size: 13px; font-weight: 500; color: var(--text-secondary); margin-bottom: 8px;">Fecha Fin Planificada</label>';
+            if (!tieneEpics || !fechaFinPlanificada) {
+                contenido += '<div style="font-size: 14px; color: var(--text-secondary); font-style: italic;">Sincronizar epics para ver fecha</div></div>';
+            } else {
+                contenido += '<input type="date" class="modern-input date-input" value="' + formatearFecha(fechaFinPlanificada) + '" readonly style="width: 100%; padding: 10px 16px; border-radius: 8px; border: 1px solid var(--border-color); font-size: 14px; font-family: \'Google Sans\', \'Roboto\', sans-serif; background: #f8f9fa; cursor: not-allowed;"></div>';
+            }
+            
+            contenido += '<div><label style="display: block; font-size: 13px; font-weight: 500; color: var(--text-secondary); margin-bottom: 8px;">Fecha Fin Real</label>';
+            if (!tieneEpics || !fechaFinReal) {
+                contenido += '<div style="font-size: 14px; color: var(--text-secondary); font-style: italic;">Sincronizar epics para ver fecha</div></div>';
+            } else {
+                contenido += '<input type="date" class="modern-input date-input" value="' + formatearFecha(fechaFinReal) + '" readonly style="width: 100%; padding: 10px 16px; border-radius: 8px; border: 1px solid var(--border-color); font-size: 14px; font-family: \'Google Sans\', \'Roboto\', sans-serif; background: #f8f9fa; cursor: not-allowed;"></div>';
+            }
+            
+            // Botón de acción
+            contenido += '<div style="margin-top: 8px;">';
+            contenido += '<button class="button" onclick="sincronizarEpicsDesdeModal(' + id_proyecto + ', \'' + (itemData.codigo_proyecto || '').replace(/'/g, "\\'") + '\', this)" style="width: 100%; padding: 10px; font-size: 13px; white-space: nowrap;"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="margin-right: 8px; vertical-align: middle;"><path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>Sincronizar Epics</button>';
+            contenido += '</div>';
+            
+            contenido += '</div>';
+            
+            // Columna derecha: Lista de epics
+            contenido += '<div style="display: flex; flex-direction: column; gap: 20px;">';
+            contenido += '<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">';
+            contenido += '<h3 style="font-size: 18px; font-weight: 500; color: var(--text-primary); margin: 0;">Epics Sincronizados</h3>';
+            contenido += '<div style="font-size: 13px; color: var(--text-secondary);">' + (tieneEpics ? 'Total: ' + (parseFloat(itemData.horas_estimadas) || 0).toFixed(1) + 'h est. / ' + (parseFloat(itemData.horas_realizadas) || 0).toFixed(1) + 'h real.' : 'Sin epics') + '</div>';
+            contenido += '</div>';
+            contenido += epicsHTML;
+            contenido += '</div>';
+            
+            contenido += '</div>'; // Cerrar grid de 2 columnas
+            contenido += '</div>'; // Cerrar contenedor principal
+            
+            modalBody.innerHTML = contenido;
+            modal.style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+        } catch (error) {
+            console.error('Error al abrir modal:', error);
+            alert('Error al abrir detalles del proyecto');
+        }
+    }
+    
+    // Cerrar modal de detalle
+    function cerrarModalDetalle() {
+        const modal = document.getElementById('modalDetalle');
+        modal.style.display = 'none';
+        document.body.style.overflow = 'auto';
+    }
+    
+    // Actualizar fecha en el modal después de guardar
+    function actualizarFechaEnModal(id_proyecto, campo, valor) {
+        // La fecha ya se actualizó en el input, no necesitamos hacer nada más
+    }
+    
+    // Sincronizar epics desde el modal
+    async function sincronizarEpicsDesdeModal(id_proyecto, codigo_proyecto, btnElement) {
+        // Usar el botón pasado como parámetro
+        const btn = btnElement || (typeof event !== 'undefined' && event?.target?.closest('button'));
+        if (!btn) {
+            console.error('No se encontró el botón');
+            return;
+        }
+        const textoOriginal = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<div class="spinner" style="width: 16px; height: 16px; border-width: 2px;"></div> <span>Sincronizando...</span>';
+        
+        try {
+            const response = await fetch('/api/sincronizar/epics', {
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/json'
+                },
+                credentials: 'include',
+                body: JSON.stringify({
+                    id_proyecto: id_proyecto,
+                    codigo_proyecto: codigo_proyecto
+                })
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                console.log('✅ Epics sincronizados:', result.data);
+                // Actualizar el botón "Ver más" con los nuevos datos
+                const btnVerMas = document.querySelector('button[data-item][onclick*="' + id_proyecto + '"]');
+                if (btnVerMas) {
+                    const itemDataJson = btnVerMas.getAttribute('data-item');
+                    if (itemDataJson) {
+                        const itemData = JSON.parse(itemDataJson.replace(/&quot;/g, '"').replace(/&#39;/g, "'"));
+                        itemData.horas_estimadas = parseFloat(result.data.horas_estimadas) || 0;
+                        itemData.horas_realizadas = parseFloat(result.data.horas_realizadas) || 0;
+                        itemData.fecha_inicio_epics = result.data.fecha_inicio || '';
+                        itemData.fecha_fin_epics = result.data.fecha_fin || '';
+                        itemData.tiene_epics = true;
+                        btnVerMas.setAttribute('data-item', JSON.stringify(itemData).replace(/"/g, '&quot;').replace(/'/g, '&#39;'));
+                    }
+                }
+                // Recargar el modal con los nuevos datos
+                if (btnVerMas) {
+                    // Guardar el botón temporalmente para que abrirModalDetalle lo use
+                    window.tempModalButton = btnVerMas;
+                    await abrirModalDetalle(id_proyecto);
+                    delete window.tempModalButton;
+                }
+                // También recargar la tabla principal
+                cargarDatos();
+            } else {
+                alert('Error al sincronizar epics: ' + (result.error || 'Error desconocido'));
+                btn.disabled = false;
+                btn.innerHTML = textoOriginal;
+            }
+        } catch (error) {
+            console.error('Error al sincronizar epics:', error);
+            alert('Error al sincronizar epics: ' + error.message);
+            btn.disabled = false;
+            btn.innerHTML = textoOriginal;
+        }
+    }
+    
+    // Sincronizar epics de un proyecto
+    async function sincronizarEpics(id_proyecto, codigo_proyecto) {
+        try {
+            const btn = event.target.closest('button');
+            const textoOriginal = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<div class="spinner" style="width: 16px; height: 16px; border-width: 2px;"></div> <span>Sincronizando...</span>';
+            
+            const response = await fetch('/api/sincronizar/epics', {
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/json'
+                },
+                credentials: 'include',
+                body: JSON.stringify({
+                    id_proyecto: id_proyecto,
+                    codigo_proyecto: codigo_proyecto
+                })
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                console.log('✅ Epics sincronizados:', result.data);
+                // Recargar datos para mostrar las horas y fechas actualizadas
+                cargarDatos();
+            } else {
+                alert('Error al sincronizar epics: ' + (result.error || 'Error desconocido'));
+                btn.disabled = false;
+                btn.innerHTML = textoOriginal;
+            }
+        } catch (error) {
+            console.error('Error al sincronizar epics:', error);
+            alert('Error al sincronizar epics: ' + error.message);
+            const btn = event.target.closest('button');
+            btn.disabled = false;
+            btn.innerHTML = textoOriginal;
+        }
+    }
+
+    // Búsqueda
+    function buscar(event) {
+        if (event) event.preventDefault();
+        const searchInput = document.getElementById('searchInput');
+        if (searchInput) {
+            busquedaActual = searchInput.value;
+            cargarDatos();
+        }
+    }
+
+    // Búsqueda con sugerencias
+    let timeoutSugerencias;
+    async function buscarSugerencias(query) {
+        clearTimeout(timeoutSugerencias);
+        
+        const suggestionsContainer = document.getElementById('searchSuggestions');
+        if (!suggestionsContainer) return;
+        
+        if (!query || query.length < 2) {
+            suggestionsContainer.style.display = 'none';
+            return;
+        }
+        
+        timeoutSugerencias = setTimeout(async () => {
+            try {
+                const endpoint = '/api/proyectos/sugerencias?q=' + encodeURIComponent(query);
+                
+                const response = await fetch(endpoint);
+                const data = await response.json();
+                
+                if (data.success && data.sugerencias && data.sugerencias.length > 0) {
+                    const html = data.sugerencias.map(item => `
+                        <div class="google-suggestion-item" onclick="seleccionarSugerencia('${item.nombre_proyecto || item.nombre || ''}')">
+                            <div class="suggestion-icon">${(item.nombre_proyecto || item.nombre || '?').substring(0, 1).toUpperCase()}</div>
+                            <div class="suggestion-text">
+                                <div class="suggestion-title">${item.nombre_proyecto || item.nombre || 'Sin nombre'}</div>
+                                <div class="suggestion-subtitle">${item.cliente || item.producto || ''}</div>
+                            </div>
+                        </div>
+                    `).join('');
+                    
+                    suggestionsContainer.innerHTML = html;
+                    suggestionsContainer.style.display = 'block';
+                } else {
+                    suggestionsContainer.style.display = 'none';
+                }
+            } catch (error) {
+                console.error('Error al obtener sugerencias:', error);
+                suggestionsContainer.style.display = 'none';
+            }
+        }, 300);
+    }
+
+    function seleccionarSugerencia(texto) {
+        const searchInput = document.getElementById('searchInput');
+        if (searchInput) {
+            searchInput.value = texto;
+            busquedaActual = texto;
+            document.getElementById('searchSuggestions').style.display = 'none';
+            cargarDatos();
+        }
+    }
+
+    // Cerrar sugerencias al hacer clic fuera
+    document.addEventListener('click', (e) => {
+        if (!e.target.closest('.google-search-box')) {
+            const suggestions = document.getElementById('searchSuggestions');
+            if (suggestions) {
+                suggestions.style.display = 'none';
+            }
+        }
+    });
+
+    // Toggle filters
+    function toggleFilterClientes(buttonElement) {
+        const dropdown = document.getElementById('filterClientes');
+        const estadosDropdown = document.getElementById('filterEstados');
+        
+        if (estadosDropdown) estadosDropdown.style.display = 'none';
+        
+        if (dropdown) {
+            const isVisible = dropdown.style.display === 'block';
+            if (isVisible) {
+                dropdown.style.display = 'none';
+            } else {
+                const button = buttonElement || document.querySelector('button[onclick*="toggleFilterClientes"]');
+                if (button) {
+                    const rect = button.getBoundingClientRect();
+                    dropdown.style.position = 'fixed';
+                    dropdown.style.top = (rect.bottom + 4) + 'px';
+                    dropdown.style.left = rect.left + 'px';
+                    dropdown.style.zIndex = '10000';
+                    dropdown.style.background = 'white';
+                }
+                dropdown.style.display = 'block';
+            }
+        }
+    }
+
+    function toggleFilterEstados(buttonElement) {
+        const dropdown = document.getElementById('filterEstados');
+        const clientesDropdown = document.getElementById('filterClientes');
+        
+        if (clientesDropdown) clientesDropdown.style.display = 'none';
+        
+        if (dropdown) {
+            const isVisible = dropdown.style.display === 'block';
+            if (isVisible) {
+                dropdown.style.display = 'none';
+            } else {
+                const button = buttonElement || document.querySelector('button[onclick*="toggleFilterEstados"]');
+                if (button) {
+                    const rect = button.getBoundingClientRect();
+                    dropdown.style.position = 'fixed';
+                    dropdown.style.top = (rect.bottom + 4) + 'px';
+                    dropdown.style.left = rect.left + 'px';
+                    dropdown.style.zIndex = '10000';
+                    dropdown.style.background = 'white';
+                }
+                dropdown.style.display = 'block';
+            }
+        }
+    }
+
+    // Cerrar dropdowns al hacer click fuera
+    document.addEventListener('click', (e) => {
+        const filterClientes = document.getElementById('filterClientes');
+        const filterEstados = document.getElementById('filterEstados');
+        
+        if (filterClientes && !e.target.closest('#filterClientes') && !e.target.closest('button[onclick*="toggleFilterClientes"]')) {
+            filterClientes.style.display = 'none';
+        }
+        
+        if (filterEstados && !e.target.closest('#filterEstados') && !e.target.closest('button[onclick*="toggleFilterEstados"]')) {
+            filterEstados.style.display = 'none';
+        }
+    });
+
+    function aplicarFiltrosProyectos() {
+        filtrosClientes = Array.from(document.querySelectorAll('.filter-checkbox-cliente:checked')).map(cb => cb.value);
+        filtrosEstados = Array.from(document.querySelectorAll('.filter-checkbox-estado:checked')).map(cb => cb.value);
+        actualizarFiltrosAplicados();
+        cargarDatos();
+    }
+
+    function actualizarFiltrosAplicados() {
+        const filtrosAplicados = document.getElementById('filtrosAplicados');
+        if (!filtrosAplicados) return;
+        
+        const tieneFiltros = filtrosClientes.length > 0 || filtrosEstados.length > 0;
+        
+        if (!tieneFiltros) {
+            filtrosAplicados.style.display = 'none';
+            filtrosAplicados.innerHTML = '';
+            return;
+        }
+        
+        filtrosAplicados.style.display = 'flex';
+        let html = '';
+        
+        filtrosClientes.forEach(cliente => {
+            html += '<div class="filter-chip" style="display: inline-flex; align-items: center; background: #e8f0fe; color: var(--primary-color); padding: 6px 12px; border-radius: 16px; font-size: 13px; font-weight: 500; gap: 8px;"><span>Cliente: ' + cliente + '</span><button onclick="removerFiltroCliente(\'' + cliente.replace(/'/g, "\\'") + '\')" style="background: none; border: none; cursor: pointer; padding: 0; display: flex; align-items: center; color: var(--primary-color);"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg></button></div>';
+        });
+        
+        filtrosEstados.forEach(estado => {
+            html += '<div class="filter-chip" style="display: inline-flex; align-items: center; background: #fef7e0; color: #f9ab00; padding: 6px 12px; border-radius: 16px; font-size: 13px; font-weight: 500; gap: 8px;"><span>Estado: ' + estado + '</span><button onclick="removerFiltroEstado(\'' + estado.replace(/'/g, "\\'") + '\')" style="background: none; border: none; cursor: pointer; padding: 0; display: flex; align-items: center; color: #f9ab00;"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg></button></div>';
+        });
+        
+        if (tieneFiltros) {
+            html += '<button onclick="limpiarFiltrosProyectos()" style="background: rgb(241, 243, 244); border: none; color: var(--text-secondary); font-size: 13px; cursor: pointer; padding: 6px 12px; border-radius: 16px; transition: background 0.2s;" onmouseover="this.style.background=\'#e8eaed\'" onmouseout="this.style.background=\'rgb(241, 243, 244)\'">Borrar filtros</button>';
+        }
+        
+        filtrosAplicados.innerHTML = html;
+    }
+
+    function removerFiltroCliente(cliente) {
+        filtrosClientes = filtrosClientes.filter(c => c !== cliente);
+        const checkbox = document.querySelector('.filter-checkbox-cliente[value="' + cliente + '"]');
+        if (checkbox) checkbox.checked = false;
+        actualizarFiltrosAplicados();
+        cargarDatos();
+    }
+
+    function removerFiltroEstado(estado) {
+        filtrosEstados = filtrosEstados.filter(e => e !== estado);
+        const checkbox = document.querySelector('.filter-checkbox-estado[value="' + estado + '"]');
+        if (checkbox) checkbox.checked = false;
+        actualizarFiltrosAplicados();
+        cargarDatos();
+    }
+
+    function limpiarFiltrosProyectos() {
+        filtrosClientes = [];
+        filtrosEstados = [];
+        document.querySelectorAll('.filter-checkbox-cliente, .filter-checkbox-estado').forEach(cb => cb.checked = false);
+        actualizarFiltrosAplicados();
+        cargarDatos();
+    }
+</script>
+    
+    <!-- Modal de Detalle del Proyecto -->
+    <div id="modalDetalle" class="modal-overlay" style="display: none;" onclick="if(event.target === this) cerrarModalDetalle()">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <h2 id="modalTitulo" style="margin: 0; font-size: 20px; font-weight: 500;">Detalle del Proyecto</h2>
+                <button class="modal-close" onclick="cerrarModalDetalle()" style="background: none; border: none; font-size: 24px; cursor: pointer; color: var(--text-secondary); padding: 0; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border-radius: 50%; transition: background 0.2s;" onmouseover="this.style.background='#f1f3f4'" onmouseout="this.style.background='none'">×</button>
+            </div>
+            <div class="modal-body" id="modalBody">
+                <!-- Contenido dinámico -->
+            </div>
+        </div>
+    </div>
+    
+    <!-- JavaScript -->
+    <script src="/js/main.js"></script>
+</body>
+</html>

@@ -69,9 +69,25 @@ function requireAuthJWT(req, res, next) {
     next();
 }
 
+/**
+ * Middleware para requerir permisos de administrador
+ * Debe usarse después de requireAuthJWT
+ */
+function requireAdmin(req, res, next) {
+    if (!req.isAdmin) {
+        console.log('❌ Acceso denegado - Se requieren permisos de administrador');
+        return res.status(403).render('pages/error', {
+            title: 'Acceso Denegado',
+            error: 'No tienes permisos para acceder a esta sección. Se requiere autenticación de administrador.'
+        });
+    }
+    next();
+}
+
 module.exports = {
     generateToken,
     verifyToken,
-    requireAuthJWT
+    requireAuthJWT,
+    requireAdmin
 };
 
