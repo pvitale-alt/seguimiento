@@ -9,7 +9,7 @@
     <link rel="stylesheet" href="/css/main.css?v=<%= Date.now() %>">
     
     <!-- Favicon -->
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📊</text></svg>">
+    <link rel="icon" type="image/x-icon" href="/images/logo.ico">
 </head>
 <body>
     <!-- Header General -->
@@ -144,13 +144,13 @@
                         </form>
                     </div>
                     
-                    <!-- Botón Actualizar y Checkbox "Incluir cerrados" -->
+                    <!-- Botón Sincronizar y Checkbox "Incluir cerrados" -->
                     <div style="display: flex; align-items: center; gap: 12px; margin-left: auto;">
                         <button class="button button-secondary" onclick="sincronizar()" id="btnSincronizar">
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
                                 <path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/>
                             </svg>
-                            <span>Actualizar</span>
+                            <span>Sincronizar</span>
                         </button>
                         <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; user-select: none;">
                             <input type="checkbox" id="incluirCerrados" style="cursor: pointer;" onchange="aplicarFiltrosProyectos()" />
@@ -1033,7 +1033,6 @@
             tablaHTML += '<div class="modern-table-cell header-cell" onclick="ordenarPor(\'plazos\')" style="cursor: pointer; user-select: none;' + (ordenActual.columna === 'plazos' ? ' color: var(--primary-color);' : '') + '">Plazos' + (ordenActual.columna === 'plazos' ? ' ' + (ordenActual.direccion === 'asc' ? flechaAsc : flechaDesc) : '') + '</div>';
             tablaHTML += '<div class="modern-table-cell header-cell" onclick="ordenarPor(\'riesgos\')" style="cursor: pointer; user-select: none;' + (ordenActual.columna === 'riesgos' ? ' color: var(--primary-color);' : '') + '">Riesgos' + (ordenActual.columna === 'riesgos' ? ' ' + (ordenActual.direccion === 'asc' ? flechaAsc : flechaDesc) : '') + '</div>';
             tablaHTML += '<div class="modern-table-cell header-cell" onclick="ordenarPor(\'avance\')" style="cursor: pointer; user-select: none;' + (ordenActual.columna === 'avance' ? ' color: var(--primary-color);' : '') + '">Avance' + (ordenActual.columna === 'avance' ? ' ' + (ordenActual.direccion === 'asc' ? flechaAsc : flechaDesc) : '') + '</div>';
-            tablaHTML += '<div class="modern-table-cell header-cell"></div>';
             tablaHTML += '</div>';
             
             datos = datosOrdenados;
@@ -1148,9 +1147,6 @@
                     avanceGradient = 'linear-gradient(90deg, #4caf50 0%, #34a853 50%, #1e8e3e 100%)';
                 }
                 tablaHTML += '<div class="modern-table-cell"><div class="progress-bar-container" data-id="' + item.id_proyecto + '"><div class="progress-bar" style="width: ' + avanceValue + '%; background: ' + avanceGradient + ';"></div><input type="range" min="0" max="100" step="5" value="' + avanceValue + '" class="progress-slider" oninput="actualizarBarraProgreso(this);" onchange="actualizarProyecto(' + item.id_proyecto + ', \'avance\', this.value);" /></div></div>';
-                
-                // Botón "Ver más" - guardar datos del item en un atributo data, color azul como enlace
-                tablaHTML += '<div class="modern-table-cell"><button class="button button-secondary" onclick="abrirModalDetalle(' + item.id_proyecto + ')" data-item="' + itemDataJson + '" style="padding: 6px 12px; font-size: 13px; border: none; color: var(--primary-color); background: transparent;">Ver más</button></div>';
                 tablaHTML += '</div>';
                 
                 // NO renderizar subproyectos todavía - se cargarán bajo demanda cuando se expanda
@@ -1909,11 +1905,6 @@
         celdaAvance.innerHTML = '<div class="progress-bar-container" data-id="' + subproyecto.id_subproyecto + '"><div class="progress-bar" style="width: ' + avanceSubproyecto + '%; background: ' + avanceGradientSub + ';"></div><input type="range" min="0" max="100" step="5" value="' + avanceSubproyecto + '" class="progress-slider" oninput="actualizarBarraProgreso(this);" onchange="actualizarSubproyecto(' + subproyecto.id_subproyecto + ', \'avance\', this.value);" /></div>';
         filaSubproyecto.appendChild(celdaAvance);
         
-        // Ver más (vacío)
-        const celdaVerMas = document.createElement('div');
-        celdaVerMas.className = 'modern-table-cell';
-        filaSubproyecto.appendChild(celdaVerMas);
-        
         return filaSubproyecto;
     }
     
@@ -1958,10 +1949,10 @@
             
             if (result.success) {
                 console.log('✅ Epics sincronizados:', result.data);
-                // Actualizar el botón "Ver más" con los nuevos datos
-                const btnVerMas = document.querySelector('button[data-item][onclick*="' + id_proyecto + '"]');
-                if (btnVerMas) {
-                    const itemDataJson = btnVerMas.getAttribute('data-item');
+                // Actualizar el enlace del proyecto con los nuevos datos
+                const linkProyecto = document.querySelector('a[data-item][onclick*="' + id_proyecto + '"]');
+                if (linkProyecto) {
+                    const itemDataJson = linkProyecto.getAttribute('data-item');
                     if (itemDataJson) {
                         const itemData = JSON.parse(itemDataJson.replace(/&quot;/g, '"').replace(/&#39;/g, "'"));
                         itemData.horas_estimadas = parseFloat(result.data.horas_estimadas) || 0;
@@ -1969,13 +1960,13 @@
                         itemData.fecha_inicio_epics = result.data.fecha_inicio || '';
                         itemData.fecha_fin_epics = result.data.fecha_fin || '';
                         itemData.tiene_epics = true;
-                        btnVerMas.setAttribute('data-item', JSON.stringify(itemData).replace(/"/g, '&quot;').replace(/'/g, '&#39;'));
+                        linkProyecto.setAttribute('data-item', JSON.stringify(itemData).replace(/"/g, '&quot;').replace(/'/g, '&#39;'));
                     }
                 }
                 // Recargar el modal con los nuevos datos
-                if (btnVerMas) {
-                    // Guardar el botón temporalmente para que abrirModalDetalle lo use
-                    window.tempModalButton = btnVerMas;
+                if (linkProyecto) {
+                    // Guardar el enlace temporalmente para que abrirModalDetalle lo use
+                    window.tempModalButton = linkProyecto;
                     await abrirModalDetalle(id_proyecto);
                     delete window.tempModalButton;
                 }

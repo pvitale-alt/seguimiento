@@ -603,10 +603,16 @@ body {
     margin-left: 8px;
 }
 
-/* Proyectos: 11 columnas - Flecha expandir, Cliente reducido, Proyecto más ancho, Plazos y Riesgos con mismo ancho que Overall/Alcance/Costo */
+/* Proyectos: 10 columnas - Flecha expandir, Cliente reducido, Proyecto más ancho, Plazos y Riesgos con mismo ancho que Overall/Alcance/Costo, Avance */
 .modern-table.proyectos .modern-table-header,
 .modern-table.proyectos .modern-table-row {
-    grid-template-columns: 40px 200px 400px 120px 70px 70px 70px 70px 70px 100px 100px;
+    grid-template-columns: 40px 150px 300px 120px 70px 70px 70px 70px 70px 100px;
+}
+
+/* Texto de cliente más bold - primera columna después de la flecha (mantenimiento y proyectos) */
+.modern-table.mantenimiento .modern-table-row .modern-table-cell.item-text:first-of-type,
+.modern-table.proyectos .modern-table-row .modern-table-cell.item-text:nth-of-type(2) {
+    font-weight: 500;
 }
 
 /* Estilos para filas de subproyectos */
