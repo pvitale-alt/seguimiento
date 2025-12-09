@@ -36,6 +36,13 @@ class ProyectosExternosModel {
                 paramCount++;
             }
 
+            // Filtro por categoría
+            if (filtros.categoria) {
+                query += ` AND categoria = $${paramCount}`;
+                params.push(filtros.categoria);
+                paramCount++;
+            }
+
             // Filtro por búsqueda
             if (filtros.busqueda) {
                 query += ` AND (

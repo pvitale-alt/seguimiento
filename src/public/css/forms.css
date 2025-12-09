@@ -1,0 +1,690 @@
+/**
+ * Forms CSS - Inputs, selects, textareas y dropdowns
+ * Seguimiento de Proyectos
+ */
+
+.modern-input {
+    border: none;
+    border-bottom: 2px solid transparent;
+    padding: 8px 4px;
+    font-size: 14px;
+    font-family: 'Google Sans', 'Roboto', sans-serif;
+    width: 100%;
+    background: transparent;
+    transition: all 0.2s;
+    resize: none;
+}
+
+.modern-input:focus {
+    outline: none;
+    border-bottom-color: var(--primary-color);
+    background: #f8f9fa;
+    border-radius: 4px;
+    padding: 8px 8px;
+}
+
+.modern-input:hover {
+    background: #f8f9fa;
+    border-radius: 4px;
+    padding: 8px 8px;
+}
+
+/* Selectores modernos */
+.modern-select {
+    border: none !important;
+    border-bottom: 2px solid transparent !important;
+    padding: 8px 4px;
+    font-size: 20px;
+    font-family: 'Google Sans', 'Roboto', sans-serif;
+    width: 100%;
+    background: transparent;
+    transition: all 0.2s;
+    cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='%235f6368'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 4px center;
+    background-size: 16px;
+    padding-right: 24px;
+    color: var(--text-primary);
+    text-align: center;
+    line-height: 1.2;
+    outline: none !important;
+    box-shadow: none !important;
+}
+
+.modern-select:focus {
+    outline: none !important;
+    border: none !important;
+    box-shadow: none !important;
+}
+
+.modern-select:focus-visible {
+    outline: none !important;
+    border: none !important;
+}
+
+.modern-select option {
+    border: none !important;
+    outline: none !important;
+    box-shadow: none !important;
+}
+
+/* Estilos para selects nativos */
+select.modern-select {
+    border: none !important;
+    outline: none !important;
+    box-shadow: none !important;
+}
+
+select.modern-select:focus {
+    border: none !important;
+    outline: none !important;
+    box-shadow: none !important;
+}
+
+select.modern-select:active {
+    border: none !important;
+    outline: none !important;
+}
+
+select.modern-select::-ms-expand {
+    display: none;
+}
+
+/* Selectores de iconos y caras */
+.icon-select,
+.face-select {
+    font-size: 20px;
+    text-align: center;
+    padding: 8px 12px;
+    background-image: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.icon-select option,
+.face-select option {
+    font-size: 20px;
+    text-align: center;
+    padding: 10px 16px;
+    background: white;
+    color: var(--text-primary);
+    transition: background 0.2s;
+    width: 100%;
+    box-sizing: border-box;
+    border: none;
+    cursor: pointer;
+}
+
+.icon-select option:hover,
+.face-select option:hover {
+    background: #f1f3f4;
+}
+
+.icon-select option:checked,
+.face-select option:checked {
+    background: #e8f0fe;
+    color: var(--primary-color);
+    font-weight: 500;
+}
+
+/* Selectores estilo tag (sin flecha) */
+.modern-select.overall-select,
+.modern-select.icon-select,
+.modern-select.face-select,
+.modern-select.riesgo-select {
+    background-image: none;
+    padding: 8px 12px;
+    border-radius: 16px;
+    background-color: #f8f9fa;
+    border: 1px solid transparent;
+}
+
+.modern-select.overall-select:hover,
+.modern-select.icon-select:hover,
+.modern-select.face-select:hover,
+.modern-select.riesgo-select:hover {
+    background-color: #e8eaed;
+    border-color: var(--border-color);
+}
+
+.modern-select.overall-select:focus,
+.modern-select.icon-select:focus,
+.modern-select.face-select:focus,
+.modern-select.riesgo-select:focus {
+    background-color: #e8eaed;
+    border-color: var(--primary-color);
+    outline: none;
+}
+
+/* Estilo de select similar a filter-btn */
+.modern-select {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 16px;
+    border-radius: 24px;
+    border: none;
+    background: white;
+    font-size: 14px;
+    font-weight: 500;
+    font-family: 'Google Sans', 'Roboto', sans-serif;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    letter-spacing: 0.25px;
+    height: 36px;
+    min-width: auto;
+    box-shadow: none;
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-image: none;
+    padding-right: 16px;
+}
+
+.modern-select:hover {
+    background: var(--hover-bg);
+    border: none;
+    box-shadow: none;
+}
+
+.modern-select:active {
+    transform: scale(0.98);
+}
+
+/* Colores de fondo para overall-select */
+.modern-select.overall-select.color-verde {
+    background-color: #e6f4ea !important;
+}
+
+.modern-select.overall-select.color-amarillo {
+    background-color: #fef7e0 !important;
+}
+
+.modern-select.overall-select.color-rojo {
+    background-color: #fce8e6 !important;
+}
+
+/* Colores para icon-select (demanda) */
+.modern-select.icon-select.demanda-llama {
+    background-color: #fce8e6 !important;
+}
+
+.modern-select.icon-select.demanda-congelado {
+    background-color: #e8f0fe !important;
+}
+
+.modern-select.icon-select.demanda-herramientas {
+    background-color: #fef7e0 !important;
+}
+
+.modern-select.icon-select.demanda-palmera {
+    background-color: #e6f4ea !important;
+}
+
+/* Colores para icon-select (estabilidad) */
+.modern-select.icon-select.estabilidad-llama {
+    background-color: #fce8e6 !important;
+}
+
+.modern-select.icon-select.estabilidad-herramientas {
+    background-color: #fef7e0 !important;
+}
+
+.modern-select.icon-select.estabilidad-cohete {
+    background-color: #e6f4ea !important;
+}
+
+/* Colores para face-select (satisfacción) */
+.modern-select.face-select.satisfaccion-feliz {
+    background-color: #e6f4ea !important;
+}
+
+.modern-select.face-select.satisfaccion-buena {
+    background-color: #c8e6c9 !important;
+}
+
+.modern-select.face-select.satisfaccion-regular {
+    background-color: #fef7e0 !important;
+}
+
+.modern-select.face-select.satisfaccion-mala {
+    background-color: #ffe0b2 !important;
+}
+
+.modern-select.face-select.satisfaccion-enojado {
+    background-color: #fce8e6 !important;
+}
+
+.modern-select.face-select.satisfaccion-calavera {
+    background-color: #000000 !important;
+    color: #ffffff !important;
+}
+
+/* Default gris si no hay valor */
+.modern-select.icon-select:not([class*="demanda-"]):not([class*="estabilidad-"]),
+.modern-select.face-select:not([class*="satisfaccion-"]) {
+    background-color: #f8f9fa;
+}
+
+.modern-select.riesgo-select {
+    background-color: #f8f9fa;
+    border: none;
+}
+
+/* Colores para riesgo-select */
+.modern-select.riesgo-select.riesgo-ok {
+    background-color: #e6f4ea !important;
+}
+
+.modern-select.riesgo-select.riesgo-red {
+    background-color: #fce8e6 !important;
+}
+
+/* Selector de estado - Estilo moderno */
+.modern-select.estado-select {
+    font-size: 12px;
+    font-weight: 500;
+    font-family: 'Google Sans', 'Roboto', sans-serif;
+    color: #3c4043;
+    background-color: #f8f9fa;
+    border-radius: 20px;
+    padding: 6px 14px;
+    background-image: none;
+    border: 1px solid transparent;
+    min-width: 100px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-align: center;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
+
+.modern-select.estado-select:hover {
+    background-color: #e8eaed;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    transform: translateY(-1px);
+    border-color: #dadce0;
+}
+
+.modern-select.estado-select:focus {
+    background-color: #e8eaed;
+    outline: none !important;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important;
+    border-color: var(--primary-color) !important;
+}
+
+.modern-select.estado-select option {
+    padding: 10px 16px;
+    font-size: 13px;
+    font-weight: 400;
+    font-family: 'Google Sans', 'Roboto', sans-serif;
+    background: white;
+    color: var(--text-primary);
+    transition: background 0.2s;
+    text-align: center;
+    border: none !important;
+    cursor: pointer;
+}
+
+.modern-select.estado-select option:hover {
+    background: #f1f3f4;
+}
+
+.modern-select.estado-select option:checked {
+    background: #e8f0fe;
+    color: var(--primary-color);
+    font-weight: 500;
+}
+
+/* Colores para estado-select */
+.modern-select.estado-select.estado-entregado {
+    background-color: #e6f4ea !important;
+    border: none !important;
+}
+
+.modern-select.estado-select.estado-progreso {
+    background-color: #e3f2fd !important;
+    border: none !important;
+}
+
+.modern-select.estado-select.estado-testing {
+    background-color: #f3e5f5 !important;
+    border: none !important;
+}
+
+.modern-select.estado-select.estado-rework {
+    background-color: #fef7e0 !important;
+    border: none !important;
+}
+
+.modern-select.estado-select.estado-bloqueado {
+    background-color: #fce8e6 !important;
+    border: none !important;
+}
+
+.modern-select.estado-select.estado-sin-comenzar {
+    background-color: #f1f3f4 !important;
+    border: none !important;
+}
+
+/* Textarea de WIN */
+.win-textarea {
+    background-color: transparent !important;
+    border-radius: 0 !important;
+    border: none !important;
+    border-bottom: 1px solid #e0e0e0 !important;
+    padding: 8px 4px !important;
+    font-size: 13px !important;
+    font-family: 'Google Sans', 'Roboto', sans-serif !important;
+    resize: none !important;
+    min-height: 32px !important;
+    max-height: 120px !important;
+    overflow-y: auto !important;
+    transition: all 0.2s ease !important;
+    line-height: 1.5 !important;
+    color: var(--text-primary) !important;
+}
+
+.win-textarea:hover {
+    border-bottom-color: #bdc1c6 !important;
+    background-color: #f8f9fa !important;
+    border-radius: 4px 4px 0 0 !important;
+    padding: 8px 8px !important;
+}
+
+.win-textarea:focus {
+    outline: none !important;
+    border: none !important;
+    border-bottom: 2px solid var(--primary-color) !important;
+    background-color: #f8f9fa !important;
+    border-radius: 4px 4px 0 0 !important;
+    padding: 8px 8px !important;
+    box-shadow: 0 1px 0 0 var(--primary-color) !important;
+}
+
+/* Scrollbar para textarea WIN */
+.win-textarea::-webkit-scrollbar {
+    width: 6px;
+}
+
+.win-textarea::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.win-textarea::-webkit-scrollbar-thumb {
+    background: #dadce0;
+    border-radius: 3px;
+}
+
+.win-textarea::-webkit-scrollbar-thumb:hover {
+    background: #bdc1c6;
+}
+
+/* Inputs de fecha y textarea */
+.modern-input[type="date"],
+textarea.modern-input {
+    font-size: 13px;
+    font-weight: 400;
+    font-family: 'Google Sans', 'Roboto', sans-serif;
+    color: var(--text-primary);
+}
+
+.modern-select:focus {
+    outline: none !important;
+    border: none !important;
+    border-bottom: none !important;
+    background-color: #f8f9fa;
+    background-image: none;
+    border-radius: 4px;
+    padding: 8px 12px;
+    box-shadow: none !important;
+}
+
+.modern-select:hover {
+    background-color: #f8f9fa;
+    border-radius: 4px;
+    padding: 8px 12px;
+    border: none !important;
+}
+
+/* Estilos para opciones de overall-select */
+.overall-select option {
+    padding: 10px 16px;
+    font-size: 20px;
+    text-align: center;
+    background: white;
+    color: var(--text-primary);
+    transition: background 0.2s;
+    width: 100%;
+    box-sizing: border-box;
+    border: none;
+    cursor: pointer;
+}
+
+.overall-select option:hover {
+    background: #f1f3f4;
+}
+
+.overall-select option:checked {
+    background: #e8f0fe;
+    color: var(--primary-color);
+    font-weight: 500;
+}
+
+.overall-select option[value="verde"]:checked,
+.overall-select[value="verde"] {
+    color: #1e8e3e;
+    font-weight: 500;
+}
+
+.overall-select option[value="amarillo"]:checked,
+.overall-select[value="amarillo"] {
+    color: #f9ab00;
+    font-weight: 500;
+}
+
+.overall-select option[value="rojo"]:checked,
+.overall-select[value="rojo"] {
+    color: #d93025;
+    font-weight: 500;
+}
+
+.overall-select.color-verde {
+    color: #1e8e3e;
+    font-weight: 500;
+}
+
+.overall-select.color-amarillo {
+    color: #f9ab00;
+    font-weight: 500;
+}
+
+.overall-select.color-rojo {
+    color: #d93025;
+    font-weight: 500;
+}
+
+.overall-select option[value="verde"] {
+    background: #e6f4ea;
+    color: #1e8e3e;
+}
+
+.overall-select option[value="amarillo"] {
+    background: #fef7e0;
+    color: #f9ab00;
+}
+
+.overall-select option[value="rojo"] {
+    background: #fce8e6;
+    color: #d93025;
+}
+
+/* Barra de progreso editable */
+.progress-bar-container {
+    position: relative;
+    width: 100%;
+    height: 20px;
+    background: linear-gradient(to bottom, #e8eaed 0%, #f1f3f4 100%);
+    border-radius: 8px;
+    overflow: hidden;
+    cursor: pointer;
+    box-shadow: inset 0 1px 3px rgba(0,0,0,0.08);
+    border: 1px solid #dadce0;
+}
+
+.progress-bar {
+    height: 100%;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1), background 0.3s ease;
+    position: relative;
+    min-width: 20px;
+    background: linear-gradient(135deg, #34a853 0%, #1e8e3e 50%, #137333 100%);
+    box-shadow: inset 0 1px 2px rgba(255,255,255,0.3);
+}
+
+.progress-text {
+    color: white;
+    font-size: 11px;
+    font-weight: 600;
+    z-index: 2;
+    position: relative;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+    letter-spacing: 0.3px;
+    font-family: 'Google Sans', 'Roboto', sans-serif;
+}
+
+.progress-slider {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    cursor: pointer;
+    z-index: 3;
+    margin: 0;
+    padding: 0;
+    -webkit-appearance: none;
+    appearance: none;
+}
+
+.progress-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: white;
+    cursor: pointer;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2), 0 0 0 1px #dadce0;
+    border: none;
+    transition: all 0.2s ease;
+}
+
+.progress-slider::-webkit-slider-thumb:hover {
+    box-shadow: 0 2px 4px rgba(0,0,0,0.25), 0 0 0 1px #1e8e3e;
+    transform: scale(1.1);
+}
+
+.progress-slider::-moz-range-thumb {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: white;
+    cursor: pointer;
+    border: none;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2), 0 0 0 1px #dadce0;
+    transition: all 0.2s ease;
+}
+
+.progress-slider::-moz-range-thumb:hover {
+    box-shadow: 0 2px 4px rgba(0,0,0,0.25), 0 0 0 1px #1e8e3e;
+    transform: scale(1.1);
+}
+
+/* Selector de riesgo */
+.riesgo-select {
+    font-size: 20px;
+    text-align: center;
+}
+
+.riesgo-select option {
+    padding: 10px 16px;
+    font-size: 18px;
+    text-align: center;
+    background: white;
+    color: var(--text-primary);
+    transition: background 0.2s;
+    border: none;
+    cursor: pointer;
+}
+
+.riesgo-select option:hover {
+    background: #f1f3f4;
+}
+
+.riesgo-select option:checked {
+    background: #e8f0fe;
+    color: var(--primary-color);
+    font-weight: 500;
+}
+
+/* Quitar icono de calendario en inputs date */
+input[type="date"]::-webkit-calendar-picker-indicator {
+    display: none;
+    -webkit-appearance: none;
+}
+
+input[type="date"] {
+    -webkit-appearance: none;
+    appearance: none;
+}
+
+/* Estilo para WIN con fondo gris */
+.win-container {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 24px;
+}
+
+/* Inputs */
+.input {
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    padding: 8px 12px;
+    font-size: 14px;
+    font-family: 'Google Sans', 'Roboto', sans-serif;
+    width: 100%;
+    transition: all 0.2s;
+}
+
+.input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 2px rgba(49, 107, 161, 0.1);
+}
+
+/* Dropdowns personalizados (sin bordes) */
+.custom-dropdown {
+    border: none !important;
+    outline: none !important;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15) !important;
+}
+
+.custom-dropdown > div {
+    border: none !important;
+    outline: none !important;
+}
+
+

@@ -1,0 +1,218 @@
+/**
+ * Table CSS - Tablas modernas
+ * Seguimiento de Proyectos
+ */
+
+/* Contenedor de tabla con scroll horizontal a nivel navegador */
+.modern-table-wrapper {
+    background: white;
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+    overflow-x: visible;
+    overflow-y: hidden;
+    width: 100%;
+}
+
+.modern-table {
+    display: flex;
+    flex-direction: column;
+    min-width: max-content;
+}
+
+.modern-table-header {
+    display: grid;
+    gap: 12px;
+    padding: 12px 16px;
+    background: #f8f9fa;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    border-bottom: none;
+    white-space: nowrap;
+}
+
+.modern-table-header .modern-table-cell {
+    justify-content: flex-start;
+    text-align: left;
+}
+
+.modern-table-cell.header-cell {
+    text-align: left;
+    justify-content: flex-start;
+    align-items: center;
+}
+
+/* Mejorar alineación de valores con headers */
+.modern-table-row .modern-table-cell {
+    justify-content: flex-start;
+    text-align: left;
+}
+
+.modern-table-row .modern-table-cell.item-text {
+    justify-content: flex-start;
+    text-align: left;
+}
+
+.modern-table-row .modern-table-cell:has(.modern-select),
+.modern-table-row .modern-table-cell:has(.modern-input),
+.modern-table-row .modern-table-cell:has(.progress-bar-container) {
+    justify-content: center;
+    text-align: center;
+}
+
+/* Mantenimiento: 7 columnas - WIN llena el espacio restante */
+.modern-table.mantenimiento .modern-table-header,
+.modern-table.mantenimiento .modern-table-row {
+    grid-template-columns: 350px 90px 70px 70px 70px 70px 1fr;
+    gap: 0 16px;
+}
+
+/* Separar columna WIN de Satisfacción en mantenimiento */
+.modern-table.mantenimiento .modern-table-header > .modern-table-cell:last-of-type,
+.modern-table.mantenimiento .modern-table-row > .modern-table-cell:last-of-type {
+    padding-left: 24px;
+    border-left: 1px solid #e8eaed;
+    margin-left: 8px;
+}
+
+/* Proyectos: 10 columnas */
+.modern-table.proyectos .modern-table-header,
+.modern-table.proyectos .modern-table-row {
+    grid-template-columns: 40px 150px 300px 120px 70px 70px 70px 70px 70px 100px;
+}
+
+/* Texto de cliente más bold */
+.modern-table.mantenimiento .modern-table-row .modern-table-cell.item-text:first-of-type,
+.modern-table.proyectos .modern-table-row .modern-table-cell.item-text:nth-of-type(2) {
+    font-weight: 500;
+}
+
+/* Estilos para filas de subproyectos */
+.modern-table-row.subproyecto-row {
+    background-color: rgba(227, 242, 253, 0.3) !important;
+    min-height: 40px;
+    padding: 8px 0;
+}
+
+.modern-table-row.subproyecto-row .modern-table-cell {
+    font-size: 13px;
+    padding: 6px 16px;
+}
+
+.modern-table-row.subproyecto-row .modern-table-cell.item-text {
+    font-size: 13px;
+    color: var(--text-secondary);
+}
+
+/* Celda que ocupa 2 columnas para el botón de sincronizar epics */
+.modern-table.proyectos .modern-table-cell.sync-epics-cell {
+    grid-column: span 2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.modern-table-row {
+    display: grid;
+    gap: 12px;
+    padding: 12px 16px;
+    border-bottom: none;
+    transition: all 0.2s;
+    align-items: center;
+    white-space: nowrap;
+}
+
+/* Alinear valores en celdas a la izquierda */
+.modern-table-row .modern-table-cell:not(.item-text) {
+    justify-content: flex-start;
+    text-align: left;
+}
+
+.modern-table-row .modern-table-cell.item-text {
+    justify-content: flex-start;
+    text-align: left;
+}
+
+.modern-table-row:hover {
+    background: #f8f9fa;
+}
+
+.modern-table-row:not(:last-child) {
+    border-bottom: 1px solid #f1f3f4;
+}
+
+.modern-table-cell {
+    font-size: 13px;
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    min-height: 40px;
+    font-family: 'Google Sans', 'Roboto', sans-serif;
+}
+
+.modern-table-cell.item-text {
+    color: var(--text-secondary);
+    font-size: 13px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    word-wrap: break-word;
+    max-width: 100%;
+}
+
+.modern-table-cell.item-text a {
+    color: var(--primary-color);
+    text-decoration: none;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    display: block;
+    width: 100%;
+}
+
+.modern-table-cell.item-text a:hover {
+    text-decoration: underline;
+}
+
+/* Tablas legacy (mantener compatibilidad) */
+.table-container {
+    background: white;
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+    overflow: hidden;
+}
+
+.table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.table thead {
+    background: #f1f3f4;
+}
+
+.table th {
+    padding: 12px 16px;
+    text-align: left;
+    font-size: 13px;
+    font-weight: 500;
+    color: #5f6368;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.table td {
+    padding: 12px 16px;
+    font-size: 14px;
+    color: var(--text-primary);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.table tbody tr:hover {
+    background: var(--hover-bg);
+}
+
+.table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+

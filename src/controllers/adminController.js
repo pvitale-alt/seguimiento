@@ -1,4 +1,5 @@
 const ProductosEquiposModel = require('../models/ProductosEquiposModel');
+const MapeoProductoProyectoInternoModel = require('../models/MapeoProductoProyectoInternoModel');
 
 /**
  * Renderizar página de administración
@@ -165,13 +166,129 @@ async function eliminarProductoEquipo(req, res) {
     }
 }
 
+/**
+ * Obtener todos los mapeos de productos a proyectos internos
+ */
+async function obtenerMapeosProyectosInternos(req, res) {
+    try {
+        const mapeos = await MapeoProductoProyectoInternoModel.obtenerTodos();
+        
+        res.json({
+            success: true,
+            data: mapeos
+        });
+    } catch (error) {
+        console.error('Error al obtener mapeos:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Error al obtener mapeos de productos a proyectos internos'
+        });
+    }
+}
+
+/**
+ * Crear nuevo mapeo de producto a proyecto interno
+ */
+async function crearMapeoProyectoInterno(req, res) {
+    try {
+        const { producto, codigo_proyecto_redmine, activo } = req.body;
+        
+        if (!producto || !codigo_proyecto_redmine) {
+            return res.status(400).json({
+                success: false,
+                error: 'Faltan datos requeridos: producto, codigo_proyecto_redmine'
+            });
+        }
+        
+        const resultado = await MapeoProductoProyectoInternoModel.crear({
+            producto,
+            codigo_proyecto_redmine,
+            activo: activo !== undefined ? activo : true
+        });
+        
+        res.json({
+            success: true,
+            data: resultado
+        });
+    } catch (error) {
+        console.error('Error al crear mapeo:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Error al crear mapeo: ' + error.message
+        });
+    }
+}
+
+/**
+ * Actualizar mapeo de producto a proyecto interno
+ */
+async function actualizarMapeoProyectoInterno(req, res) {
+    try {
+        const { id } = req.params;
+        const datos = req.body;
+        
+        const resultado = await MapeoProductoProyectoInternoModel.actualizar(id, datos);
+        
+        if (!resultado) {
+            return res.status(404).json({
+                success: false,
+                error: 'Mapeo no encontrado'
+            });
+        }
+        
+        res.json({
+            success: true,
+            data: resultado
+        });
+    } catch (error) {
+        console.error('Error al actualizar mapeo:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Error al actualizar mapeo: ' + error.message
+        });
+    }
+}
+
+/**
+ * Eliminar mapeo de producto a proyecto interno
+ */
+async function eliminarMapeoProyectoInterno(req, res) {
+    try {
+        const { id } = req.params;
+        
+        const eliminado = await MapeoProductoProyectoInternoModel.eliminar(id);
+        
+        if (!eliminado) {
+            return res.status(404).json({
+                success: false,
+                error: 'Mapeo no encontrado'
+            });
+        }
+        
+        res.json({
+            success: true,
+            message: 'Mapeo eliminado correctamente'
+        });
+    } catch (error) {
+        console.error('Error al eliminar mapeo:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Error al eliminar mapeo: ' + error.message
+        });
+    }
+}
+
 module.exports = {
     index,
     obtenerProductosEquipos,
     obtenerProductosYEquiposUnicos,
     crearProductoEquipo,
     actualizarProductoEquipo,
-    eliminarProductoEquipo
+    eliminarProductoEquipo,
+    obtenerMapeosProyectosInternos,
+    crearMapeoProyectoInterno,
+    actualizarMapeoProyectoInterno,
+    eliminarMapeoProyectoInterno
 };
 
 

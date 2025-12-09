@@ -88,35 +88,44 @@ class ProyectosInternosModel {
      */
     static async actualizar(id_proyecto, datos) {
         try {
+            // Construir dinámicamente el query solo con los campos que se envían
+            const camposPermitidos = ['estado', 'overall', 'alcance', 'costo', 'plazos', 'avance', 'fecha_inicio', 'fecha_fin', 'win', 'riesgos'];
+            const camposActualizar = [];
+            const values = [];
+            let paramCount = 1;
+            
+            for (const campo of camposPermitidos) {
+                if (datos.hasOwnProperty(campo)) {
+                    camposActualizar.push(`${campo} = $${paramCount}`);
+                    // El campo 'costo' ahora es VARCHAR(50) (igual que overall, alcance, plazos)
+                    // Guardamos valores como 'verde', 'amarillo', 'rojo'
+                    if (campo === 'avance' && datos[campo] !== null && datos[campo] !== undefined && datos[campo] !== '') {
+                        values.push(parseInt(datos[campo]));
+                    } else {
+                        // Para todos los demás campos (incluyendo costo), guardar como string o null
+                        values.push(datos[campo] || null);
+                    }
+                    paramCount++;
+                }
+            }
+            
+            if (camposActualizar.length === 0) {
+                throw new Error('No se proporcionaron campos para actualizar');
+            }
+            
+            // Agregar updated_at
+            camposActualizar.push(`updated_at = CURRENT_TIMESTAMP`);
+            
+            // Agregar id_proyecto al final
+            values.push(id_proyecto);
+            
             const query = `
                 UPDATE proyectos_internos
-                SET estado = $1,
-                    overall = $2,
-                    alcance = $3,
-                    costo = $4,
-                    plazos = $5,
-                    avance = $6,
-                    fecha_inicio = $7,
-                    fecha_fin = $8,
-                    win = $9,
-                    riesgos = $10,
-                    updated_at = CURRENT_TIMESTAMP
-                WHERE id_proyecto = $11
+                SET ${camposActualizar.join(', ')}
+                WHERE id_proyecto = $${paramCount}
                 RETURNING *
             `;
-            const values = [
-                datos.estado || null,
-                datos.overall || null,
-                datos.alcance || null,
-                datos.costo ? parseFloat(datos.costo) : null,
-                datos.plazos || null,
-                datos.avance || null,
-                datos.fecha_inicio || null,
-                datos.fecha_fin || null,
-                datos.win || null,
-                datos.riesgos || null,
-                id_proyecto
-            ];
+            
             const result = await pool.query(query, values);
             
             if (!result.rows[0]) {
@@ -192,6 +201,7 @@ class ProyectosInternosModel {
 }
 
 module.exports = ProyectosInternosModel;
+
 
 
 

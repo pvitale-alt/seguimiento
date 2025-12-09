@@ -1,0 +1,74 @@
+/**
+ * Modal CSS - Estilos del modal
+ * Seguimiento de Proyectos
+ */
+
+/* Modal de detalle del proyecto */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+    padding: 20px;
+}
+
+.modal-content {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+    max-width: 1200px;
+    width: 95%;
+    max-height: 90vh;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+}
+
+.modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 24px 32px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.modal-body {
+    padding: 32px;
+    flex: 1;
+}
+
+.modal-close {
+    transition: all 0.2s;
+}
+
+.modal-close:hover {
+    background: var(--hover-bg) !important;
+}
+
+/* Lista de epics */
+.epics-list {
+    max-height: 500px;
+    overflow-y: auto;
+}
+
+.epic-item {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border-color);
+    transition: background 0.2s;
+}
+
+.epic-item:hover {
+    background: var(--hover-bg);
+}
+
+.epic-item:last-child {
+    border-bottom: none;
+}
+
+

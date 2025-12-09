@@ -1,0 +1,209 @@
+/**
+ * Buttons CSS - Estilos de botones
+ * Seguimiento de Proyectos
+ */
+
+/* Botones de filtro estilo Material Design */
+.filter-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 16px;
+    border-radius: 24px;
+    border: 1px solid var(--border-color);
+    background: white;
+    font-size: 14px;
+    font-weight: 500;
+    font-family: 'Google Sans', 'Roboto', sans-serif;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    gap: 6px;
+    letter-spacing: 0.25px;
+    height: 36px;
+    min-width: auto;
+    box-shadow: 0 1px 2px 0 rgba(60,64,67,.3), 0 1px 3px 1px rgba(60,64,67,.15);
+}
+
+.filter-btn:hover {
+    background: var(--hover-bg);
+    border-color: #bdc1c6;
+    box-shadow: 0 1px 2px 0 rgba(60,64,67,.3), 0 1px 3px 1px rgba(60,64,67,.15);
+}
+
+.filter-btn:active {
+    transform: scale(0.98);
+}
+
+.filter-btn.filter-btn-active {
+    background: #e8f0fe;
+    color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.filter-btn.filter-btn-active svg {
+    color: var(--primary-color);
+}
+
+.filter-btn svg {
+    width: 18px;
+    height: 18px;
+    color: var(--text-secondary);
+}
+
+/* Botón estándar estilo Google */
+.button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 10px 24px;
+    border-radius: 24px;
+    background: #1a73e8;
+    color: white;
+    font-size: 14px;
+    font-weight: 500;
+    font-family: 'Google Sans', 'Roboto', sans-serif;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: none;
+    line-height: 1.5;
+    min-height: 40px;
+}
+
+.button:hover {
+    background: #1557b0;
+    box-shadow: 0 1px 2px 0 rgba(60,64,67,.3), 0 1px 3px 1px rgba(60,64,67,.15);
+    text-decoration: none;
+    color: white;
+}
+
+.button:active {
+    background: #0d47a1;
+}
+
+/* Variante blanca con letras azules */
+.button.button-secondary {
+    background: white;
+    color: #1a73e8;
+    border: 1px solid #dadce0;
+}
+
+.button.button-secondary:hover {
+    background: #f1f3f4;
+    color: #1557b0;
+    border-color: #bdc1c6;
+    box-shadow: none;
+}
+
+.button.button-secondary:active {
+    background: #e8eaed;
+    color: #0d47a1;
+}
+
+/* Botón estándar - Estilo Google Drive/Material Design */
+.btn {
+    padding: 10px 24px;
+    border-radius: 24px;
+    border: 1px solid #dadce0;
+    background: white;
+    font-size: 14px;
+    font-weight: 500;
+    font-family: 'Google Sans', 'Roboto', sans-serif;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    letter-spacing: 0.25px;
+    height: 40px;
+    min-width: 100px;
+    box-shadow: none;
+    outline: none;
+    position: relative;
+    overflow: hidden;
+    color: var(--text-primary);
+    text-transform: none;
+}
+
+.btn:hover {
+    background: #f1f3f4;
+    border-color: #bdc1c6;
+    box-shadow: 0 1px 2px 0 rgba(60,64,67,.3), 0 1px 3px 1px rgba(60,64,67,.15);
+    opacity: 0.9;
+}
+
+.btn:active {
+    transform: scale(0.98);
+    opacity: 0.8;
+}
+
+.btn:focus {
+    outline: none;
+}
+
+.btn:disabled,
+.btn[disabled] {
+    opacity: 0.6;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+/* Botón primario - Estilo Google Drive/Material Design */
+button.btn-primary,
+button.btn.btn-primary,
+.btn.btn-primary {
+    background: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+    font-weight: 600;
+    box-shadow: 0 1px 2px 0 rgba(60,64,67,.3), 0 1px 3px 1px rgba(60,64,67,.15);
+    padding: 10px 24px;
+    border-radius: 24px;
+    border: 1px solid var(--primary-color);
+    height: 40px;
+    min-width: 100px;
+    font-size: 14px;
+    font-family: 'Google Sans', 'Roboto', sans-serif;
+    letter-spacing: 0.25px;
+    text-transform: none;
+}
+
+button.btn-primary:hover,
+button.btn.btn-primary:hover,
+.btn.btn-primary:hover {
+    background: #1f4f80;
+    border-color: #2f5b88;
+    box-shadow: 0 1px 3px 0 rgba(60,64,67,.3), 0 4px 8px 3px rgba(60,64,67,.15);
+    opacity: 0.9;
+}
+
+button.btn-primary:active,
+button.btn.btn-primary:active,
+.btn.btn-primary:active {
+    background: #08396C;
+    transform: scale(0.98);
+    opacity: 0.85;
+}
+
+button.btn-primary:focus,
+button.btn.btn-primary:focus,
+.btn.btn-primary:focus {
+    outline: none;
+}
+
+button.btn-primary:disabled,
+button.btn.btn-primary:disabled,
+.btn.btn-primary:disabled,
+button.btn-primary[disabled],
+button.btn.btn-primary[disabled],
+.btn.btn-primary[disabled] {
+    opacity: 0.6;
+    cursor: not-allowed;
+    pointer-events: none;
+    background: rgba(55, 111, 163, 0.6);
+    border-color: rgba(67, 114, 158, 0.6);
+}
+
+

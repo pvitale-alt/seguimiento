@@ -54,6 +54,59 @@ class EpicsProyectoModel {
     }
 
     /**
+     * Sincronizar un epic individual
+     * @param {number} id_proyecto - ID del proyecto
+     * @param {Object} epic - Epic mapeado
+     * @returns {Promise<Object>} - Epic guardado
+     */
+    static async sincronizarEpic(id_proyecto, epic) {
+        try {
+            const query = `
+                INSERT INTO epics_proyecto (
+                    id_proyecto, epic_id, subject, status, total_estimated_hours, 
+                    total_spent_hours, proyecto_padre, nombre_proyecto_padre, cf_23, cf_21, cf_22, cf_15,
+                    created_at, updated_at
+                )
+                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+                ON CONFLICT (id_proyecto, epic_id)
+                DO UPDATE SET
+                    subject = EXCLUDED.subject,
+                    status = EXCLUDED.status,
+                    total_estimated_hours = EXCLUDED.total_estimated_hours,
+                    total_spent_hours = EXCLUDED.total_spent_hours,
+                    proyecto_padre = EXCLUDED.proyecto_padre,
+                    nombre_proyecto_padre = EXCLUDED.nombre_proyecto_padre,
+                    cf_23 = EXCLUDED.cf_23,
+                    cf_21 = EXCLUDED.cf_21,
+                    cf_22 = EXCLUDED.cf_22,
+                    cf_15 = EXCLUDED.cf_15,
+                    updated_at = CURRENT_TIMESTAMP
+                RETURNING *
+            `;
+            
+            const result = await pool.query(query, [
+                id_proyecto,
+                epic.epic_id,
+                epic.subject,
+                epic.status,
+                epic.total_estimated_hours,
+                epic.total_spent_hours,
+                epic.proyecto_padre,
+                epic.nombre_proyecto_padre,
+                epic.cf_23,
+                epic.cf_21,
+                epic.cf_22,
+                epic.cf_15
+            ]);
+            
+            return result.rows[0];
+        } catch (error) {
+            console.error('Error al sincronizar epic:', error);
+            throw error;
+        }
+    }
+
+    /**
      * Guardar o actualizar epics de un proyecto
      * @param {number} id_proyecto - ID del proyecto
      * @param {Array} epics - Array de epics mapeados

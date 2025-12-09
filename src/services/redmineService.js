@@ -64,7 +64,7 @@ function mapearProyecto(proyecto) {
         id_proyecto: proyecto.id,
         nombre_proyecto: proyecto.name || 'Sin nombre',
         codigo_proyecto: proyecto.identifier || null,
-        proyecto_padre: proyecto.parent?.name || null,
+        proyecto_padre: proyecto.parent?.id || null,
         estado_redmine: proyecto.status || null,
         producto: producto || null,
         cliente: cliente || null,
@@ -140,6 +140,42 @@ async function obtenerIdProyectoPorCodigo(codigoProyecto) {
         return data.project?.id || null;
     } catch (error) {
         console.error(`❌ Error al obtener ID del proyecto "${codigoProyecto}":`, error.message);
+        return null;
+    }
+}
+
+/**
+ * Obtener proyecto completo por su código (identifier)
+ * @param {string} codigoProyecto - Código del proyecto (identifier)
+ * @returns {Promise<Object|null>} - Proyecto completo o null si no se encuentra
+ */
+async function obtenerProyectoPorCodigo(codigoProyecto) {
+    if (!codigoProyecto) return null;
+    
+    validarCredenciales();
+    
+    try {
+        const baseUrl = REDMINE_URL.replace(/\/+$/, '');
+        const url = `${baseUrl}/projects/${codigoProyecto}.json?key=${REDMINE_TOKEN}&include=parent`;
+        
+        const response = await fetch(url, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'User-Agent': 'Seguimiento-NodeJS/1.0'
+            }
+        });
+        
+        if (!response.ok) {
+            console.warn(`⚠️ No se pudo obtener el proyecto con código "${codigoProyecto}": ${response.status}`);
+            return null;
+        }
+        
+        const data = await response.json();
+        return data.project || null;
+    } catch (error) {
+        console.error(`❌ Error al obtener proyecto "${codigoProyecto}":`, error.message);
         return null;
     }
 }
@@ -424,6 +460,9 @@ module.exports = {
     normalizarProductoParaRedmine,
     validarCredenciales,
     obtenerEpics,
-    mapearEpic
+    mapearEpic,
+    obtenerProyectoPorCodigo,
+    obtenerIdProyectoPorCodigo,
+    extraerCustomField
 };
 

@@ -41,22 +41,31 @@
                     </div>
                 </div>
 
-                <div id="contenido" class="table-container">
-                    <table class="table">
-                        <thead>
-                            <tr>
-                                <th>Producto</th>
-                                <th>Equipo</th>
-                                <th>ID Equipo Redmine</th>
-                                <th>Producto Redmine</th>
-                                <th>Código Proyecto Padre</th>
-                                <th>Acciones</th>
-                            </tr>
-                        </thead>
-                        <tbody id="tablaProductosEquipos">
-                            <!-- Se llena dinámicamente -->
-                    </tbody>
-                </table>
+                <!-- Tabs para secciones -->
+                <div class="tabs" style="padding: 0 24px; margin: 16px 0 0 0; border-bottom: 1px solid var(--border-color);">
+                    <a href="#" class="tab active" onclick="event.preventDefault(); if(typeof mostrarSeccion === 'function') mostrarSeccion('productos-equipos');" id="tab-productos-equipos">Productos y Equipos</a>
+                </div>
+
+                <!-- Sección Productos y Equipos -->
+                <div id="seccion-productos-equipos" class="seccion-admin">
+                    <div id="contenido" class="table-container">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Producto</th>
+                                    <th>Equipo</th>
+                                    <th>ID Equipo Redmine</th>
+                                    <th>Producto Redmine</th>
+                                    <th>Código Proyecto Padre</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tablaProductosEquipos">
+                                <!-- Se llena dinámicamente -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
                 </div>
         </div>
@@ -503,8 +512,6 @@
             padding: 20px;
         }
     </style>
-    
-    <!-- JavaScript -->
     <script src="/js/main.js"></script>
 </body>
 </html>

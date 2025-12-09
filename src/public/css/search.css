@@ -1,0 +1,113 @@
+/**
+ * Search CSS - Buscador estilo Google
+ * Seguimiento de Proyectos
+ */
+
+/* Buscador estilo Google */
+.google-search-box {
+    position: relative;
+}
+
+.google-search-box-container {
+    display: flex;
+    align-items: center;
+    background: white;
+    border: 1px solid #dfe1e5;
+    border-radius: 24px;
+    padding: 0 16px;
+    height: 44px;
+    box-shadow: 0 2px 5px 1px rgba(64,60,67,.16);
+    transition: all 0.2s;
+}
+
+.google-search-box-container:focus-within {
+    box-shadow: 0 2px 8px 1px rgba(64,60,67,.24);
+    border-color: transparent;
+}
+
+.google-search-input {
+    flex: 1;
+    border: none;
+    outline: none;
+    font-size: 16px;
+    font-family: 'Google Sans', 'Roboto', sans-serif;
+    background: transparent;
+    padding: 0;
+    margin: 0;
+    resize: none;
+    overflow: hidden;
+}
+
+.google-search-suggestions {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: white;
+    border: 1px solid #dfe1e5;
+    border-top: none;
+    border-radius: 0 0 24px 24px;
+    box-shadow: 0 4px 6px rgba(32,33,36,.28);
+    max-height: 400px;
+    overflow-y: auto;
+    z-index: 1000;
+    margin-top: -1px;
+    display: none;
+}
+
+.google-suggestion-item {
+    padding: 12px 16px;
+    cursor: pointer;
+    transition: background 0.15s;
+    display: flex;
+    align-items: center;
+    min-height: 56px;
+    font-size: 14px;
+    color: var(--text-primary);
+    gap: 12px;
+}
+
+.google-suggestion-item:hover {
+    background: #f1f3f4;
+}
+
+.google-suggestion-item:first-child {
+    padding-top: 8px;
+}
+
+.google-suggestion-item:last-child {
+    padding-bottom: 8px;
+}
+
+.suggestion-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--primary-color);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 14px;
+    flex-shrink: 0;
+}
+
+.suggestion-text {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.suggestion-title {
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.suggestion-subtitle {
+    font-size: 12px;
+    color: var(--text-secondary);
+}
+
+

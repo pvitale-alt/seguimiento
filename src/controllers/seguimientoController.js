@@ -1,5 +1,6 @@
 const MantenimientoModel = require('../models/MantenimientoModel');
 const ProyectosExternosModel = require('../models/ProyectosExternosModel');
+// ProyectosInternosModel ya no se usa - proyectos internos ahora usan ProyectosExternosModel con filtro de categoría
 const ProductosEquiposModel = require('../models/ProductosEquiposModel');
 const EpicsProyectoModel = require('../models/EpicsProyectoModel');
 const SubproyectosModel = require('../models/SubproyectosModel');
@@ -537,6 +538,168 @@ async function actualizarSubproyecto(req, res) {
     }
 }
 
+/**
+ * Renderizar página de proyectos internos
+ */
+async function proyectosInternos(req, res) {
+    try {
+        const producto = req.query.producto || null;
+        
+        // Obtener productos con equipos
+        const productosEquipos = await ProductosEquiposModel.obtenerTodos();
+        
+        res.render('pages/proyectos-internos', {
+            title: 'Proyectos Internos',
+            productosEquipos: productosEquipos,
+            productoActual: producto,
+            activeMenu: 'proyectos-internos',
+            isAdmin: req.isAdmin || false
+        });
+    } catch (error) {
+        console.error('Error en proyectosInternos:', error);
+        res.status(500).render('pages/error', {
+            title: 'Error',
+            error: 'Error al cargar la página de proyectos internos'
+        });
+    }
+}
+
+/**
+ * Obtener datos de proyectos internos
+ * Usa la misma tabla que proyectos externos pero con filtro de categoría "Proyectos Internos"
+ */
+async function obtenerProyectosInternos(req, res) {
+    try {
+        const producto = req.query.producto || null;
+        const filtros = {
+            producto: producto,
+            categoria: 'Proyectos Internos', // Filtro específico para proyectos internos
+            busqueda: req.query.busqueda || null,
+            orden: req.query.orden || 'nombre_proyecto',
+            direccion: req.query.direccion || 'asc'
+        };
+        
+        // Usar ProyectosExternosModel con filtro de categoría
+        const proyectos = await ProyectosExternosModel.obtenerTodos(filtros);
+        
+        // Obtener epics secundarios para detectar si tiene subproyectos (igual que en obtenerProyectos)
+        const ids_proyectos = proyectos.map(p => p.id_proyecto);
+        const epicsSecundarios = await EpicsProyectoModel.obtenerEpicsSecundariosPorProyectos(ids_proyectos);
+        
+        // Marcar si tiene subproyectos (carga lazy)
+        const proyectosConInfoSubproyectos = proyectos.map(proyecto => {
+            const epicsDelProyecto = epicsSecundarios[proyecto.id_proyecto] || [];
+            // Agrupar epics por proyecto_padre para contar subproyectos únicos
+            const proyectosSecundariosUnicos = {};
+            epicsDelProyecto.forEach(epic => {
+                const proyectoPadre = epic.proyecto_padre;
+                if (proyectoPadre && !proyectosSecundariosUnicos[proyectoPadre]) {
+                    proyectosSecundariosUnicos[proyectoPadre] = true;
+                }
+            });
+            const tieneSubproyectos = Object.keys(proyectosSecundariosUnicos).length > 0;
+            
+            return {
+                ...proyecto,
+                tiene_subproyectos: tieneSubproyectos,
+                subproyectos: [] // No cargar todavía, se cargarán bajo demanda
+            };
+        });
+        
+        res.json({
+            success: true,
+            data: proyectosConInfoSubproyectos
+        });
+    } catch (error) {
+        console.error('Error al obtener proyectos internos:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Error al obtener datos de proyectos internos'
+        });
+    }
+}
+
+/**
+ * Actualizar datos editables de proyecto interno
+ */
+async function actualizarProyectoInterno(req, res) {
+    try {
+        const { id_proyecto } = req.params;
+        const datos = req.body;
+        
+        const idProyectoNum = parseInt(id_proyecto);
+        if (isNaN(idProyectoNum)) {
+            return res.status(400).json({
+                success: false,
+                error: 'ID de proyecto inválido'
+            });
+        }
+        
+        // Usar ProyectosExternosModel (misma tabla que proyectos)
+        const resultado = await ProyectosExternosModel.actualizar(idProyectoNum, datos);
+        
+        if (!resultado) {
+            return res.status(404).json({
+                success: false,
+                error: 'Proyecto interno no encontrado'
+            });
+        }
+        
+        res.json({
+            success: true,
+            data: resultado
+        });
+    } catch (error) {
+        console.error('Error al actualizar proyecto interno:', error);
+        res.status(500).json({
+            success: false,
+            error: error.message || 'Error al actualizar proyecto interno'
+        });
+    }
+}
+
+/**
+ * Obtener sugerencias de búsqueda para proyectos internos
+ * Usa la misma tabla que proyectos externos pero con filtro de categoría "Proyectos Internos"
+ */
+async function obtenerSugerenciasProyectosInternos(req, res) {
+    try {
+        const query = req.query.q || '';
+        
+        if (!query || query.length < 2) {
+            return res.json({
+                success: true,
+                sugerencias: []
+            });
+        }
+        
+        const filtros = {
+            categoria: 'Proyectos Internos', // Filtro específico para proyectos internos
+            busqueda: query
+        };
+        
+        // Usar ProyectosExternosModel con filtro de categoría
+        const proyectos = await ProyectosExternosModel.obtenerTodos(filtros);
+        
+        const sugerencias = proyectos.slice(0, 10).map(proyecto => ({
+            nombre_proyecto: proyecto.nombre_proyecto,
+            cliente: proyecto.cliente,
+            producto: proyecto.producto
+        }));
+        
+        res.json({
+            success: true,
+            sugerencias: sugerencias
+        });
+    } catch (error) {
+        console.error('Error al obtener sugerencias de proyectos internos:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Error al obtener sugerencias'
+        });
+    }
+}
+
 module.exports = {
     index,
     obtenerMantenimiento,
@@ -549,6 +712,10 @@ module.exports = {
     obtenerSugerenciasMantenimiento,
     obtenerSugerenciasProyectos,
     sincronizarEpics,
-    obtenerMetricasDashboard
+    obtenerMetricasDashboard,
+    proyectosInternos,
+    obtenerProyectosInternos,
+    actualizarProyectoInterno,
+    obtenerSugerenciasProyectosInternos
 };
 
