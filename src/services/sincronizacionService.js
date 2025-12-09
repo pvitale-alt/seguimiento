@@ -425,7 +425,7 @@ async function sincronizarProyectosInternos(producto = null, maxTotal = null) {
         } catch (error) {
             console.warn(`   ⚠️ Error al obtener código proyecto padre: ${error.message}`);
         }
-        
+                    
         // 1. Obtener proyectos de Redmine con filtro de categoría "Proyectos Internos"
         console.log('📥 Paso 1: Obteniendo proyectos de Redmine con categoría "Proyectos Internos"...');
         const proyectosMapeados = await redmineService.obtenerProyectosMapeados({

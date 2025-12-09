@@ -56,41 +56,112 @@ async function mostrarDashboard() {
             }
         });
         
-        let dashboardHTML = '<div style="padding: 24px; position: relative;">';
-        dashboardHTML += '<div style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background-image: url(\'/images/cover.png\'); background-size: cover; background-position: center; background-repeat: no-repeat; opacity: 0.2; pointer-events: none; border-radius: 12px;"></div>';
-        dashboardHTML += '<div style="position: relative; z-index: 1; display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px;">';
+        // Función para convertir hex a rgba
+        function hexToRgba(hex, alpha) {
+            const r = parseInt(hex.slice(1, 3), 16);
+            const g = parseInt(hex.slice(3, 5), 16);
+            const b = parseInt(hex.slice(5, 7), 16);
+            return 'rgba(' + r + ', ' + g + ', ' + b + ', ' + alpha + ')';
+        }
+        
+        // Función para obtener colores únicos por producto
+        function obtenerColoresProducto(producto) {
+            const colores = {
+                'Abbaco': { primary: '#4285F4', secondary: '#E8F0FE', gradient: 'linear-gradient(135deg, #4285F4 0%, #34A853 100%)' },
+                'Portfolio': { primary: '#EA4335', secondary: '#FCE8E6', gradient: 'linear-gradient(135deg, #EA4335 0%, #FBBC04 100%)' },
+                'Portfolio Cloud': { primary: '#34A853', secondary: '#E6F4EA', gradient: 'linear-gradient(135deg, #34A853 0%, #4285F4 100%)' },
+                'Unitrade': { primary: '#FBBC04', secondary: '#FEF7E0', gradient: 'linear-gradient(135deg, #FBBC04 0%, #EA4335 100%)' },
+                'Trading Room': { primary: '#9C27B0', secondary: '#F3E5F5', gradient: 'linear-gradient(135deg, #9C27B0 0%, #673AB7 100%)' },
+                'Order Management': { primary: '#00BCD4', secondary: '#E0F7FA', gradient: 'linear-gradient(135deg, #00BCD4 0%, #009688 100%)' },
+                'OMS': { primary: '#00BCD4', secondary: '#E0F7FA', gradient: 'linear-gradient(135deg, #00BCD4 0%, #009688 100%)' },
+                'Pepper': { primary: '#FF5722', secondary: '#FFEBEE', gradient: 'linear-gradient(135deg, #FF5722 0%, #FF9800 100%)' }
+            };
+            return colores[producto] || { primary: '#1A73E8', secondary: '#E8F0FE', gradient: 'linear-gradient(135deg, #1A73E8 0%, #4285F4 100%)' };
+        }
+        
+        let dashboardHTML = '<div style="padding: 32px; position: relative;">';
+        dashboardHTML += '<div style="position: relative; z-index: 1; display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 28px;">';
         
         productosOrdenados.forEach(function(item) {
             const producto = item.producto;
             const productoNormalizado = producto === 'OMS' ? 'Order Management' : producto;
             const equipos = item.equipos || [];
             const metrica = metricasMap[producto] || { total_equipos: 0, total_clientes: 0, proyectos_en_curso: 0 };
+            const colores = obtenerColoresProducto(producto);
             
-            dashboardHTML += '<div style="background: linear-gradient(135deg, rgba(239, 246, 255, 0.6) 0%, rgba(255, 255, 255, 0.9) 100%); border-radius: 16px; padding: 28px; box-shadow: 0 2px 8px rgba(0,0,0,0.08), 0 1px 3px rgba(0,0,0,0.1); border: 1px solid rgba(26, 115, 232, 0.1); transition: all 0.3s ease; position: relative; overflow: hidden;">';
-            dashboardHTML += '<h3 style="font-size: 22px; font-weight: 500; color: var(--text-primary); margin-bottom: 20px; font-family: \'Google Sans\', \'Roboto\', sans-serif; position: relative; z-index: 1;">' + productoNormalizado + '</h3>';
+            // Crear variables rgba para transparencias
+            const primaryRgba70 = hexToRgba(colores.primary, 0.7);
+            const primaryRgba25 = hexToRgba(colores.primary, 0.25);
+            const primaryRgba20 = hexToRgba(colores.primary, 0.2);
+            const primaryRgba15 = hexToRgba(colores.primary, 0.15);
+            const primaryRgba10 = hexToRgba(colores.primary, 0.10);
+            const primaryRgba08 = hexToRgba(colores.primary, 0.08);
+            const primaryRgba06 = hexToRgba(colores.primary, 0.06);
             
+            // Variables para el header con mayor opacidad
+            const headerRgba40 = hexToRgba(colores.primary, 0.4);
+            const headerRgba50 = hexToRgba(colores.primary, 0.5);
+            const headerRgba15 = hexToRgba(colores.primary, 0.15);
+            const headerRgba12 = hexToRgba(colores.primary, 0.12);
+            const headerRgba10 = hexToRgba(colores.primary, 0.10);
+            
+            dashboardHTML += '<div class="dashboard-card" style="background: white; border-radius: 20px; padding: 0; box-shadow: 0 4px 12px rgba(0,0,0,0.08), 0 2px 4px rgba(0,0,0,0.04); transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); position: relative; overflow: hidden; border: 1px solid rgba(0,0,0,0.06);" onmouseover="this.style.transform=\'translateY(-4px)\'; this.style.boxShadow=\'0 8px 24px rgba(0,0,0,0.12), 0 4px 8px rgba(0,0,0,0.08)\';" onmouseout="this.style.transform=\'translateY(0)\'; this.style.boxShadow=\'0 4px 12px rgba(0,0,0,0.08), 0 2px 4px rgba(0,0,0,0.04)\';">';
+            
+            // Header con gradiente más oscuro
+            dashboardHTML += '<div style="background: linear-gradient(135deg, ' + headerRgba40 + ' 0%, ' + headerRgba50 + ' 100%); padding: 24px 28px; position: relative; overflow: hidden; border-bottom: 1px solid ' + headerRgba15 + ';">';
+            dashboardHTML += '<div style="position: absolute; top: -50px; right: -50px; width: 150px; height: 150px; background: ' + headerRgba12 + '; border-radius: 50%;"></div>';
+            dashboardHTML += '<div style="position: absolute; bottom: -30px; left: -30px; width: 100px; height: 100px; background: ' + headerRgba10 + '; border-radius: 50%;"></div>';
+            dashboardHTML += '<h3 style="font-size: 24px; font-weight: 600; color: ' + colores.primary + '; margin: 0; font-family: \'Google Sans\', \'Roboto\', sans-serif; position: relative; z-index: 1;">' + productoNormalizado + '</h3>';
+            dashboardHTML += '</div>';
+            
+            // Contenido
+            dashboardHTML += '<div style="padding: 28px;">';
+            
+            // Equipos
             if (equipos.length > 0) {
-                dashboardHTML += '<div style="margin-bottom: 20px; position: relative; z-index: 1;">';
-                dashboardHTML += '<div style="display: flex; flex-wrap: wrap; gap: 6px;">';
+                dashboardHTML += '<div style="margin-bottom: 24px;">';
+                dashboardHTML += '<div style="display: flex; flex-wrap: wrap; gap: 8px;">';
                 equipos.forEach(function(equipo) {
-                    dashboardHTML += '<span style="display: inline-block; padding: 4px 10px; background: rgba(26, 115, 232, 0.1); color: var(--primary-color); border-radius: 12px; font-size: 12px; font-weight: 500; border: 1px solid rgba(26, 115, 232, 0.3);">' + equipo.equipo + '</span>';
+                    dashboardHTML += '<span style="display: inline-flex; align-items: center; padding: 6px 14px; background: ' + primaryRgba15 + '; color: ' + colores.primary + '; border-radius: 20px; font-size: 12px; font-weight: 500; border: 1px solid rgba(0,0,0,0.06); font-family: \'Google Sans\', \'Roboto\', sans-serif;">' + equipo.equipo + '</span>';
                 });
                 dashboardHTML += '</div>';
                 dashboardHTML += '</div>';
             }
             
-            dashboardHTML += '<div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-top: 20px; position: relative; z-index: 1;">';
+            // Métricas
+            // Para Abbaco y Pepper, solo mostrar "Proyectos en Curso"
+            const mostrarClientes = producto !== 'Abbaco' && producto !== 'Pepper';
+            const gridColumns = mostrarClientes ? 'repeat(2, 1fr)' : '1fr';
             
-            dashboardHTML += '<div style="padding: 16px; border-radius: 12px;">';
-            dashboardHTML += '<div style="font-size: 11px; color: var(--text-secondary); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 500;">Total Clientes</div>';
-            dashboardHTML += '<div style="font-size: 32px; font-weight: 600; color: var(--primary-color); line-height: 1;">' + parseInt(metrica.total_clientes || 0) + '</div>';
+            dashboardHTML += '<div style="display: grid; grid-template-columns: ' + gridColumns + '; gap: 16px;">';
+            
+            // Métrica: Total Clientes (solo si no es Abbaco ni Pepper)
+            if (mostrarClientes) {
+                dashboardHTML += '<div style="background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%); border-radius: 16px; padding: 20px; border: 1px solid rgba(0,0,0,0.04); transition: all 0.2s;" onmouseover="this.style.background=\'linear-gradient(135deg, #f1f3f4 0%, #ffffff 100%)\'; this.style.borderColor=\'' + primaryRgba20 + '\';" onmouseout="this.style.background=\'linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%)\'; this.style.borderColor=\'rgba(0,0,0,0.04)\';">';
+                dashboardHTML += '<div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px;">';
+                dashboardHTML += '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="color: ' + primaryRgba70 + ';">';
+                dashboardHTML += '<path d="M16 7C16 9.20914 14.2091 11 12 11C9.79086 11 8 9.20914 8 7C8 4.79086 9.79086 3 12 3C14.2091 3 16 4.79086 16 7Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>';
+                dashboardHTML += '<path d="M12 14C8.13401 14 5 17.134 5 21H19C19 17.134 15.866 14 12 14Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>';
+                dashboardHTML += '</svg>';
+                dashboardHTML += '<div style="font-size: 12px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.8px; font-weight: 600; font-family: \'Google Sans\', \'Roboto\', sans-serif;">Clientes</div>';
+                dashboardHTML += '</div>';
+                dashboardHTML += '<div style="font-size: 36px; font-weight: 700; color: ' + primaryRgba70 + '; line-height: 1; font-family: \'Google Sans\', \'Roboto\', sans-serif;">' + parseInt(metrica.total_clientes || 0) + '</div>';
+                dashboardHTML += '</div>';
+            }
+            
+            // Métrica: Proyectos en Curso
+            dashboardHTML += '<div style="background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%); border-radius: 16px; padding: 20px; border: 1px solid rgba(0,0,0,0.04); transition: all 0.2s;" onmouseover="this.style.background=\'linear-gradient(135deg, #f1f3f4 0%, #ffffff 100%)\'; this.style.borderColor=\'' + primaryRgba20 + '\';" onmouseout="this.style.background=\'linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%)\'; this.style.borderColor=\'rgba(0,0,0,0.04)\';">';
+            dashboardHTML += '<div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px;">';
+            dashboardHTML += '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="color: ' + primaryRgba70 + ';">';
+            dashboardHTML += '<path d="M9 11L12 14L22 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>';
+            dashboardHTML += '<path d="M21 12V19C21 20.1046 20.1046 21 19 21H5C3.89543 21 3 20.1046 3 19V5C3 3.89543 3.89543 3 5 3H16" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>';
+            dashboardHTML += '</svg>';
+            dashboardHTML += '<div style="font-size: 12px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.8px; font-weight: 600; font-family: \'Google Sans\', \'Roboto\', sans-serif;">En Curso</div>';
+            dashboardHTML += '</div>';
+            dashboardHTML += '<div style="font-size: 36px; font-weight: 700; color: ' + primaryRgba70 + '; line-height: 1; font-family: \'Google Sans\', \'Roboto\', sans-serif;">' + parseInt(metrica.proyectos_en_curso || 0) + '</div>';
             dashboardHTML += '</div>';
             
-            dashboardHTML += '<div style="padding: 16px; border-radius: 12px;">';
-            dashboardHTML += '<div style="font-size: 11px; color: var(--text-secondary); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 500;">Proyectos en Curso</div>';
-            dashboardHTML += '<div style="font-size: 32px; font-weight: 600; color: var(--primary-color); line-height: 1;">' + parseInt(metrica.proyectos_en_curso || 0) + '</div>';
             dashboardHTML += '</div>';
-            
             dashboardHTML += '</div>';
             dashboardHTML += '</div>';
         });
