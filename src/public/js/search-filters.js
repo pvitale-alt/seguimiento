@@ -245,7 +245,7 @@ function deseleccionarTodosEstados() {
 }
 
 // Variables para ordenamiento
-let ordenActual = { columna: 'cliente', direccion: 'asc' };
+let ordenActual = { columna: 'cliente', direccion: 'desc' };
 const ordenEstados = ['sin comenzar', 'en curso', 'Testing', 'Entregado', 'Cerrado', 'Rework', 'Bloqueado'];
 
 function ordenarPor(columna) {
@@ -253,9 +253,13 @@ function ordenarPor(columna) {
         ordenActual.direccion = ordenActual.direccion === 'asc' ? 'desc' : 'asc';
     } else {
         ordenActual.columna = columna;
-        ordenActual.direccion = 'asc';
+        // Si es cliente, usar 'desc' por defecto, sino 'asc'
+        ordenActual.direccion = columna === 'cliente' ? 'desc' : 'asc';
     }
     cargarDatos();
 }
+
+
+
 
 

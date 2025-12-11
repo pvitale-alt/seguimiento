@@ -18,6 +18,15 @@ const pool = new Pool({
     connectionTimeoutMillis: 10000,
 });
 
+// Configurar timezone para todas las conexiones (Buenos Aires, Argentina)
+pool.on('connect', async (client) => {
+    try {
+        await client.query('SET timezone = \'America/Argentina/Buenos_Aires\'');
+    } catch (error) {
+        console.error('Error al configurar timezone:', error);
+    }
+});
+
 // Manejo de errores del pool
 pool.on('error', (err) => {
     console.error('❌ Error inesperado en el pool de PostgreSQL:', err);
@@ -77,6 +86,9 @@ module.exports = {
     query,
     transaction
 };
+
+
+
 
 
 

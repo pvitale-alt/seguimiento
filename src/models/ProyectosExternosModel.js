@@ -2,6 +2,40 @@ const { pool } = require('../config/database');
 
 class ProyectosExternosModel {
     /**
+     * Obtener categorías disponibles para un equipo (desde redmine_proyectos_externos)
+     * @param {string} equipo - ID del equipo
+     * @returns {Promise<Array>} - Array de categorías
+     */
+    static async obtenerCategoriasEquipo(equipo) {
+        try {
+            let query = `
+                SELECT DISTINCT categoria
+                FROM redmine_proyectos_externos
+                WHERE categoria IS NOT NULL AND categoria != ''
+                AND categoria != 'Bolsa de Horas'
+                AND categoria != 'On-Site'
+                AND categoria != 'Mantenimiento'
+            `;
+            const params = [];
+            let paramCount = 1;
+
+            if (equipo && equipo !== '*' && equipo !== 'null') {
+                query += ` AND equipo = $${paramCount}`;
+                params.push(equipo);
+                paramCount++;
+            }
+
+            query += ` ORDER BY categoria ASC`;
+
+            const result = await pool.query(query, params);
+            return result.rows.map(row => row.categoria);
+        } catch (error) {
+            console.error('Error al obtener categorías del equipo:', error);
+            throw error;
+        }
+    }
+
+    /**
      * Obtener todos los proyectos externos con datos completos (vista)
      * @param {Object} filtros - Filtros de búsqueda
      * @returns {Promise<Array>} - Array de proyectos externos
@@ -91,9 +125,10 @@ class ProyectosExternosModel {
      * Actualizar datos editables de proyecto externo
      * @param {number} id_proyecto - ID del proyecto en Redmine
      * @param {Object} datos - Datos a actualizar
+     * @param {boolean} actualizarTimestamp - Si debe actualizar updated_at (default: true)
      * @returns {Promise<Object>} - Proyecto externo actualizado
      */
-    static async actualizar(id_proyecto, datos) {
+    static async actualizar(id_proyecto, datos, actualizarTimestamp = true) {
         try {
             // Verificar primero que el proyecto existe en redmine_proyectos_externos
             // Esto es necesario porque hay una foreign key constraint
@@ -138,6 +173,15 @@ class ProyectosExternosModel {
             if ('riesgos' in datos) {
                 campos.push(`riesgos = EXCLUDED.riesgos`);
             }
+            if ('accionables' in datos) {
+                campos.push(`accionables = EXCLUDED.accionables`);
+            }
+            if ('fecha_accionable' in datos) {
+                campos.push(`fecha_accionable = EXCLUDED.fecha_accionable`);
+            }
+            if ('asignado_accionable' in datos) {
+                campos.push(`asignado_accionable = EXCLUDED.asignado_accionable`);
+            }
             
             if (campos.length === 0) {
                 return await this.obtenerPorId(id_proyecto);
@@ -155,18 +199,21 @@ class ProyectosExternosModel {
                 'fecha_inicio' in datos ? (datos.fecha_inicio || null) : null,
                 'fecha_fin' in datos ? (datos.fecha_fin || null) : null,
                 'win' in datos ? (datos.win || null) : null,
-                'riesgos' in datos ? (datos.riesgos || null) : null
+                'riesgos' in datos ? (datos.riesgos || null) : null,
+                'accionables' in datos ? (datos.accionables || null) : null,
+                'fecha_accionable' in datos ? (datos.fecha_accionable || null) : null,
+                'asignado_accionable' in datos ? (datos.asignado_accionable || null) : null
             ];
             
             // Usar UPSERT (INSERT ... ON CONFLICT DO UPDATE) para crear o actualizar
             // Ahora es seguro porque ya verificamos que existe en redmine_proyectos_externos
+            const updateTimestamp = actualizarTimestamp ? ', updated_at = CURRENT_TIMESTAMP' : '';
             const query = `
-                INSERT INTO proyectos_externos (id_proyecto, estado, overall, alcance, costo, plazos, avance, fecha_inicio, fecha_fin, win, riesgos, created_at, updated_at)
-                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+                INSERT INTO proyectos_externos (id_proyecto, estado, overall, alcance, costo, plazos, avance, fecha_inicio, fecha_fin, win, riesgos, accionables, fecha_accionable, asignado_accionable, created_at, updated_at)
+                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
                 ON CONFLICT (id_proyecto) 
                 DO UPDATE SET
-                    ${campos.join(', ')},
-                    updated_at = CURRENT_TIMESTAMP
+                    ${campos.join(', ')}${updateTimestamp}
                 RETURNING *
             `;
             

@@ -7,6 +7,13 @@
 async function mostrarDashboard() {
     const contenido = document.getElementById('contenido');
     
+    // Eliminar estilos de table-container cuando se muestra el dashboard
+    contenido.className = '';
+    contenido.style.background = 'transparent';
+    contenido.style.borderRadius = '0';
+    contenido.style.boxShadow = 'none';
+    contenido.style.overflow = 'visible';
+    
     // Mostrar loading
     contenido.innerHTML = '<div class="empty-state"><div class="spinner"></div><div class="empty-state-text">Cargando métricas...</div></div>';
     
@@ -79,94 +86,48 @@ async function mostrarDashboard() {
             return colores[producto] || { primary: '#1A73E8', secondary: '#E8F0FE', gradient: 'linear-gradient(135deg, #1A73E8 0%, #4285F4 100%)' };
         }
         
-        let dashboardHTML = '<div style="padding: 32px; position: relative;">';
-        dashboardHTML += '<div style="position: relative; z-index: 1; display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 28px;">';
+        let dashboardHTML = '<div style="position: relative; z-index: 1; display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 24px;">';
         
-        productosOrdenados.forEach(function(item) {
+        productosOrdenados.forEach(function(item, index) {
             const producto = item.producto;
             const productoNormalizado = producto === 'OMS' ? 'Order Management' : producto;
             const equipos = item.equipos || [];
             const metrica = metricasMap[producto] || { total_equipos: 0, total_clientes: 0, proyectos_en_curso: 0 };
             const colores = obtenerColoresProducto(producto);
             
-            // Crear variables rgba para transparencias
-            const primaryRgba70 = hexToRgba(colores.primary, 0.7);
-            const primaryRgba25 = hexToRgba(colores.primary, 0.25);
-            const primaryRgba20 = hexToRgba(colores.primary, 0.2);
-            const primaryRgba15 = hexToRgba(colores.primary, 0.15);
-            const primaryRgba10 = hexToRgba(colores.primary, 0.10);
-            const primaryRgba08 = hexToRgba(colores.primary, 0.08);
-            const primaryRgba06 = hexToRgba(colores.primary, 0.06);
+            // Para Abbaco y Pepper, solo mostrar "Proyectos en Curso"
+            const mostrarClientes = producto !== 'Abbaco' && producto !== 'Pepper';
             
-            // Variables para el header con mayor opacidad
-            const headerRgba40 = hexToRgba(colores.primary, 0.4);
-            const headerRgba50 = hexToRgba(colores.primary, 0.5);
-            const headerRgba15 = hexToRgba(colores.primary, 0.15);
-            const headerRgba12 = hexToRgba(colores.primary, 0.12);
-            const headerRgba10 = hexToRgba(colores.primary, 0.10);
+            // Estilo tipo article card
+            dashboardHTML += '<div class="feed-article" style="background: white; border-radius: 12px; padding: 24px; box-shadow: 0 1px 2px 0 rgba(60,64,67,.3), 0 1px 3px 1px rgba(60,64,67,.15); transition: all 0.2s; cursor: pointer; border: 1px solid transparent;" onmouseover="this.style.boxShadow=\'0 2px 6px 2px rgba(60,64,67,.15), 0 1px 2px 0 rgba(60,64,67,.3)\'; this.style.borderColor=\'#dadce0\';" onmouseout="this.style.boxShadow=\'0 1px 2px 0 rgba(60,64,67,.3), 0 1px 3px 1px rgba(60,64,67,.15)\'; this.style.borderColor=\'transparent\';" onclick="window.location.href=\'/?producto=\' + encodeURIComponent(\'' + producto + '\')">';
             
-            dashboardHTML += '<div class="dashboard-card" style="background: white; border-radius: 20px; padding: 0; box-shadow: 0 4px 12px rgba(0,0,0,0.08), 0 2px 4px rgba(0,0,0,0.04); transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); position: relative; overflow: hidden; border: 1px solid rgba(0,0,0,0.06);" onmouseover="this.style.transform=\'translateY(-4px)\'; this.style.boxShadow=\'0 8px 24px rgba(0,0,0,0.12), 0 4px 8px rgba(0,0,0,0.08)\';" onmouseout="this.style.transform=\'translateY(0)\'; this.style.boxShadow=\'0 4px 12px rgba(0,0,0,0.08), 0 2px 4px rgba(0,0,0,0.04)\';">';
+            // Eyebrow (Producto) - estilo ANDROID (color uniforme #4285F4 para todos)
+            dashboardHTML += '<a class="uni-eyebrow" style="display: inline-block; font-size: 14px; font-weight: 500; color: #4285F4; text-decoration: none; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px; font-family: \'Google Sans\', \'Roboto\', sans-serif;">' + productoNormalizado.toUpperCase() + '</a>';
             
-            // Header con gradiente más oscuro
-            dashboardHTML += '<div style="background: linear-gradient(135deg, ' + headerRgba40 + ' 0%, ' + headerRgba50 + ' 100%); padding: 24px 28px; position: relative; overflow: hidden; border-bottom: 1px solid ' + headerRgba15 + ';">';
-            dashboardHTML += '<div style="position: absolute; top: -50px; right: -50px; width: 150px; height: 150px; background: ' + headerRgba12 + '; border-radius: 50%;"></div>';
-            dashboardHTML += '<div style="position: absolute; bottom: -30px; left: -30px; width: 100px; height: 100px; background: ' + headerRgba10 + '; border-radius: 50%;"></div>';
-            dashboardHTML += '<h3 style="font-size: 24px; font-weight: 600; color: ' + colores.primary + '; margin: 0; font-family: \'Google Sans\', \'Roboto\', sans-serif; position: relative; z-index: 1;">' + productoNormalizado + '</h3>';
-            dashboardHTML += '</div>';
-            
-            // Contenido
-            dashboardHTML += '<div style="padding: 28px;">';
-            
-            // Equipos
+            // Equipos como tags
             if (equipos.length > 0) {
-                dashboardHTML += '<div style="margin-bottom: 24px;">';
-                dashboardHTML += '<div style="display: flex; flex-wrap: wrap; gap: 8px;">';
+                dashboardHTML += '<div style="display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px;">';
                 equipos.forEach(function(equipo) {
-                    dashboardHTML += '<span style="display: inline-flex; align-items: center; padding: 6px 14px; background: ' + primaryRgba15 + '; color: ' + colores.primary + '; border-radius: 20px; font-size: 12px; font-weight: 500; border: 1px solid rgba(0,0,0,0.06); font-family: \'Google Sans\', \'Roboto\', sans-serif;">' + equipo.equipo + '</span>';
+                    dashboardHTML += '<span style="display: inline-flex; align-items: center; padding: 4px 10px; background: #f1f3f4; color: #5f6368; border-radius: 12px; font-size: 12px; font-weight: 400; font-family: \'Google Sans\', \'Roboto\', sans-serif;">' + equipo.equipo + '</span>';
                 });
-                dashboardHTML += '</div>';
                 dashboardHTML += '</div>';
             }
             
-            // Métricas
-            // Para Abbaco y Pepper, solo mostrar "Proyectos en Curso"
-            const mostrarClientes = producto !== 'Abbaco' && producto !== 'Pepper';
-            const gridColumns = mostrarClientes ? 'repeat(2, 1fr)' : '1fr';
-            
-            dashboardHTML += '<div style="display: grid; grid-template-columns: ' + gridColumns + '; gap: 16px;">';
+            // Métricas - estilo eyebrow__date
+            dashboardHTML += '<div style="display: flex; flex-direction: column; gap: 8px;">';
             
             // Métrica: Total Clientes (solo si no es Abbaco ni Pepper)
             if (mostrarClientes) {
-                dashboardHTML += '<div style="background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%); border-radius: 16px; padding: 20px; border: 1px solid rgba(0,0,0,0.04); transition: all 0.2s;" onmouseover="this.style.background=\'linear-gradient(135deg, #f1f3f4 0%, #ffffff 100%)\'; this.style.borderColor=\'' + primaryRgba20 + '\';" onmouseout="this.style.background=\'linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%)\'; this.style.borderColor=\'rgba(0,0,0,0.04)\';">';
-                dashboardHTML += '<div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px;">';
-                dashboardHTML += '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="color: ' + primaryRgba70 + ';">';
-                dashboardHTML += '<path d="M16 7C16 9.20914 14.2091 11 12 11C9.79086 11 8 9.20914 8 7C8 4.79086 9.79086 3 12 3C14.2091 3 16 4.79086 16 7Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>';
-                dashboardHTML += '<path d="M12 14C8.13401 14 5 17.134 5 21H19C19 17.134 15.866 14 12 14Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>';
-                dashboardHTML += '</svg>';
-                dashboardHTML += '<div style="font-size: 12px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.8px; font-weight: 600; font-family: \'Google Sans\', \'Roboto\', sans-serif;">Clientes</div>';
-                dashboardHTML += '</div>';
-                dashboardHTML += '<div style="font-size: 36px; font-weight: 700; color: ' + primaryRgba70 + '; line-height: 1; font-family: \'Google Sans\', \'Roboto\', sans-serif;">' + parseInt(metrica.total_clientes || 0) + '</div>';
-                dashboardHTML += '</div>';
+                dashboardHTML += '<span class="eyebrow__date" style="display: inline-block; font-size: 12px; font-weight: 400; color: #5f6368; text-transform: uppercase; letter-spacing: 0.5px; font-family: \'Google Sans\', \'Roboto\', sans-serif; line-height: 1.5;">CLIENTES ' + parseInt(metrica.total_clientes || 0) + '</span>';
             }
             
             // Métrica: Proyectos en Curso
-            dashboardHTML += '<div style="background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%); border-radius: 16px; padding: 20px; border: 1px solid rgba(0,0,0,0.04); transition: all 0.2s;" onmouseover="this.style.background=\'linear-gradient(135deg, #f1f3f4 0%, #ffffff 100%)\'; this.style.borderColor=\'' + primaryRgba20 + '\';" onmouseout="this.style.background=\'linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%)\'; this.style.borderColor=\'rgba(0,0,0,0.04)\';">';
-            dashboardHTML += '<div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px;">';
-            dashboardHTML += '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="color: ' + primaryRgba70 + ';">';
-            dashboardHTML += '<path d="M9 11L12 14L22 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>';
-            dashboardHTML += '<path d="M21 12V19C21 20.1046 20.1046 21 19 21H5C3.89543 21 3 20.1046 3 19V5C3 3.89543 3.89543 3 5 3H16" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>';
-            dashboardHTML += '</svg>';
-            dashboardHTML += '<div style="font-size: 12px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.8px; font-weight: 600; font-family: \'Google Sans\', \'Roboto\', sans-serif;">En Curso</div>';
-            dashboardHTML += '</div>';
-            dashboardHTML += '<div style="font-size: 36px; font-weight: 700; color: ' + primaryRgba70 + '; line-height: 1; font-family: \'Google Sans\', \'Roboto\', sans-serif;">' + parseInt(metrica.proyectos_en_curso || 0) + '</div>';
-            dashboardHTML += '</div>';
+            dashboardHTML += '<span class="eyebrow__date" style="display: inline-block; font-size: 12px; font-weight: 400; color: #5f6368; text-transform: uppercase; letter-spacing: 0.5px; font-family: \'Google Sans\', \'Roboto\', sans-serif; line-height: 1.5;">PROYECTOS EN CURSO ' + parseInt(metrica.proyectos_en_curso || 0) + '</span>';
             
-            dashboardHTML += '</div>';
             dashboardHTML += '</div>';
             dashboardHTML += '</div>';
         });
         
-        dashboardHTML += '</div>';
         dashboardHTML += '</div>';
         
         contenido.innerHTML = dashboardHTML;
@@ -228,12 +189,15 @@ async function cargarDatos() {
         
         if (tipoActual === 'mantenimiento') {
             endpoint = '/api/mantenimiento?' + params;
-        } else if (tipoActual === 'proyectos') {
-            endpoint = '/api/proyectos?' + params;
-        } else if (tipoActual === 'proyectos-internos') {
-            endpoint = '/api/proyectos-internos?' + params;
         } else {
-            throw new Error('Tipo de datos no válido: ' + tipoActual);
+            // Para todas las demás categorías (proyectos externos, internos, bolsa de horas, etc.)
+            // Usar el endpoint de proyectos con la categoría correspondiente
+            endpoint = '/api/proyectos?' + params;
+            
+            // Si hay categoría definida, agregarla como parámetro
+            if (typeof categoriaActual !== 'undefined' && categoriaActual) {
+                endpoint += '&categoria=' + encodeURIComponent(categoriaActual);
+            }
         }
 
         const controller = new AbortController();
@@ -279,7 +243,8 @@ async function cargarDatos() {
         if (result.data.length > 0) {
             let datosFiltrados = result.data;
             
-            if (tipoActual === 'proyectos') {
+            // Para todas las categorías que no sean mantenimiento (proyectos externos, internos, bolsa de horas, etc.)
+            if (tipoActual !== 'mantenimiento') {
                 if (typeof datosOriginales !== 'undefined') {
                     datosOriginales = result.data;
                 }
@@ -296,7 +261,7 @@ async function cargarDatos() {
                 }
             }
             
-            if (tipoActual === 'proyectos') {
+            if (tipoActual !== 'mantenimiento') {
                 if (typeof filtrosClientes !== 'undefined' && filtrosClientes.length > 0) {
                     datosFiltrados = datosFiltrados.filter(d => filtrosClientes.includes(d.cliente));
                 }
@@ -312,12 +277,14 @@ async function cargarDatos() {
                 }
             }
             
-            if (tipoActual === 'proyectos' && typeof ordenActual !== 'undefined' && ordenActual && ordenActual.columna === 'cliente' && ordenActual.direccion === 'asc') {
+            if (tipoActual !== 'mantenimiento' && typeof ordenActual !== 'undefined' && ordenActual && ordenActual.columna === 'cliente') {
                 datosFiltrados.sort((a, b) => {
                     const clienteA = (a.cliente || '').toLowerCase();
                     const clienteB = (b.cliente || '').toLowerCase();
                     if (clienteA !== clienteB) {
-                        return clienteA < clienteB ? -1 : 1;
+                        return ordenActual.direccion === 'asc' 
+                            ? (clienteA < clienteB ? -1 : 1)
+                            : (clienteA > clienteB ? -1 : 1);
                     }
                     const ordenEstadosArray = typeof ordenEstados !== 'undefined' ? ordenEstados : [];
                     const indexA = ordenEstadosArray.indexOf((a.estado || '').toLowerCase());
@@ -341,7 +308,7 @@ async function cargarDatos() {
                 datosOriginales = [];
             }
             contenido.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📭</div><div class="empty-state-text">No hay datos disponibles</div><div class="empty-state-subtext">Haz clic en "Actualizar" para sincronizar</div></div>';
-            if (tipoActual === 'proyectos') {
+            if (tipoActual !== 'mantenimiento') {
                 if (typeof actualizarFiltroClientesDesdeTabla === 'function') {
                     actualizarFiltroClientesDesdeTabla();
                 }
@@ -375,7 +342,7 @@ async function cargarDatos() {
             '<button class="button" onclick="cargarDatos()" style="margin-top: 16px;">Reintentar</button>' +
             '</div>';
         
-        if (tipoActual === 'proyectos') {
+        if (tipoActual !== 'mantenimiento') {
             const contadorProyectos = document.getElementById('contadorProyectos');
             if (contadorProyectos) {
                 contadorProyectos.textContent = 'total proyectos: 0';

@@ -75,10 +75,10 @@
     margin-left: 8px;
 }
 
-/* Proyectos: 10 columnas */
+/* Proyectos: 11 columnas (agregada columna Accionables) */
 .modern-table.proyectos .modern-table-header,
 .modern-table.proyectos .modern-table-row {
-    grid-template-columns: 40px 150px 300px 120px 70px 70px 70px 70px 70px 100px;
+    grid-template-columns: 40px 150px 300px 120px 70px 70px 70px 70px 70px 100px 100px;
 }
 
 /* Texto de cliente más bold */
@@ -214,5 +214,7 @@
 .table tbody tr:last-child td {
     border-bottom: none;
 }
+
+
 
 

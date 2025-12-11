@@ -1,5 +1,6 @@
 const MantenimientoModel = require('../models/MantenimientoModel');
 const ProyectosExternosModel = require('../models/ProyectosExternosModel');
+const AccionablesProyectoModel = require('../models/AccionablesProyectoModel');
 // ProyectosInternosModel ya no se usa - proyectos internos ahora usan ProyectosExternosModel con filtro de categoría
 const ProductosEquiposModel = require('../models/ProductosEquiposModel');
 const EpicsProyectoModel = require('../models/EpicsProyectoModel');
@@ -14,6 +15,7 @@ async function index(req, res) {
         const producto = req.query.producto || null;
         const equipo = req.query.equipo || null;
         const tipo = req.query.tipo || 'mantenimiento';
+        const categoriaActual = req.query.categoria || null;
         
         // Obtener productos con equipos
         const productosEquipos = await ProductosEquiposModel.obtenerTodos();
@@ -30,6 +32,58 @@ async function index(req, res) {
             }
         }
         
+        // Obtener categorías disponibles para el equipo (para solapas dinámicas)
+        let categoriasEquipo = [];
+        if (equipo) {
+            categoriasEquipo = await ProyectosExternosModel.obtenerCategoriasEquipo(equipo);
+        }
+        
+        // Verificar si hay proyectos de mantenimiento para este equipo/producto
+        let tieneMantenimiento = false;
+        if (producto && equipo) {
+            const filtrosMantenimiento = {
+                producto: producto,
+                equipo: equipo
+            };
+            const mantenimientos = await MantenimientoModel.obtenerTodos(filtrosMantenimiento);
+            
+            // También verificar proyectos de "Bolsa de Horas" y "On-Site"
+            const filtrosBolsaHoras = {
+                producto: producto,
+                equipo: equipo,
+                categoria: 'Bolsa de Horas'
+            };
+            const proyectosBolsaHoras = await ProyectosExternosModel.obtenerTodos(filtrosBolsaHoras);
+            
+            const filtrosOnSite = {
+                producto: producto,
+                equipo: equipo,
+                categoria: 'On-Site'
+            };
+            const proyectosOnSite = await ProyectosExternosModel.obtenerTodos(filtrosOnSite);
+            
+            // Si hay al menos un proyecto de mantenimiento, bolsa de horas u on-site, mostrar la solapa
+            tieneMantenimiento = mantenimientos.length > 0 || proyectosBolsaHoras.length > 0 || proyectosOnSite.length > 0;
+        }
+        
+        // Si no hay tipo especificado o el tipo es 'mantenimiento' pero no hay proyectos de mantenimiento, redirigir a la primera solapa disponible
+        if (producto && equipo) {
+            // Si no hay tipo o es 'mantenimiento' pero no hay mantenimiento, determinar la primera solapa disponible
+            if (!tipo || tipo === 'mantenimiento') {
+                if (tieneMantenimiento) {
+                    // Si hay mantenimiento y el tipo es 'mantenimiento' o no está especificado, usar mantenimiento
+                    if (!tipo) {
+                        tipo = 'mantenimiento';
+                    }
+                } else if (categoriasEquipo.length > 0) {
+                    // Si no hay mantenimiento pero hay categorías, redirigir a la primera categoría
+                    const primeraCategoria = categoriasEquipo[0];
+                    const tipoSlug = primeraCategoria.toLowerCase().replace(/\s+/g, '-');
+                    return res.redirect(`/?producto=${encodeURIComponent(producto)}&equipo=${encodeURIComponent(equipo)}&tipo=${tipoSlug}&categoria=${encodeURIComponent(primeraCategoria)}`);
+                }
+            }
+        }
+        
         res.render('pages/index', {
             title: 'Seguimiento de Proyectos',
             productosEquipos: productosEquipos,
@@ -37,6 +91,9 @@ async function index(req, res) {
             equipoActual: equipo,
             equipoNombre: equipoNombre,
             tipoActual: tipo,
+            categoriaActual: categoriaActual,
+            categoriasEquipo: categoriasEquipo,
+            tieneMantenimiento: tieneMantenimiento,
             activeMenu: 'seguimiento',
             isAdmin: req.isAdmin || false
         });
@@ -64,11 +121,52 @@ async function obtenerMantenimiento(req, res) {
             direccion: req.query.direccion || 'asc'
         };
         
+        // Obtener proyectos de mantenimiento (Mantenimiento + On-Site)
         const mantenimientos = await MantenimientoModel.obtenerTodos(filtros);
+        
+        // Obtener proyectos de "Bolsa de Horas" desde proyectos_externos
+        const filtrosBolsaHoras = {
+            producto: producto,
+            equipo: equipo,
+            categoria: 'Bolsa de Horas',
+            busqueda: req.query.busqueda || null,
+            orden: req.query.orden || 'nombre_proyecto',
+            direccion: req.query.direccion || 'asc'
+        };
+        const proyectosBolsaHoras = await ProyectosExternosModel.obtenerTodos(filtrosBolsaHoras);
+        
+        // Combinar ambos resultados y eliminar duplicados por id_proyecto
+        const proyectosMap = new Map();
+        mantenimientos.forEach(m => {
+            proyectosMap.set(m.id_proyecto, m);
+        });
+        proyectosBolsaHoras.forEach(p => {
+            // Solo agregar si no existe ya (evitar duplicados)
+            if (!proyectosMap.has(p.id_proyecto)) {
+                proyectosMap.set(p.id_proyecto, p);
+            }
+        });
+        
+        const todosLosProyectos = Array.from(proyectosMap.values());
+        
+        // Aplicar ordenamiento
+        const ordenValido = ['nombre_proyecto', 'cliente', 'equipo', 'producto', 'fecha_creacion'];
+        const orden = ordenValido.includes(filtros.orden) ? filtros.orden : 'nombre_proyecto';
+        const direccion = filtros.direccion === 'asc' ? 'ASC' : 'DESC';
+        
+        todosLosProyectos.sort((a, b) => {
+            const aVal = a[orden] || '';
+            const bVal = b[orden] || '';
+            if (direccion === 'ASC') {
+                return aVal > bVal ? 1 : aVal < bVal ? -1 : 0;
+            } else {
+                return aVal < bVal ? 1 : aVal > bVal ? -1 : 0;
+            }
+        });
         
         res.json({
             success: true,
-            data: mantenimientos
+            data: todosLosProyectos
         });
     } catch (error) {
         console.error('Error al obtener mantenimiento:', error);
@@ -114,17 +212,23 @@ async function obtenerProyectos(req, res) {
     try {
         const producto = req.query.producto || null;
         const equipo = req.query.equipo || null;
+        const categoria = req.query.categoria || null;
+        const orden = req.query.orden || 'cliente';
+        // Si no se especifica dirección y la columna es 'cliente', usar 'desc' por defecto
+        const direccionDefault = (orden === 'cliente' && !req.query.direccion) ? 'desc' : 'asc';
         const filtros = {
             producto: producto,
             equipo: equipo,
+            categoria: categoria,
             busqueda: req.query.busqueda || null,
-            orden: req.query.orden || 'nombre_proyecto',
-            direccion: req.query.direccion || 'asc'
+            orden: orden,
+            direccion: req.query.direccion || direccionDefault
         };
         
         console.log('📊 Obteniendo proyectos con filtros:', {
             producto: filtros.producto,
             equipo: filtros.equipo,
+            categoria: filtros.categoria,
             busqueda: filtros.busqueda
         });
         
@@ -259,6 +363,154 @@ async function actualizarProyecto(req, res) {
     }
 }
 
+// Funciones para accionables (mantener compatibilidad con código antiguo)
+async function actualizarAccionables(req, res) {
+    try {
+        const { id_proyecto } = req.params;
+        const { accionables, fecha_accionable, asignado_accionable } = req.body;
+        
+        const datosActualizar = {};
+        if ('accionables' in req.body) {
+            datosActualizar.accionables = accionables || null;
+        }
+        if ('fecha_accionable' in req.body) {
+            datosActualizar.fecha_accionable = fecha_accionable || null;
+        }
+        if ('asignado_accionable' in req.body) {
+            datosActualizar.asignado_accionable = asignado_accionable || null;
+        }
+        
+        const resultado = await ProyectosExternosModel.actualizar(id_proyecto, datosActualizar);
+        
+        if (!resultado) {
+            return res.status(404).json({
+                success: false,
+                error: 'Proyecto no encontrado'
+            });
+        }
+        
+        res.json({
+            success: true,
+            data: resultado
+        });
+    } catch (error) {
+        console.error('Error al actualizar accionables:', error);
+        res.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
+}
+
+// Obtener todos los accionables de un proyecto
+async function obtenerAccionablesProyecto(req, res) {
+    try {
+        const { id_proyecto } = req.params;
+        const accionables = await AccionablesProyectoModel.obtenerPorProyecto(id_proyecto);
+        
+        res.json({
+            success: true,
+            data: accionables
+        });
+    } catch (error) {
+        console.error('Error al obtener accionables:', error);
+        res.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
+}
+
+// Crear un nuevo accionable
+async function crearAccionable(req, res) {
+    try {
+        const { id_proyecto } = req.params;
+        const { fecha_accionable, asignado_accionable, accionable } = req.body;
+        
+        const nuevoAccionable = await AccionablesProyectoModel.crear(id_proyecto, {
+            fecha_accionable: fecha_accionable || null,
+            asignado_accionable: asignado_accionable || null,
+            accionable: accionable || null
+        });
+        
+        res.json({
+            success: true,
+            data: nuevoAccionable
+        });
+    } catch (error) {
+        console.error('Error al crear accionable:', error);
+        res.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
+}
+
+// Actualizar un accionable
+async function actualizarAccionable(req, res) {
+    try {
+        const { id } = req.params;
+        const { fecha_accionable, asignado_accionable, accionable } = req.body;
+        
+        const datosActualizar = {};
+        if ('fecha_accionable' in req.body) {
+            datosActualizar.fecha_accionable = fecha_accionable || null;
+        }
+        if ('asignado_accionable' in req.body) {
+            datosActualizar.asignado_accionable = asignado_accionable || null;
+        }
+        if ('accionable' in req.body) {
+            datosActualizar.accionable = accionable || null;
+        }
+        
+        const accionableActualizado = await AccionablesProyectoModel.actualizar(id, datosActualizar);
+        
+        if (!accionableActualizado) {
+            return res.status(404).json({
+                success: false,
+                error: 'Accionable no encontrado'
+            });
+        }
+        
+        res.json({
+            success: true,
+            data: accionableActualizado
+        });
+    } catch (error) {
+        console.error('Error al actualizar accionable:', error);
+        res.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
+}
+
+// Eliminar un accionable
+async function eliminarAccionable(req, res) {
+    try {
+        const { id } = req.params;
+        const eliminado = await AccionablesProyectoModel.eliminar(id);
+        
+        if (!eliminado) {
+            return res.status(404).json({
+                success: false,
+                error: 'Accionable no encontrado'
+            });
+        }
+        
+        res.json({
+            success: true,
+            message: 'Accionable eliminado correctamente'
+        });
+    } catch (error) {
+        console.error('Error al eliminar accionable:', error);
+        res.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
+}
+
 /**
  * Obtener sugerencias de búsqueda para mantenimiento
  */
@@ -371,12 +623,12 @@ async function sincronizarEpics(req, res) {
         // Obtener totales actualizados
         const totales = await EpicsProyectoModel.obtenerTotalesPorProyecto(id_proyecto);
         
-        // Actualizar fechas del proyecto si hay epics
+        // Actualizar fechas del proyecto si hay epics (sin actualizar updated_at)
         if (totales.total_epics > 0) {
             await ProyectosExternosModel.actualizar(id_proyecto, {
                 fecha_inicio: totales.fecha_inicio_minima,
                 fecha_fin: totales.fecha_fin_maxima
-            });
+            }, false); // false = no actualizar updated_at
         }
         
         res.json({
@@ -708,6 +960,7 @@ module.exports = {
     obtenerSubproyectos,
     actualizarMantenimiento,
     actualizarProyecto,
+    actualizarAccionables,
     actualizarSubproyecto,
     obtenerSugerenciasMantenimiento,
     obtenerSugerenciasProyectos,
@@ -716,6 +969,10 @@ module.exports = {
     proyectosInternos,
     obtenerProyectosInternos,
     actualizarProyectoInterno,
-    obtenerSugerenciasProyectosInternos
+    obtenerSugerenciasProyectosInternos,
+    obtenerAccionablesProyecto,
+    crearAccionable,
+    actualizarAccionable,
+    eliminarAccionable
 };
 

@@ -22,7 +22,7 @@
                 <div class="producto-equipos" id="equipos-<%= producto %>" style="display: <%= isActive ? 'block' : 'none' %>;">
                     <% equipos.forEach(equipo => { %>
                         <a 
-                            href="/?producto=<%= encodeURIComponent(producto) %>&equipo=<%= encodeURIComponent(equipo.id_equipo_redmine) %>&tipo=<%= tipoActual || 'mantenimiento' %>" 
+                            href="/?producto=<%= encodeURIComponent(producto) %>&equipo=<%= encodeURIComponent(equipo.id_equipo_redmine) %>" 
                             class="nav-item nav-item-equipo <%= equipoActual === equipo.id_equipo_redmine ? 'active' : '' %>"
                             style="padding-left: 48px;"
                         >
@@ -32,11 +32,6 @@
                 </div>
             </div>
         <% }); %>
-        
-        <!-- Proyectos Internos -->
-        <a href="/proyectos-internos" class="nav-item <%= activeMenu === 'proyectos-internos' ? 'active' : '' %>" style="margin-top: 16px; border-top: 1px solid var(--border-color);">
-            <span>Proyectos Internos</span>
-        </a>
         
         <% if (typeof isAdmin !== 'undefined' && isAdmin) { %>
         <a href="/admin" class="nav-item <%= activeMenu === 'admin' ? 'active' : '' %>">

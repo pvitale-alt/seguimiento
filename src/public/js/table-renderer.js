@@ -27,10 +27,8 @@ function renderizarTabla(datos) {
     
     if (tipoActual === 'mantenimiento') {
         renderizarTablaMantenimiento(datos, contenido);
-    } else if (tipoActual === 'proyectos' || tipoActual === 'proyectos-internos') {
-        // Proyectos internos usa la misma lógica que proyectos (solo cambia el filtro de categoría)
-        renderizarTablaProyectos(datos, contenido);
     } else {
+        // Todas las demás categorías usan la misma lógica de proyectos
         renderizarTablaProyectos(datos, contenido);
     }
 }
@@ -51,8 +49,26 @@ function renderizarTablaMantenimiento(datos, contenido) {
     tablaHTML += '</div>';
     
     datos.forEach(function(item) {
+        // Truncar nombre_proyecto: solo la parte a la derecha de " | "
+        let nombreProyectoTruncado = '';
+        if (item.nombre_proyecto) {
+            const partes = item.nombre_proyecto.split(' | ');
+            if (partes.length > 1) {
+                // Tomar solo la parte a la derecha de " | "
+                nombreProyectoTruncado = partes.slice(1).join(' | ');
+            } else {
+                // Si no hay " | ", mostrar el nombre completo
+                nombreProyectoTruncado = item.nombre_proyecto;
+            }
+        }
+        
         tablaHTML += '<div class="modern-table-row">';
-        tablaHTML += '<div class="modern-table-cell item-text">' + (item.cliente || '-') + '</div>';
+        tablaHTML += '<div class="modern-table-cell item-text" style="display: flex; flex-direction: column; align-items: flex-start; gap: 4px;">';
+        tablaHTML += '<div style="line-height: 1.4;">' + (item.cliente || '-') + '</div>';
+        if (nombreProyectoTruncado) {
+            tablaHTML += '<div style="font-size: 11px; color: var(--text-secondary); line-height: 1.3;">' + nombreProyectoTruncado + '</div>';
+        }
+        tablaHTML += '</div>';
         tablaHTML += '<div class="modern-table-cell item-text" style="text-align: center; justify-content: center;">' + (item.limite_horas || '-') + '</div>';
         tablaHTML += '<div class="modern-table-cell">' + crearDropdownOverall(item.id_proyecto, 'estado', item.estado || '', '') + '</div>';
         tablaHTML += '<div class="modern-table-cell">' + crearDropdownIconos(item.id_proyecto, 'demanda', item.demanda || '', 'demanda', '') + '</div>';
@@ -170,6 +186,10 @@ function renderizarTablaProyectos(datos, contenido) {
             win: item.win || '',
             tiene_epics: item.tiene_epics || false,
             estado: item.estado || '',
+            accionables: item.accionables || '',
+            fecha_accionable: item.fecha_accionable || '',
+            asignado_accionable: item.asignado_accionable || '',
+            updated_at: item.updated_at || '',
             redmineUrl: redmineUrl
         };
         const itemDataJson = JSON.stringify(itemData).replace(/"/g, '&quot;').replace(/'/g, '&#39;');
@@ -220,6 +240,7 @@ function renderizarTablaProyectos(datos, contenido) {
             avanceGradient = 'linear-gradient(90deg, #4caf50 0%, #34a853 50%, #1e8e3e 100%)';
         }
         tablaHTML += '<div class="modern-table-cell"><div class="progress-bar-container" data-id="' + item.id_proyecto + '"><div class="progress-bar" style="width: ' + avanceValue + '%; background: ' + avanceGradient + ';"></div><input type="range" min="0" max="100" step="5" value="' + avanceValue + '" class="progress-slider" oninput="actualizarBarraProgreso(this);" onchange="actualizarProyecto(' + item.id_proyecto + ', \'avance\', this.value);" /></div></div>';
+        
         tablaHTML += '</div>';
     });
     

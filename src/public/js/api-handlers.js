@@ -67,6 +67,10 @@ async function actualizarMantenimiento(id_proyecto, campo, valor) {
         
         if (result.success) {
             console.log('✅ Mantenimiento actualizado correctamente:', result.data);
+            // Actualizar el texto de "Última Actualización" en el modal si está abierto
+            if (result.data && result.data.updated_at && typeof actualizarTextoUltimaActualizacion === 'function') {
+                actualizarTextoUltimaActualizacion(id_proyecto, result.data.updated_at);
+            }
         } else {
             console.error('❌ Error al actualizar mantenimiento:', result.error);
             alert('Error al actualizar: ' + (result.error || 'Error desconocido'));
@@ -94,6 +98,10 @@ async function actualizarProyecto(id_proyecto, campo, valor) {
         
         if (result.success) {
             console.log('✅ Proyecto actualizado correctamente:', result.data);
+            // Actualizar el texto de "Última Actualización" en el modal si está abierto
+            if (result.data && result.data.updated_at && typeof actualizarTextoUltimaActualizacion === 'function') {
+                actualizarTextoUltimaActualizacion(id_proyecto, result.data.updated_at);
+            }
         } else {
             console.error('❌ Error al actualizar proyecto:', result.error);
             alert('Error al actualizar: ' + (result.error || 'Error desconocido'));
@@ -183,5 +191,8 @@ function actualizarBarraProgreso(slider) {
         throttleTimeout = null;
     });
 }
+
+
+
 
 

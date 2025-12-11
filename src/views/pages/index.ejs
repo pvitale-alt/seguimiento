@@ -32,30 +32,51 @@
                 <% if (productoActual) { %>
                 <!-- Contenedor agrupado: Título, Tabs y Filtros -->
                 <div style="background: white; border-radius: 12px; box-shadow: 0 1px 2px 0 rgba(60,64,67,.3), 0 1px 3px 1px rgba(60,64,67,.15); position: relative; z-index: 2; margin-bottom: 16px; overflow: hidden;">
-                    <!-- Título (solo cuando hay producto seleccionado) -->
-                    <div style="padding: 16px 24px; position: relative; z-index: 2;">
+                    <!-- Título y botón Sincronizar -->
+                    <div style="padding: 16px 24px; position: relative; z-index: 2; display: flex; justify-content: space-between; align-items: center;">
                         <h1 style="font-size: 32px; font-weight: 500; color: #5f6368; margin: 0; font-family: 'Google Sans', 'Roboto', sans-serif;">
                             Seguimiento<% if (equipoNombre) { %> - <%= equipoNombre %><% } %>
                         </h1>
+                        <button class="button button-secondary" onclick="sincronizar()" id="btnSincronizar">Sincronizar</button>
                     </div>
                     <div class="tabs" style="padding: 0 24px; margin: 0; display: flex; justify-content: space-between; align-items: center; position: relative; z-index: 2; border-top: 1px solid var(--border-color);">
                         <div style="display: flex;">
+                            <% if (typeof tieneMantenimiento !== 'undefined' && tieneMantenimiento) { %>
                             <a 
                                 href="/?producto=<%= encodeURIComponent(productoActual || '') %>&equipo=<%= encodeURIComponent(equipoActual || '') %>&tipo=mantenimiento" 
                                 class="tab <%= tipoActual === 'mantenimiento' ? 'active' : '' %>"
                             >
                                 Mantenimiento
                             </a>
-                            <a 
-                                href="/?producto=<%= encodeURIComponent(productoActual || '') %>&equipo=<%= encodeURIComponent(equipoActual || '') %>&tipo=proyectos" 
-                                class="tab <%= tipoActual === 'proyectos' ? 'active' : '' %>"
-                            >
-                                Proyectos
-                            </a>
+                            <% } %>
+                            <% if (typeof categoriasEquipo !== 'undefined' && categoriasEquipo.length > 0) { %>
+                                <% categoriasEquipo.forEach(function(categoria) { %>
+                                    <% 
+                                        // Convertir categoria a slug para el tipo
+                                        const tipoSlug = categoria.toLowerCase().replace(/\s+/g, '-');
+                                        // Verificar si esta categoría está activa comparando con categoriaActual
+                                        const isActive = (typeof categoriaActual !== 'undefined' && categoriaActual === categoria) || 
+                                                        (tipoActual !== 'mantenimiento' && tipoActual === tipoSlug);
+                                    %>
+                                    <a 
+                                        href="/?producto=<%= encodeURIComponent(productoActual || '') %>&equipo=<%= encodeURIComponent(equipoActual || '') %>&tipo=<%= tipoSlug %>&categoria=<%= encodeURIComponent(categoria) %>"
+                                        class="tab <%= isActive ? 'active' : '' %>"
+                                    >
+                                        <%= categoria %>
+                                    </a>
+                                <% }); %>
+                            <% } else { %>
+                                <a 
+                                    href="/?producto=<%= encodeURIComponent(productoActual || '') %>&equipo=<%= encodeURIComponent(equipoActual || '') %>&tipo=proyectos" 
+                                    class="tab <%= tipoActual === 'proyectos' ? 'active' : '' %>"
+                                >
+                                    Proyectos
+                                </a>
+                            <% } %>
                         </div>
                     </div>
-                    <!-- Filtros y buscador solo para proyectos -->
-                    <% if (tipoActual === 'proyectos') { %>
+                    <!-- Filtros y buscador para proyectos (todas las categorías, no mantenimiento) -->
+                    <% if (tipoActual !== 'mantenimiento') { %>
                     <div id="filtrosProyectos" style="padding: 16px 24px; margin-top: 0; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; position: relative; z-index: 2; border-top: 1px solid var(--border-color);">
                     <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
                     <!-- Filtro Cliente -->
@@ -144,14 +165,8 @@
                         </form>
                     </div>
                     
-                    <!-- Botón Sincronizar y Checkbox "Incluir cerrados" -->
+                    <!-- Checkbox "Incluir cerrados" -->
                     <div style="display: flex; align-items: center; gap: 12px; margin-left: auto;">
-                        <button class="button button-secondary" onclick="sincronizar()" id="btnSincronizar">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                                <path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/>
-                            </svg>
-                            <span>Sincronizar</span>
-                        </button>
                         <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; user-select: none;">
                             <input type="checkbox" id="incluirCerrados" style="cursor: pointer;" onchange="aplicarFiltrosProyectos()" />
                             <span style="font-size: 13px; color: var(--text-secondary);">Incluir cerrados</span>
@@ -181,6 +196,7 @@
         const productoActual = '<%= productoActual || '' %>';
         const equipoActual = '<%= equipoActual || '' %>';
         const tipoActual = '<%= tipoActual || 'mantenimiento' %>';
+        const categoriaActual = '<%= categoriaActual || '' %>';
         const productosEquiposData = <%- JSON.stringify(productosEquipos) %>;
         
         // Variables de estado global
@@ -198,6 +214,7 @@
     <script src="/js/data-loader.js?v=<%= Date.now() %>"></script>
     <script src="/js/table-renderer.js?v=<%= Date.now() %>"></script>
     <script src="/js/sync.js?v=<%= Date.now() %>"></script>
+    <script src="/js/date-picker.js?v=<%= Date.now() %>"></script>
     <script src="/js/modal.js?v=<%= Date.now() %>"></script>
     
     <!-- Inicialización -->
@@ -206,7 +223,7 @@
         document.addEventListener('DOMContentLoaded', () => {
             if (productoActual) {
                 cargarDatos();
-                if (tipoActual === 'proyectos') {
+                if (tipoActual !== 'mantenimiento') {
                     cargarClientesParaFiltro();
                 }
             } else {

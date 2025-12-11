@@ -21,8 +21,15 @@ router.get('/proyectos-internos/sugerencias', seguimientoController.obtenerSuger
 // Rutas para actualizar datos editables
 router.put('/mantenimiento/:id_proyecto', seguimientoController.actualizarMantenimiento);
 router.put('/proyectos/:id_proyecto', seguimientoController.actualizarProyecto);
+router.put('/proyectos/:id_proyecto/accionables', seguimientoController.actualizarAccionables);
 router.put('/proyectos-internos/:id_proyecto', seguimientoController.actualizarProyectoInterno);
 router.put('/subproyectos/:id_subproyecto', seguimientoController.actualizarSubproyecto);
+
+// Rutas para accionables múltiples
+router.get('/proyectos/:id_proyecto/accionables', seguimientoController.obtenerAccionablesProyecto);
+router.post('/proyectos/:id_proyecto/accionables', seguimientoController.crearAccionable);
+router.put('/accionables/:id', seguimientoController.actualizarAccionable);
+router.delete('/accionables/:id', seguimientoController.eliminarAccionable);
 
 // Rutas para sincronización con Redmine
 router.post('/sincronizar/mantenimiento', async (req, res) => {

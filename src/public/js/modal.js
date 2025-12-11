@@ -4,19 +4,39 @@
  */
 
 // Abrir modal de detalle del proyecto
-async function abrirModalDetalle(id_proyecto) {
+async function abrirModalDetalle(id_proyecto, mostrarAccionables = false) {
     try {
         let btn = window.tempModalButton || (typeof event !== 'undefined' && event?.target) || document.querySelector('button[data-item][onclick*="' + id_proyecto + '"]') || document.querySelector('a[data-item][onclick*="' + id_proyecto + '"]');
-        if (!btn) {
-            console.error('No se encontró el elemento del proyecto');
-            return;
+        let itemData = null;
+        
+        // Si hay un botón con data-item, usar esos datos
+        if (btn && btn.getAttribute('data-item')) {
+            const itemDataJson = btn.getAttribute('data-item');
+            itemData = JSON.parse(itemDataJson.replace(/&quot;/g, '"').replace(/&#39;/g, "'"));
+        } else {
+            // Si no hay data-item, obtener los datos del proyecto desde la API
+            try {
+                const response = await fetch('/api/proyectos/' + id_proyecto);
+                const result = await response.json();
+                if (result.success && result.data) {
+                    itemData = result.data;
+                } else {
+                    // Intentar con mantenimiento
+                    const responseMant = await fetch('/api/mantenimiento/' + id_proyecto);
+                    const resultMant = await responseMant.json();
+                    if (resultMant.success && resultMant.data) {
+                        itemData = resultMant.data;
+                    }
+                }
+            } catch (error) {
+                console.error('Error al obtener datos del proyecto:', error);
+            }
         }
-        const itemDataJson = btn.getAttribute('data-item');
-        if (!itemDataJson) {
+        
+        if (!itemData) {
             console.error('No se encontraron datos del proyecto');
             return;
         }
-        const itemData = JSON.parse(itemDataJson.replace(/&quot;/g, '"').replace(/&#39;/g, "'"));
         const modal = document.getElementById('modalDetalle');
         const modalTitulo = document.getElementById('modalTitulo');
         const modalBody = document.getElementById('modalBody');
@@ -143,7 +163,68 @@ async function abrirModalDetalle(id_proyecto) {
         
         const redmineLink = itemData.redmineUrl || ('https://redmine.mercap.net/projects/' + (itemData.codigo_proyecto || ''));
         
-        let contenido = '<div style="display: flex; flex-direction: column; gap: 24px;">';
+        // Obtener accionables del proyecto (desde itemData si está disponible, sino hacer fetch)
+        let accionablesActual = itemData.accionables || '';
+        let fechaAccionableActual = itemData.fecha_accionable || '';
+        let asignadoAccionableActual = itemData.asignado_accionable || '';
+        let updatedAt = itemData.updated_at || '';
+        
+        if (!accionablesActual) {
+            try {
+                // Intentar obtener desde la tabla actual si está disponible
+                const proyectoEnTabla = datosTablaActual?.find(p => p.id_proyecto === id_proyecto);
+                if (proyectoEnTabla) {
+                    if (proyectoEnTabla.accionables) accionablesActual = proyectoEnTabla.accionables;
+                    if (proyectoEnTabla.fecha_accionable) fechaAccionableActual = proyectoEnTabla.fecha_accionable;
+                    if (proyectoEnTabla.asignado_accionable) asignadoAccionableActual = proyectoEnTabla.asignado_accionable;
+                    if (proyectoEnTabla.updated_at) updatedAt = proyectoEnTabla.updated_at;
+                }
+            } catch (error) {
+                console.error('Error al cargar accionables:', error);
+            }
+        }
+        
+        // Formatear fecha de última actualización
+        let fechaUltimaActualizacion = '';
+        if (updatedAt) {
+            try {
+                // Convertir a zona horaria de Buenos Aires usando Intl.DateTimeFormat
+                const fecha = new Date(updatedAt);
+                const formatter = new Intl.DateTimeFormat('es-AR', {
+                    timeZone: 'America/Argentina/Buenos_Aires',
+                    year: 'numeric',
+                    month: '2-digit',
+                    day: '2-digit',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    hour12: true
+                });
+                
+                const partes = formatter.formatToParts(fecha);
+                const dia = partes.find(p => p.type === 'day').value;
+                const mes = partes.find(p => p.type === 'month').value;
+                const año = partes.find(p => p.type === 'year').value;
+                const horas = partes.find(p => p.type === 'hour').value;
+                const minutos = partes.find(p => p.type === 'minute').value;
+                const ampm = partes.find(p => p.type === 'dayPeriod').value === 'AM' ? 'a. m.' : 'p. m.';
+                
+                fechaUltimaActualizacion = `${dia}/${mes}/${año}, ${horas}:${minutos} ${ampm}`;
+            } catch (e) {
+                fechaUltimaActualizacion = updatedAt;
+            }
+        }
+        
+        let contenido = '<div style="display: flex; flex-direction: column; gap: 24px; position: relative;">';
+        
+        // Header superior: Botón Sincronizar Redmine y Última Actualización (intercambiados)
+        contenido += '<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">';
+        contenido += '<button class="button" onclick="sincronizarEpicsDesdeModal(' + id_proyecto + ', \'' + (itemData.codigo_proyecto || '').replace(/'/g, "\\'") + '\', this)" style="padding: 8px 16px; font-size: 13px; white-space: nowrap;"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="margin-right: 8px; vertical-align: middle;"><path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>Sincronizar Redmine</button>';
+        if (fechaUltimaActualizacion) {
+            contenido += '<div id="ultimaActualizacion_' + id_proyecto + '" style="font-size: 12px; color: var(--text-secondary); font-family: \'Google Sans\', \'Roboto\', sans-serif;">Última Actualización: ' + fechaUltimaActualizacion + '</div>';
+        } else {
+            contenido += '<div></div>';
+        }
+        contenido += '</div>';
         
         const codigoProyecto = itemData.codigo_proyecto || '';
         contenido += '<div style="margin-bottom: 8px;"><a href="' + redmineLink + '" target="_blank" style="color: var(--primary-color); text-decoration: none; font-size: 14px; font-weight: 400;">Redmine ' + codigoProyecto + '</a></div>';
@@ -185,10 +266,6 @@ async function abrirModalDetalle(id_proyecto) {
             }
         }
         
-        contenido += '<div style="margin-top: 8px;">';
-        contenido += '<button class="button" onclick="sincronizarEpicsDesdeModal(' + id_proyecto + ', \'' + (itemData.codigo_proyecto || '').replace(/'/g, "\\'") + '\', this)" style="width: 100%; padding: 10px; font-size: 13px; white-space: nowrap;"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="margin-right: 8px; vertical-align: middle;"><path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>Sincronizar Epics</button>';
-        contenido += '</div>';
-        
         contenido += '</div>';
         
         contenido += '<div style="display: flex; flex-direction: column; gap: 20px;">';
@@ -202,25 +279,632 @@ async function abrirModalDetalle(id_proyecto) {
         contenido += '</div>';
         contenido += '</div>';
         
+        // Panel de Accionables (al final, después de la información del proyecto)
+        contenido += '<div id="accionablesPanel_' + id_proyecto + '" style="margin-top: 32px; padding: 20px; padding-top: 24px; border-top: 1px solid var(--border-color); background: rgba(26, 115, 232, 0.05); border-radius: 8px;">';
+        contenido += '<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">';
+        contenido += '<label style="font-size: 13px; font-weight: 500; color: var(--text-secondary);">Accionables</label>';
+        contenido += '</div>';
+        contenido += '<div id="accionablesList_' + id_proyecto + '" style="display: flex; flex-direction: column; gap: 12px;">';
+        contenido += '<div style="color: var(--text-secondary); font-style: italic; text-align: center; padding: 20px;">Cargando accionables...</div>';
+        contenido += '</div>';
+        contenido += '<div id="agregarAccionableBtnContainer_' + id_proyecto + '" style="margin-top: 12px; display: flex; justify-content: center;"></div>';
+        contenido += '</div>';
+        
+        contenido += '</div>';
+        
         modalBody.innerHTML = contenido;
         modal.style.display = 'flex';
         document.body.style.overflow = 'hidden';
+        
+        // Cargar accionables
+        cargarAccionablesProyecto(id_proyecto);
+        
+        // Inicializar estado de edición
+        accionablesEditados = false;
+        idProyectoActual = id_proyecto;
+        
+        // Si se debe mostrar los accionables, hacer scroll al panel después de cargar
+        if (mostrarAccionables) {
+            setTimeout(() => {
+                const accionablesPanel = document.getElementById('accionablesPanel_' + id_proyecto);
+                if (accionablesPanel) {
+                    accionablesPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            }, 500); // Esperar a que se carguen los accionables
+        }
+        
+        // Verificar estado inicial del botón check
+        setTimeout(() => {
+            marcarAccionablesEditado(id_proyecto);
+        }, 100);
     } catch (error) {
         console.error('Error al abrir modal:', error);
         alert('Error al abrir detalles del proyecto');
     }
 }
 
-// Cerrar modal de detalle
+// Marcar que los accionables fueron editados (mostrar check solo si los 3 campos están llenos)
+function marcarAccionablesEditado(id_proyecto) {
+    const inputAccionables = document.getElementById('accionablesInput_' + id_proyecto);
+    const inputFecha = document.getElementById('fechaAccionableInput_' + id_proyecto);
+    const inputAsignado = document.getElementById('asignadoAccionableInput_' + id_proyecto);
+    const btnGuardar = document.getElementById('guardarAccionablesBtn_' + id_proyecto);
+    
+    if (btnGuardar && inputAccionables && inputFecha && inputAsignado) {
+        const accionables = inputAccionables.value.trim();
+        const fecha = inputFecha.value.trim();
+        const asignado = inputAsignado.value.trim();
+        
+        // Solo mostrar check si los 3 campos están llenos
+        if (accionables && fecha && asignado) {
+            btnGuardar.style.display = 'flex';
+            accionablesEditados = true;
+        } else {
+            btnGuardar.style.display = 'none';
+        }
+    }
+}
+
+// Función auxiliar para convertir fecha YYYY-MM-DD a DD-MM-AAAA
+function convertirFechaADDMAAAA(fecha) {
+    if (!fecha) return obtenerFechaHoy();
+    
+    // Si ya está en formato DD-MM-AAAA, devolverlo
+    if (/^\d{2}-\d{2}-\d{4}$/.test(fecha)) {
+        return fecha;
+    }
+    
+    // Si está en formato YYYY-MM-DD, convertir
+    if (/^\d{4}-\d{2}-\d{2}/.test(fecha)) {
+        const partes = fecha.split('T')[0].split('-');
+        return `${partes[2]}-${partes[1]}-${partes[0]}`;
+    }
+    
+    return obtenerFechaHoy();
+}
+
+// Guardar accionables (retorna Promise)
+async function guardarAccionables(id_proyecto) {
+    return new Promise(async (resolve, reject) => {
+    const inputAccionables = document.getElementById('accionablesInput_' + id_proyecto);
+    const inputFecha = document.getElementById('fechaAccionableInput_' + id_proyecto);
+    const inputAsignado = document.getElementById('asignadoAccionableInput_' + id_proyecto);
+    const btnGuardar = document.getElementById('guardarAccionablesBtn_' + id_proyecto);
+    
+    if (!inputAccionables || !inputFecha || !inputAsignado) {
+        console.error('No se encontraron los campos de accionables');
+        return;
+    }
+    
+    const accionables = inputAccionables.value.trim();
+    // Convertir fecha DD-MM-AAAA a YYYY-MM-DD para el backend
+    let fechaAccionable = null;
+    if (inputFecha.value.trim()) {
+        const partesFecha = inputFecha.value.trim().split('-');
+        if (partesFecha.length === 3) {
+            fechaAccionable = `${partesFecha[2]}-${partesFecha[1]}-${partesFecha[0]}`;
+        }
+    }
+    const asignadoAccionable = inputAsignado.value.trim() || null;
+    
+    try {
+        const response = await fetch('/api/proyectos/' + id_proyecto + '/accionables', {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ 
+                accionables: accionables,
+                fecha_accionable: fechaAccionable,
+                asignado_accionable: asignadoAccionable
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            // Ocultar botón de guardar
+            if (btnGuardar) {
+                btnGuardar.style.display = 'none';
+            }
+            
+            // Marcar como guardado
+            accionablesEditados = false;
+            
+            // Mostrar feedback visual temporal
+            const originalBg = btnGuardar.style.background;
+            btnGuardar.style.background = '#34a853';
+            setTimeout(() => {
+                btnGuardar.style.background = originalBg;
+            }, 1000);
+            
+            resolve(result);
+        } else {
+            const errorMsg = 'Error al guardar accionables: ' + (result.error || 'Error desconocido');
+            alert(errorMsg);
+            reject(new Error(errorMsg));
+        }
+    } catch (error) {
+        console.error('Error al guardar accionables:', error);
+        const errorMsg = 'Error al guardar accionables';
+        alert(errorMsg);
+        reject(error);
+    }
+    });
+}
+
+// Variable global para rastrear si hay cambios sin guardar
+let accionablesEditados = false;
+let idProyectoActual = null;
+
+// Mostrar modal de confirmación personalizado
+function mostrarConfirmacion(mensaje, onConfirm, onCancel, textoConfirmar = 'Guardar y cerrar') {
+    // Crear overlay
+    const overlay = document.createElement('div');
+    overlay.id = 'confirmModalOverlay';
+    overlay.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.5); z-index: 10000; display: flex; align-items: center; justify-content: center;';
+    
+    // Crear modal
+    const modal = document.createElement('div');
+    modal.style.cssText = 'background: white; border-radius: 12px; box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2); max-width: 400px; width: 90%; padding: 24px;';
+    
+    modal.innerHTML = `
+        <div style="margin-bottom: 20px;">
+            <h3 style="font-size: 18px; font-weight: 500; color: var(--text-primary); margin: 0 0 12px 0; font-family: \'Google Sans\', \'Roboto\', sans-serif;">Confirmar</h3>
+            <p style="font-size: 14px; color: var(--text-secondary); margin: 0; font-family: \'Google Sans\', \'Roboto\', sans-serif; line-height: 1.5;">${mensaje}</p>
+        </div>
+        <div style="display: flex; gap: 12px; justify-content: flex-end;">
+            <button id="confirmCancelBtn" style="padding: 10px 20px; border: 1px solid var(--border-color); border-radius: 4px; background: white; cursor: pointer; font-size: 14px; font-weight: 500; color: var(--text-primary); font-family: \'Google Sans\', \'Roboto\', sans-serif; transition: all 0.2s;" onmouseover="this.style.background='#f1f3f4'" onmouseout="this.style.background='white'">
+                Cancelar
+            </button>
+            <button id="confirmOkBtn" style="padding: 10px 20px; border: none; border-radius: 4px; background: var(--primary-color); color: white; cursor: pointer; font-size: 14px; font-weight: 500; font-family: \'Google Sans\', \'Roboto\', sans-serif; transition: all 0.2s;" onmouseover="this.style.background='#1557b0'" onmouseout="this.style.background='var(--primary-color)'">
+                ${textoConfirmar}
+            </button>
+        </div>
+    `;
+    
+    overlay.appendChild(modal);
+    document.body.appendChild(overlay);
+    
+    // Función para cerrar el modal
+    const cerrar = () => {
+        if (overlay && overlay.parentNode) {
+            overlay.remove();
+        }
+    };
+    
+    // Event listeners
+    const btnCancel = document.getElementById('confirmCancelBtn');
+    const btnOk = document.getElementById('confirmOkBtn');
+    
+    btnCancel.onclick = () => {
+        cerrar();
+        if (onCancel) onCancel();
+    };
+    
+    btnOk.onclick = () => {
+        cerrar();
+        if (onConfirm) onConfirm();
+    };
+    
+    // Cerrar al hacer clic fuera del modal
+    overlay.onclick = (e) => {
+        if (e.target === overlay) {
+            cerrar();
+            if (onCancel) onCancel();
+        }
+    };
+    
+    // Cerrar con Escape
+    const handleEscape = (e) => {
+        if (e.key === 'Escape') {
+            cerrar();
+            document.removeEventListener('keydown', handleEscape);
+            if (onCancel) onCancel();
+        }
+    };
+    document.addEventListener('keydown', handleEscape);
+}
+
+// Cerrar modal de detalle con aviso si hay cambios sin guardar
 function cerrarModalDetalle() {
+    // Verificar si hay cambios sin guardar
+    if (accionablesEditados && idProyectoActual) {
+        const btnGuardar = document.getElementById('guardarAccionablesBtn_' + idProyectoActual);
+        if (btnGuardar && btnGuardar.style.display !== 'none') {
+            mostrarConfirmacion(
+                '¿Desea guardar los cambios antes de cerrar?',
+                () => {
+                    // Guardar y cerrar
+                    guardarAccionables(idProyectoActual).then(() => {
+                        const modal = document.getElementById('modalDetalle');
+                        modal.style.display = 'none';
+                        document.body.style.overflow = 'auto';
+                        accionablesEditados = false;
+                        idProyectoActual = null;
+                    }).catch(() => {
+                        // Si hay error, no cerrar el modal
+                    });
+                },
+                () => {
+                    // Cerrar sin guardar
+                    const modal = document.getElementById('modalDetalle');
+                    modal.style.display = 'none';
+                    document.body.style.overflow = 'auto';
+                    accionablesEditados = false;
+                    idProyectoActual = null;
+                }
+            );
+            return;
+        }
+    }
+    
     const modal = document.getElementById('modalDetalle');
     modal.style.display = 'none';
     document.body.style.overflow = 'auto';
+    accionablesEditados = false;
+    idProyectoActual = null;
 }
 
 // Actualizar fecha en el modal después de guardar
 function actualizarFechaEnModal(id_proyecto, campo, valor) {
     // La fecha ya se actualizó en el input, no necesitamos hacer nada más
 }
+
+// Cargar accionables del proyecto
+async function cargarAccionablesProyecto(id_proyecto) {
+    try {
+        const response = await fetch('/api/proyectos/' + id_proyecto + '/accionables');
+        const result = await response.json();
+        
+        if (result.success) {
+            renderizarAccionables(id_proyecto, result.data);
+        } else {
+            document.getElementById('accionablesList_' + id_proyecto).innerHTML = '<div style="color: var(--text-secondary); font-style: italic; text-align: center; padding: 20px;">Error al cargar accionables</div>';
+        }
+    } catch (error) {
+        console.error('Error al cargar accionables:', error);
+        document.getElementById('accionablesList_' + id_proyecto).innerHTML = '<div style="color: var(--text-secondary); font-style: italic; text-align: center; padding: 20px;">Error al cargar accionables</div>';
+    }
+}
+
+// Renderizar lista de accionables
+function renderizarAccionables(id_proyecto, accionables) {
+    const container = document.getElementById('accionablesList_' + id_proyecto);
+    const btnContainer = document.getElementById('agregarAccionableBtnContainer_' + id_proyecto);
+    if (!container) return;
+    
+    // Si está vacío, no mostrar ningún registro, solo el botón "+"
+    if (!accionables || accionables.length === 0) {
+        container.innerHTML = '';
+        // Mostrar botón "+" para agregar el primer accionable
+        if (btnContainer) {
+            btnContainer.innerHTML = '<button onclick="agregarNuevoAccionable(' + id_proyecto + ')" style="display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 50%; border: 1px solid var(--border-color); background: white; cursor: pointer; transition: all 0.2s; color: var(--primary-color); font-size: 20px; font-weight: 500; padding: 0;" onmouseover="this.style.background=\'#f1f3f4\'" onmouseout="this.style.background=\'white\'" title="Agregar accionable">+</button>';
+        }
+        return;
+    }
+    
+    let html = '';
+    accionables.forEach((accionable) => {
+        const fechaHoy = obtenerFechaHoy();
+        const fechaValor = accionable.fecha_accionable ? convertirFechaADDMAAAA(accionable.fecha_accionable) : fechaHoy;
+        const asignadoValor = (accionable.asignado_accionable || '').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+        const accionableValor = (accionable.accionable || '').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+        
+        html += crearHTMLAccionable(accionable.id, id_proyecto, fechaValor, asignadoValor, accionableValor);
+    });
+    
+    container.innerHTML = html;
+    
+    // Mostrar botón "+" abajo del último accionable
+    if (btnContainer) {
+        btnContainer.innerHTML = '<button onclick="agregarNuevoAccionable(' + id_proyecto + ')" style="display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 50%; border: 1px solid var(--border-color); background: white; cursor: pointer; transition: all 0.2s; color: var(--primary-color); font-size: 20px; font-weight: 500; padding: 0;" onmouseover="this.style.background=\'#f1f3f4\'" onmouseout="this.style.background=\'white\'" title="Agregar accionable">+</button>';
+    }
+}
+
+// Función auxiliar para crear HTML de un accionable
+function crearHTMLAccionable(id_accionable, id_proyecto, fechaValor, asignadoValor, accionableValor) {
+    const idInput = id_accionable ? id_accionable : 'nuevo_' + Date.now();
+    const fechaInputId = 'fechaAccionable_' + idInput;
+    const asignadoInputId = 'asignadoAccionable_' + idInput;
+    const accionableInputId = 'accionable_' + idInput;
+    const guardarBtnId = 'guardarAccionableBtn_' + idInput;
+    const itemId = 'accionableItem_' + idInput;
+    
+    let html = '<div id="' + itemId + '" style="display: grid; grid-template-columns: 140px 1px 180px 1px 1fr 1px 40px; gap: 0; align-items: stretch; border: 1px solid var(--border-color); border-radius: 8px; overflow: hidden; background: rgba(26, 115, 232, 0.08);">';
+    
+    // Campo Fecha
+    html += '<div class="date-input-wrapper" style="position: relative; display: flex; align-items: center;">';
+    html += '<input type="text" class="input date-input" id="' + fechaInputId + '" value="' + fechaValor + '" placeholder="DD-MM-AAAA" maxlength="10" style="width: 100%; padding: 8px 12px; padding-right: 40px; border: none; outline: none; font-size: 13px; font-family: \'Google Sans\', \'Roboto\', sans-serif; box-sizing: border-box; background: transparent;" onchange="' + (id_accionable ? 'actualizarAccionableIndividual(' + id_accionable + ')' : 'actualizarAccionableNuevo(\'' + idInput + '\', ' + id_proyecto + ')') + '" oninput="' + (id_accionable ? 'actualizarAccionableIndividual(' + id_accionable + ')' : 'actualizarAccionableNuevo(\'' + idInput + '\', ' + id_proyecto + ')') + '">';
+    html += '<button type="button" class="date-picker-icon-btn" onclick="abrirDatePicker(\'' + fechaInputId + '\')" title="Seleccionar fecha">';
+    html += '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor">';
+    html += '<path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7z"/>';
+    html += '</svg>';
+    html += '</button>';
+    html += '</div>';
+    
+    // Separador 1
+    html += '<div style="background: var(--border-color); width: 1px;"></div>';
+    
+    // Campo Asignado
+    html += '<div style="display: flex; align-items: center;">';
+    html += '<input type="text" id="' + asignadoInputId + '" value="' + asignadoValor + '" placeholder="Asignado a..." style="width: 100%; padding: 8px 12px; border: none; outline: none; font-size: 13px; font-family: \'Google Sans\', \'Roboto\', sans-serif; box-sizing: border-box; background: transparent;" onchange="' + (id_accionable ? 'actualizarAccionableIndividual(' + id_accionable + ')' : 'actualizarAccionableNuevo(\'' + idInput + '\', ' + id_proyecto + ')') + '" oninput="' + (id_accionable ? 'actualizarAccionableIndividual(' + id_accionable + ')' : 'actualizarAccionableNuevo(\'' + idInput + '\', ' + id_proyecto + ')') + '">';
+    html += '</div>';
+    
+    // Separador 2
+    html += '<div style="background: var(--border-color); width: 1px;"></div>';
+    
+    // Campo Accionable
+    html += '<div style="position: relative; display: flex; align-items: center;">';
+    html += '<input type="text" id="' + accionableInputId + '" value="' + accionableValor + '" placeholder="Ingrese el accionable..." style="width: 100%; padding: 8px 12px; padding-right: 40px; border: none; outline: none; font-size: 13px; font-family: \'Google Sans\', \'Roboto\', sans-serif; box-sizing: border-box; background: transparent;" onchange="' + (id_accionable ? 'actualizarAccionableIndividual(' + id_accionable + ')' : 'actualizarAccionableNuevo(\'' + idInput + '\', ' + id_proyecto + ')') + '" oninput="' + (id_accionable ? 'actualizarAccionableIndividual(' + id_accionable + ')' : 'actualizarAccionableNuevo(\'' + idInput + '\', ' + id_proyecto + ')') + '">';
+    html += '<button id="' + guardarBtnId + '" onclick="' + (id_accionable ? 'guardarAccionableIndividual(' + id_accionable + ')' : 'guardarAccionableNuevo(\'' + idInput + '\', ' + id_proyecto + ')') + '" style="display: none; position: absolute; right: 8px; width: 24px; height: 24px; border: none; background: transparent; cursor: pointer; transition: all 0.2s; padding: 0; align-items: center; justify-content: center; flex-shrink: 0;" title="Guardar">';
+    html += '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--primary-color)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display: block;"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>';
+    html += '</button>';
+    html += '</div>';
+    
+    // Separador 3
+    html += '<div style="background: var(--border-color); width: 1px;"></div>';
+    
+    // Botón eliminar (solo si tiene ID, no para nuevos)
+    if (id_accionable) {
+        html += '<div style="display: flex; align-items: center; justify-content: center; padding: 8px; position: relative; z-index: 10;">';
+        html += '<button onclick="eliminarAccionable(' + id_accionable + ', ' + id_proyecto + ')" style="display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 50%; border: 1px solid #dadce0; background: white; cursor: pointer; transition: all 0.2s; color: #d93025; padding: 0; box-shadow: 0 1px 2px 0 rgba(60,64,67,.3);" onmouseover="this.style.background=\'#fce8e6\'; this.style.borderColor=\'#d93025\';" onmouseout="this.style.background=\'white\'; this.style.borderColor=\'#dadce0\';" title="Eliminar accionable">';
+        html += '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: block;">';
+        html += '<path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>';
+        html += '</svg>';
+        html += '</button>';
+        html += '</div>';
+    } else {
+        html += '<div style="display: flex; align-items: center; justify-content: center; padding: 8px;"></div>';
+    }
+    
+    html += '</div>';
+    return html;
+}
+
+// Agregar nuevo accionable
+async function agregarNuevoAccionable(id_proyecto) {
+    try {
+        const fechaHoy = obtenerFechaHoy();
+        const response = await fetch('/api/proyectos/' + id_proyecto + '/accionables', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                fecha_accionable: convertirFechaADDMAAAA(fechaHoy).split('-').reverse().join('-'), // Convertir a YYYY-MM-DD
+                asignado_accionable: '',
+                accionable: ''
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            // Recargar la lista de accionables
+            await cargarAccionablesProyecto(id_proyecto);
+        } else {
+            alert('Error al crear accionable: ' + (result.error || 'Error desconocido'));
+        }
+    } catch (error) {
+        console.error('Error al agregar accionable:', error);
+        alert('Error al agregar accionable');
+    }
+}
+
+// Actualizar accionable individual (mostrar check)
+function actualizarAccionableIndividual(id_accionable) {
+    const btnGuardar = document.getElementById('guardarAccionableBtn_' + id_accionable);
+    if (btnGuardar) {
+        const inputAccionable = document.getElementById('accionable_' + id_accionable);
+        const inputFecha = document.getElementById('fechaAccionable_' + id_accionable);
+        const inputAsignado = document.getElementById('asignadoAccionable_' + id_accionable);
+        
+        if (inputAccionable && inputFecha && inputAsignado) {
+            const accionable = inputAccionable.value.trim();
+            const fecha = inputFecha.value.trim();
+            const asignado = inputAsignado.value.trim();
+            
+            // Solo mostrar check si los 3 campos están llenos
+            if (accionable && fecha && asignado) {
+                btnGuardar.style.display = 'flex';
+            } else {
+                btnGuardar.style.display = 'none';
+            }
+        }
+    }
+}
+
+// Actualizar accionable nuevo (mostrar check)
+function actualizarAccionableNuevo(idInput, id_proyecto) {
+    const btnGuardar = document.getElementById('guardarAccionableBtn_' + idInput);
+    if (btnGuardar) {
+        const inputAccionable = document.getElementById('accionable_' + idInput);
+        const inputFecha = document.getElementById('fechaAccionable_' + idInput);
+        const inputAsignado = document.getElementById('asignadoAccionable_' + idInput);
+        
+        if (inputAccionable && inputFecha && inputAsignado) {
+            const accionable = inputAccionable.value.trim();
+            const fecha = inputFecha.value.trim();
+            const asignado = inputAsignado.value.trim();
+            
+            // Solo mostrar check si los 3 campos están llenos
+            if (accionable && fecha && asignado) {
+                btnGuardar.style.display = 'flex';
+            } else {
+                btnGuardar.style.display = 'none';
+            }
+        }
+    }
+}
+
+// Guardar accionable nuevo (desde registro vacío)
+async function guardarAccionableNuevo(idInput, id_proyecto) {
+    const inputAccionable = document.getElementById('accionable_' + idInput);
+    const inputFecha = document.getElementById('fechaAccionable_' + idInput);
+    const inputAsignado = document.getElementById('asignadoAccionable_' + idInput);
+    
+    if (!inputAccionable || !inputFecha || !inputAsignado) {
+        console.error('No se encontraron los campos del accionable');
+        return;
+    }
+    
+    const accionable = inputAccionable.value.trim();
+    let fechaAccionable = null;
+    if (inputFecha.value.trim()) {
+        const partesFecha = inputFecha.value.trim().split('-');
+        if (partesFecha.length === 3) {
+            fechaAccionable = `${partesFecha[2]}-${partesFecha[1]}-${partesFecha[0]}`;
+        }
+    }
+    const asignadoAccionable = inputAsignado.value.trim() || null;
+    
+    // Validar que los 3 campos estén llenos
+    if (!accionable || !fechaAccionable || !asignadoAccionable) {
+        alert('Por favor complete todos los campos (fecha, asignado y accionable)');
+        return;
+    }
+    
+    try {
+        const response = await fetch('/api/proyectos/' + id_proyecto + '/accionables', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                fecha_accionable: fechaAccionable,
+                asignado_accionable: asignadoAccionable,
+                accionable: accionable
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            // Recargar la lista de accionables
+            await cargarAccionablesProyecto(id_proyecto);
+        } else {
+            alert('Error al guardar accionable: ' + (result.error || 'Error desconocido'));
+        }
+    } catch (error) {
+        console.error('Error al guardar accionable:', error);
+        alert('Error al guardar accionable');
+    }
+}
+
+// Guardar accionable individual
+async function guardarAccionableIndividual(id_accionable) {
+    const inputAccionable = document.getElementById('accionable_' + id_accionable);
+    const inputFecha = document.getElementById('fechaAccionable_' + id_accionable);
+    const inputAsignado = document.getElementById('asignadoAccionable_' + id_accionable);
+    const btnGuardar = document.getElementById('guardarAccionableBtn_' + id_accionable);
+    
+    if (!inputAccionable || !inputFecha || !inputAsignado) {
+        console.error('No se encontraron los campos del accionable');
+        return;
+    }
+    
+    const accionable = inputAccionable.value.trim();
+    let fechaAccionable = null;
+    if (inputFecha.value.trim()) {
+        const partesFecha = inputFecha.value.trim().split('-');
+        if (partesFecha.length === 3) {
+            fechaAccionable = `${partesFecha[2]}-${partesFecha[1]}-${partesFecha[0]}`;
+        }
+    }
+    const asignadoAccionable = inputAsignado.value.trim() || null;
+    
+    try {
+        const response = await fetch('/api/accionables/' + id_accionable, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                fecha_accionable: fechaAccionable,
+                asignado_accionable: asignadoAccionable,
+                accionable: accionable
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            if (btnGuardar) {
+                btnGuardar.style.display = 'none';
+            }
+        } else {
+            alert('Error al guardar accionable: ' + (result.error || 'Error desconocido'));
+        }
+    } catch (error) {
+        console.error('Error al guardar accionable:', error);
+        alert('Error al guardar accionable');
+    }
+}
+
+// Eliminar accionable
+async function eliminarAccionable(id_accionable, id_proyecto) {
+    mostrarConfirmacion(
+        '¿Está seguro de que desea eliminar este accionable?',
+        async () => {
+            try {
+                const response = await fetch('/api/accionables/' + id_accionable, {
+                    method: 'DELETE'
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    // Recargar la lista de accionables
+                    await cargarAccionablesProyecto(id_proyecto);
+                } else {
+                    alert('Error al eliminar accionable: ' + (result.error || 'Error desconocido'));
+                }
+            } catch (error) {
+                console.error('Error al eliminar accionable:', error);
+                alert('Error al eliminar accionable');
+            }
+        },
+        () => {
+            // Cancelar - no hacer nada
+        },
+        'Eliminar'
+    );
+}
+
+// Función para actualizar el texto de "Última Actualización" en el modal
+function actualizarTextoUltimaActualizacion(id_proyecto, updatedAt) {
+    const elemento = document.getElementById('ultimaActualizacion_' + id_proyecto);
+    if (!elemento) return;
+    
+    try {
+        // Convertir a zona horaria de Buenos Aires usando Intl.DateTimeFormat
+        const fecha = new Date(updatedAt);
+        const formatter = new Intl.DateTimeFormat('es-AR', {
+            timeZone: 'America/Argentina/Buenos_Aires',
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: true
+        });
+        
+        const partes = formatter.formatToParts(fecha);
+        const dia = partes.find(p => p.type === 'day').value;
+        const mes = partes.find(p => p.type === 'month').value;
+        const año = partes.find(p => p.type === 'year').value;
+        const horas = partes.find(p => p.type === 'hour').value;
+        const minutos = partes.find(p => p.type === 'minute').value;
+        const ampm = partes.find(p => p.type === 'dayPeriod').value === 'AM' ? 'a. m.' : 'p. m.';
+        
+        const fechaFormateada = `${dia}/${mes}/${año}, ${horas}:${minutos} ${ampm}`;
+        elemento.textContent = 'Última Actualización: ' + fechaFormateada;
+    } catch (e) {
+        console.error('Error al formatear fecha:', e);
+    }
+}
+
+
 
 

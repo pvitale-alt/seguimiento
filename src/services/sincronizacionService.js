@@ -16,7 +16,7 @@ async function sincronizarMantenimiento(producto = null, equipo = null, maxTotal
     console.log('   =================================\n');
     console.log(`   Producto: ${producto || 'todos'}`);
     console.log(`   Equipo: ${equipo || 'todos'}`);
-    console.log(`   Categoría: Mantenimiento + On-Site`);
+            console.log(`   Categoría: Mantenimiento + On-Site + Bolsa de Horas`);
     console.log(`   Línea de Servicio: Si`);
     console.log(`   Límite: ${maxTotal || 'sin límite'}\n`);
     
@@ -73,16 +73,37 @@ async function sincronizarMantenimiento(producto = null, equipo = null, maxTotal
             codigo_proyecto_padre: codigoProyectoPadre,
             maxTotal
         });
-        console.log(`   ✅ ${proyectosOnSite.length} proyectos de categoría "On-Site" obtenidos\n`);
+        console.log(`   ✅ ${proyectosOnSite.length} proyectos de categoría "On-Site" obtenidos`);
         
-        // Combinar ambos resultados y eliminar duplicados por id_proyecto
+        // Llamado para categoría "Bolsa de Horas"
+        console.log('   📋 Obteniendo proyectos de categoría "Bolsa de Horas"...');
+        const proyectosBolsaHoras = await redmineService.obtenerProyectosMapeados({
+            producto,
+            equipo,
+            categoria: 'Bolsa de Horas',
+            codigo_proyecto_padre: codigoProyectoPadre,
+            maxTotal
+        });
+        console.log(`   ✅ ${proyectosBolsaHoras.length} proyectos de categoría "Bolsa de Horas" obtenidos\n`);
+        
+        // Combinar todos los resultados y eliminar duplicados por id_proyecto
         const proyectosMap = new Map();
-        [...proyectosMantenimiento, ...proyectosOnSite].forEach(p => {
+        [...proyectosMantenimiento, ...proyectosOnSite, ...proyectosBolsaHoras].forEach(p => {
             if (!proyectosMap.has(p.id_proyecto)) {
                 proyectosMap.set(p.id_proyecto, p);
             }
         });
-        const proyectosMapeados = Array.from(proyectosMap.values());
+        
+        // Excluir proyectos cuyo cliente sea "Mercap"
+        const proyectosMapeados = Array.from(proyectosMap.values()).filter(p => {
+            const cliente = (p.cliente || '').toLowerCase().trim();
+            if (cliente === 'mercap') {
+                console.log(`   ⏭️ Excluyendo proyecto con cliente "Mercap": ${p.nombre_proyecto}`);
+                return false;
+            }
+            return true;
+        });
+        console.log(`   📊 Total proyectos después de excluir "Mercap": ${proyectosMapeados.length}`);
         
         if (proyectosMapeados.length === 0) {
             console.log('⚠️ No se encontraron proyectos para sincronizar');
@@ -95,7 +116,7 @@ async function sincronizarMantenimiento(producto = null, equipo = null, maxTotal
             };
         }
         
-        console.log(`✅ ${proyectosMapeados.length} proyectos únicos obtenidos de Redmine (Mantenimiento + On-Site)\n`);
+        console.log(`✅ ${proyectosMapeados.length} proyectos únicos obtenidos de Redmine (Mantenimiento + On-Site + Bolsa de Horas)\n`);
         
         // 2. Filtrar proyectos excluyendo "Licencias" (ya están filtrados por categoría)
         const proyectosMantenimientoFiltrados = proyectosMapeados.filter(p => 
@@ -300,8 +321,8 @@ async function sincronizarProyectos(producto = null, equipo = null, maxTotal = n
                     INSERT INTO redmine_proyectos_externos (
                         id_proyecto, nombre_proyecto, codigo_proyecto, proyecto_padre,
                         estado_redmine, producto, cliente, linea_servicio, categoria,
-                        equipo, reventa, proyecto_sponsor, fecha_creacion, sincronizado_en
-                    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, CURRENT_TIMESTAMP)
+                        limite_horas, equipo, reventa, proyecto_sponsor, fecha_creacion, sincronizado_en
+                    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, CURRENT_TIMESTAMP)
                     ON CONFLICT (id_proyecto) 
                     DO UPDATE SET
                         nombre_proyecto = EXCLUDED.nombre_proyecto,
@@ -312,6 +333,7 @@ async function sincronizarProyectos(producto = null, equipo = null, maxTotal = n
                         cliente = EXCLUDED.cliente,
                         linea_servicio = EXCLUDED.linea_servicio,
                         categoria = EXCLUDED.categoria,
+                        limite_horas = EXCLUDED.limite_horas,
                         equipo = EXCLUDED.equipo,
                         reventa = EXCLUDED.reventa,
                         proyecto_sponsor = EXCLUDED.proyecto_sponsor,
@@ -328,6 +350,7 @@ async function sincronizarProyectos(producto = null, equipo = null, maxTotal = n
                     proyecto.cliente,
                     proyecto.linea_servicio,
                     proyecto.categoria,
+                    proyecto.limite_horas,
                     proyecto.equipo,
                     proyecto.reventa,
                     proyecto.proyecto_sponsor,
@@ -461,8 +484,8 @@ async function sincronizarProyectosInternos(producto = null, maxTotal = null) {
                     INSERT INTO redmine_proyectos_externos (
                         id_proyecto, nombre_proyecto, codigo_proyecto, proyecto_padre,
                         estado_redmine, producto, cliente, linea_servicio, categoria,
-                        equipo, reventa, proyecto_sponsor, fecha_creacion, sincronizado_en
-                    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, CURRENT_TIMESTAMP)
+                        limite_horas, equipo, reventa, proyecto_sponsor, fecha_creacion, sincronizado_en
+                    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, CURRENT_TIMESTAMP)
                     ON CONFLICT (id_proyecto) 
                     DO UPDATE SET
                         nombre_proyecto = EXCLUDED.nombre_proyecto,
@@ -473,6 +496,7 @@ async function sincronizarProyectosInternos(producto = null, maxTotal = null) {
                         cliente = EXCLUDED.cliente,
                         linea_servicio = EXCLUDED.linea_servicio,
                         categoria = EXCLUDED.categoria,
+                        limite_horas = EXCLUDED.limite_horas,
                         equipo = EXCLUDED.equipo,
                         reventa = EXCLUDED.reventa,
                         proyecto_sponsor = EXCLUDED.proyecto_sponsor,
@@ -489,6 +513,7 @@ async function sincronizarProyectosInternos(producto = null, maxTotal = null) {
                     proyecto.cliente,
                     proyecto.linea_servicio,
                     proyecto.categoria,
+                    proyecto.limite_horas,
                     proyecto.equipo,
                     proyecto.reventa || null,
                     proyecto.proyecto_sponsor || null,

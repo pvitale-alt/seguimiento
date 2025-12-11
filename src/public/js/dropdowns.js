@@ -225,9 +225,9 @@ function seleccionarDropdownOption(dropdownId, campo, idProyecto, valor, element
         else if (valor === 'rojo') button.style.background = '#fce8e6';
         else button.style.background = '#f8f9fa';
     } else if (campo === 'estado') {
-        // Para proyectos internos y externos, usar actualizarProyecto
+        // Para todas las categorías de proyectos (no mantenimiento), usar actualizarProyecto
         // Para mantenimiento, usar actualizarMantenimiento
-        if (esProyectoInterno || (typeof tipoActual !== 'undefined' && tipoActual === 'proyectos')) {
+        if (esProyectoInterno || (typeof tipoActual !== 'undefined' && tipoActual !== 'mantenimiento')) {
             actualizarProyecto(idProyecto, campo, valor);
         } else {
             actualizarMantenimiento(idProyecto, campo, valor);

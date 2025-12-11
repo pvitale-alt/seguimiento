@@ -237,6 +237,10 @@ function renderizarTablaProyectosInternos(datos) {
             win: item.win || '',
             tiene_epics: item.tiene_epics || false,
             estado: item.estado || '',
+            accionables: item.accionables || '',
+            fecha_accionable: item.fecha_accionable || '',
+            asignado_accionable: item.asignado_accionable || '',
+            updated_at: item.updated_at || '',
             redmineUrl: redmineUrl
         };
         const itemDataJson = JSON.stringify(itemData).replace(/"/g, '&quot;').replace(/'/g, '&#39;');
@@ -281,6 +285,7 @@ function renderizarTablaProyectosInternos(datos) {
             avanceGradient = 'linear-gradient(90deg, #4caf50 0%, #34a853 50%, #1e8e3e 100%)';
         }
         tablaHTML += '<div class="modern-table-cell"><div class="progress-bar-container" data-id="' + item.id_proyecto + '"><div class="progress-bar" style="width: ' + avanceValue + '%; background: ' + avanceGradient + ';"></div><input type="range" min="0" max="100" step="5" value="' + avanceValue + '" class="progress-slider" oninput="actualizarBarraProgreso(this);" onchange="actualizarProyectoInternoDesdeUI(' + item.id_proyecto + ', \'avance\', this.value);" /></div></div>';
+        
         tablaHTML += '</div>';
     });
     
@@ -466,7 +471,8 @@ function ordenarPor(columna) {
         ordenActual.direccion = ordenActual.direccion === 'asc' ? 'desc' : 'asc';
     } else {
         ordenActual.columna = columna;
-        ordenActual.direccion = 'asc';
+        // Si es cliente, usar 'desc' por defecto, sino 'asc'
+        ordenActual.direccion = columna === 'cliente' ? 'desc' : 'asc';
     }
     cargarDatosProyectosInternos();
 }

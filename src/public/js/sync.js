@@ -36,10 +36,9 @@ async function sincronizar() {
         
         if (tipoActual === 'mantenimiento') {
             endpoint = '/api/sincronizar/mantenimiento';
-        } else if (tipoActual === 'proyectos') {
-            endpoint = '/api/sincronizar/proyectos';
         } else {
-            throw new Error('Tipo de sincronización no válido: ' + tipoActual);
+            // Todas las demás categorías usan el endpoint de sincronización de proyectos
+            endpoint = '/api/sincronizar/proyectos';
         }
 
         console.log('📡 Llamando a:', endpoint);
@@ -238,5 +237,7 @@ async function sincronizarEpics(id_proyecto, codigo_proyecto) {
         btn.innerHTML = textoOriginal;
     }
 }
+
+
 
 
