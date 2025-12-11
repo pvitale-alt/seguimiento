@@ -296,6 +296,11 @@ function renderizarTablaProyectosInternos(datos) {
     if (contadorProyectos) {
         contadorProyectos.textContent = 'Total proyectos: ' + datosOrdenados.length;
     }
+    
+    // Ocultar scroll horizontal si no es necesario
+    setTimeout(() => {
+        ajustarScrollHorizontal();
+    }, 100);
 }
 
 // Función para actualizar proyecto interno desde la UI

@@ -3,14 +3,49 @@
  * Seguimiento de Proyectos
  */
 
-/* Contenedor de tabla con scroll horizontal a nivel navegador */
+/* Contenedor de tabla con scroll horizontal solo cuando sea necesario */
 .modern-table-wrapper {
     background: white;
     border-radius: 12px;
     box-shadow: var(--shadow);
-    overflow-x: visible;
+    overflow-x: auto;
     overflow-y: hidden;
     width: 100%;
+    max-width: 100%;
+    padding: 0;
+    margin: 0;
+}
+
+/* Ocultar scrollbar cuando no es necesario (solo en WebKit) */
+.modern-table-wrapper::-webkit-scrollbar {
+    height: 8px;
+}
+
+.modern-table-wrapper::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.modern-table-wrapper::-webkit-scrollbar-thumb {
+    background: #dadce0;
+    border-radius: 4px;
+}
+
+.modern-table-wrapper::-webkit-scrollbar-thumb:hover {
+    background: #bdc1c6;
+}
+
+/* Ocultar scrollbar cuando el contenido cabe (Firefox) */
+.modern-table-wrapper {
+    scrollbar-width: thin;
+    scrollbar-color: #dadce0 transparent;
+}
+
+/* Para proyectos, ajustar el ancho */
+.modern-table-wrapper .modern-table.proyectos {
+    margin-right: 0;
+    padding-right: 0;
+    width: 100%;
+    min-width: max-content;
 }
 
 .modern-table {
@@ -29,6 +64,12 @@
     color: var(--text-secondary);
     border-bottom: none;
     white-space: nowrap;
+}
+
+/* Para proyectos, el header debe ocupar todo el ancho */
+.modern-table.proyectos .modern-table-header {
+    min-width: 100%;
+    box-sizing: border-box;
 }
 
 .modern-table-header .modern-table-cell {
@@ -75,10 +116,21 @@
     margin-left: 8px;
 }
 
-/* Proyectos: 11 columnas (agregada columna Accionables) */
+/* Proyectos: 10 columnas */
 .modern-table.proyectos .modern-table-header,
 .modern-table.proyectos .modern-table-row {
-    grid-template-columns: 40px 150px 300px 120px 70px 70px 70px 70px 70px 100px 100px;
+    grid-template-columns: 40px 150px 300px 120px 70px 70px 70px 70px 70px 100px;
+    padding-left: 16px;
+    padding-right: 16px;
+    gap: 0 12px; /* row-gap: 0, column-gap: 12px */
+    min-width: 100%;
+    width: max-content;
+}
+
+/* Asegurar que la tabla ocupe el 100% del contenedor */
+.modern-table.proyectos {
+    width: 100%;
+    min-width: max-content;
 }
 
 /* Texto de cliente más bold */

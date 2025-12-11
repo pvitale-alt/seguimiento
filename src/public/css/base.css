@@ -37,7 +37,7 @@ body {
     font-family: 'Google Sans', 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     background-color: #f8f9fa;
     color: var(--text-primary);
-    overflow-x: auto;
+    overflow-x: hidden;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     padding-top: 56px; /* Espacio para el header fijo */

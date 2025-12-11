@@ -251,6 +251,11 @@ function renderizarTablaProyectos(datos, contenido) {
     if (contadorProyectos) {
         contadorProyectos.textContent = 'Total proyectos: ' + datosOrdenados.length;
     }
+    
+    // Ocultar scroll horizontal si no es necesario
+    setTimeout(() => {
+        ajustarScrollHorizontal();
+    }, 100);
 }
 
 // Función para expandir/contraer proyectos secundarios (con carga lazy)
@@ -416,6 +421,37 @@ function crearFilaSubproyecto(id_proyecto, subproyecto, filaProyectoPadre) {
     filaSubproyecto.appendChild(celdaAvance);
     
     return filaSubproyecto;
+}
+
+// Función para ajustar el scroll horizontal: ocultar barra cuando no es necesaria
+function ajustarScrollHorizontal() {
+    const wrappers = document.querySelectorAll('.modern-table-wrapper');
+    wrappers.forEach(wrapper => {
+        const table = wrapper.querySelector('.modern-table');
+        if (table) {
+            // Verificar si el contenido es más ancho que el contenedor
+            const wrapperWidth = wrapper.clientWidth;
+            const tableWidth = table.scrollWidth;
+            
+            // Si el contenido cabe en el contenedor, ocultar scroll
+            if (tableWidth <= wrapperWidth) {
+                wrapper.style.overflowX = 'hidden';
+            } else {
+                wrapper.style.overflowX = 'auto';
+            }
+        }
+    });
+}
+
+// Ajustar scroll cuando se redimensiona la ventana
+if (typeof window !== 'undefined') {
+    let resizeTimeout;
+    window.addEventListener('resize', () => {
+        clearTimeout(resizeTimeout);
+        resizeTimeout = setTimeout(() => {
+            ajustarScrollHorizontal();
+        }, 250);
+    });
 }
 
 
