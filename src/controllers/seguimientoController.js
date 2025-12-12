@@ -47,14 +47,7 @@ async function index(req, res) {
             };
             const mantenimientos = await MantenimientoModel.obtenerTodos(filtrosMantenimiento);
             
-            // También verificar proyectos de "Bolsa de Horas" y "On-Site"
-            const filtrosBolsaHoras = {
-                producto: producto,
-                equipo: equipo,
-                categoria: 'Bolsa de Horas'
-            };
-            const proyectosBolsaHoras = await ProyectosExternosModel.obtenerTodos(filtrosBolsaHoras);
-            
+            // También verificar proyectos de "On-Site"
             const filtrosOnSite = {
                 producto: producto,
                 equipo: equipo,
@@ -62,8 +55,8 @@ async function index(req, res) {
             };
             const proyectosOnSite = await ProyectosExternosModel.obtenerTodos(filtrosOnSite);
             
-            // Si hay al menos un proyecto de mantenimiento, bolsa de horas u on-site, mostrar la solapa
-            tieneMantenimiento = mantenimientos.length > 0 || proyectosBolsaHoras.length > 0 || proyectosOnSite.length > 0;
+            // Si hay al menos un proyecto de mantenimiento u on-site, mostrar la solapa
+            tieneMantenimiento = mantenimientos.length > 0 || proyectosOnSite.length > 0;
         }
         
         // Si no hay tipo especificado o el tipo es 'mantenimiento' pero no hay proyectos de mantenimiento, redirigir a la primera solapa disponible
@@ -124,30 +117,7 @@ async function obtenerMantenimiento(req, res) {
         // Obtener proyectos de mantenimiento (Mantenimiento + On-Site)
         const mantenimientos = await MantenimientoModel.obtenerTodos(filtros);
         
-        // Obtener proyectos de "Bolsa de Horas" desde proyectos_externos
-        const filtrosBolsaHoras = {
-            producto: producto,
-            equipo: equipo,
-            categoria: 'Bolsa de Horas',
-            busqueda: req.query.busqueda || null,
-            orden: req.query.orden || 'nombre_proyecto',
-            direccion: req.query.direccion || 'asc'
-        };
-        const proyectosBolsaHoras = await ProyectosExternosModel.obtenerTodos(filtrosBolsaHoras);
-        
-        // Combinar ambos resultados y eliminar duplicados por id_proyecto
-        const proyectosMap = new Map();
-        mantenimientos.forEach(m => {
-            proyectosMap.set(m.id_proyecto, m);
-        });
-        proyectosBolsaHoras.forEach(p => {
-            // Solo agregar si no existe ya (evitar duplicados)
-            if (!proyectosMap.has(p.id_proyecto)) {
-                proyectosMap.set(p.id_proyecto, p);
-            }
-        });
-        
-        const todosLosProyectos = Array.from(proyectosMap.values());
+        const todosLosProyectos = mantenimientos;
         
         // Aplicar ordenamiento
         const ordenValido = ['nombre_proyecto', 'cliente', 'equipo', 'producto', 'fecha_creacion'];

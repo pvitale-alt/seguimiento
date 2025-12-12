@@ -138,10 +138,13 @@ select.modern-select::-ms-expand {
 .modern-select.face-select,
 .modern-select.riesgo-select {
     background-image: none;
-    padding: 8px 12px;
-    border-radius: 16px;
+    padding: 4px 6px;
+    border-radius: 12px;
     background-color: #f8f9fa;
     border: 1px solid transparent;
+    min-width: 36px;
+    height: 28px;
+    font-size: 16px;
 }
 
 .modern-select.overall-select:hover,
@@ -287,16 +290,16 @@ select.modern-select::-ms-expand {
 
 /* Selector de estado - Estilo moderno */
 .modern-select.estado-select {
-    font-size: 12px;
+    font-size: 11px;
     font-weight: 500;
     font-family: 'Google Sans', 'Roboto', sans-serif;
     color: #3c4043;
     background-color: #f8f9fa;
-    border-radius: 20px;
-    padding: 6px 14px;
+    border-radius: 14px;
+    padding: 4px 8px;
     background-image: none;
     border: 1px solid transparent;
-    min-width: 100px;
+    min-width: 80px;
     cursor: pointer;
     transition: all 0.2s ease;
     text-align: center;
@@ -304,6 +307,7 @@ select.modern-select::-ms-expand {
     align-items: center;
     justify-content: center;
     box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    height: 28px;
 }
 
 .modern-select.estado-select:hover {
@@ -530,9 +534,9 @@ textarea.modern-input {
 .progress-bar-container {
     position: relative;
     width: 100%;
-    height: 20px;
+    height: 16px;
     background: linear-gradient(to bottom, #e8eaed 0%, #f1f3f4 100%);
-    border-radius: 8px;
+    border-radius: 6px;
     overflow: hidden;
     cursor: pointer;
     box-shadow: inset 0 1px 3px rgba(0,0,0,0.08);
@@ -541,13 +545,13 @@ textarea.modern-input {
 
 .progress-bar {
     height: 100%;
-    border-radius: 8px;
+    border-radius: 6px;
     display: flex;
     align-items: center;
     justify-content: center;
     transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1), background 0.3s ease;
     position: relative;
-    min-width: 20px;
+    min-width: 16px;
     background: linear-gradient(135deg, #34a853 0%, #1e8e3e 50%, #137333 100%);
     box-shadow: inset 0 1px 2px rgba(255,255,255,0.3);
 }

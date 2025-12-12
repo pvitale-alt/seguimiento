@@ -16,7 +16,7 @@ async function sincronizarMantenimiento(producto = null, equipo = null, maxTotal
     console.log('   =================================\n');
     console.log(`   Producto: ${producto || 'todos'}`);
     console.log(`   Equipo: ${equipo || 'todos'}`);
-            console.log(`   Categoría: Mantenimiento + On-Site + Bolsa de Horas`);
+            console.log(`   Categoría: Mantenimiento + On-Site`);
     console.log(`   Línea de Servicio: Si`);
     console.log(`   Límite: ${maxTotal || 'sin límite'}\n`);
     
@@ -75,20 +75,9 @@ async function sincronizarMantenimiento(producto = null, equipo = null, maxTotal
         });
         console.log(`   ✅ ${proyectosOnSite.length} proyectos de categoría "On-Site" obtenidos`);
         
-        // Llamado para categoría "Bolsa de Horas"
-        console.log('   📋 Obteniendo proyectos de categoría "Bolsa de Horas"...');
-        const proyectosBolsaHoras = await redmineService.obtenerProyectosMapeados({
-            producto,
-            equipo,
-            categoria: 'Bolsa de Horas',
-            codigo_proyecto_padre: codigoProyectoPadre,
-            maxTotal
-        });
-        console.log(`   ✅ ${proyectosBolsaHoras.length} proyectos de categoría "Bolsa de Horas" obtenidos\n`);
-        
         // Combinar todos los resultados y eliminar duplicados por id_proyecto
         const proyectosMap = new Map();
-        [...proyectosMantenimiento, ...proyectosOnSite, ...proyectosBolsaHoras].forEach(p => {
+        [...proyectosMantenimiento, ...proyectosOnSite].forEach(p => {
             if (!proyectosMap.has(p.id_proyecto)) {
                 proyectosMap.set(p.id_proyecto, p);
             }
@@ -116,7 +105,7 @@ async function sincronizarMantenimiento(producto = null, equipo = null, maxTotal
             };
         }
         
-        console.log(`✅ ${proyectosMapeados.length} proyectos únicos obtenidos de Redmine (Mantenimiento + On-Site + Bolsa de Horas)\n`);
+        console.log(`✅ ${proyectosMapeados.length} proyectos únicos obtenidos de Redmine (Mantenimiento + On-Site)\n`);
         
         // 2. Filtrar proyectos excluyendo "Licencias" (ya están filtrados por categoría)
         const proyectosMantenimientoFiltrados = proyectosMapeados.filter(p => 

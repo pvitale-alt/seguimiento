@@ -1,6 +1,18 @@
 <aside class="sidebar" id="sidebar">
     <nav class="sidebar-nav">
-        <% productosEquipos.forEach(item => { 
+        <% 
+            // Orden personalizado de productos
+            const ordenProductos = ['Abbaco', 'Portfolio', 'Portfolio Cloud', 'Pepper', 'Unitrade', 'Trading Room', 'Order Management', 'OMS'];
+            const productosOrdenados = [...productosEquipos].sort((a, b) => {
+                const indexA = ordenProductos.indexOf(a.producto);
+                const indexB = ordenProductos.indexOf(b.producto);
+                // Si no está en la lista, ponerlo al final
+                const posA = indexA === -1 ? 999 : indexA;
+                const posB = indexB === -1 ? 999 : indexB;
+                return posA - posB;
+            });
+        %>
+        <% productosOrdenados.forEach(item => { 
             const producto = item.producto;
             const equipos = item.equipos || [];
             const productoNormalizado = producto === 'OMS' ? 'Order Management' : producto;

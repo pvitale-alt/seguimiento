@@ -21,7 +21,7 @@ function crearDropdownOverall(idProyecto, campo, valorActual, clasesAdicionales)
     else if (valorActual === 'rojo') bgColor = '#fce8e6';
     
     let html = '<div style="position: relative; display: inline-block;">';
-    html += '<button class="modern-select overall-select ' + valorActualClass + ' ' + clasesAdicionales + '" onclick="toggleCustomDropdown(\'' + dropdownId + '\', this)" style="text-align: left; border: none; background: ' + bgColor + '; padding: 6px 10px; border-radius: 16px; cursor: pointer; font-size: 20px; min-width: 50px; white-space: nowrap;">' + textoMostrado + '</button>';
+    html += '<button class="modern-select overall-select ' + valorActualClass + ' ' + clasesAdicionales + '" onclick="toggleCustomDropdown(\'' + dropdownId + '\', this)" style="text-align: center; border: none; background: ' + bgColor + '; padding: 4px 6px; border-radius: 12px; cursor: pointer; font-size: 16px; min-width: 36px; height: 28px; white-space: nowrap;">' + textoMostrado + '</button>';
     html += '<div id="' + dropdownId + '" class="custom-dropdown" style="display: none; position: absolute; top: 100%; left: 0; background: white; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.15); z-index: 10000; margin-top: 4px; overflow: hidden; min-width: 60px;">';
     opciones.forEach(opcion => {
         const isSelected = opcion.valor === valorActual;
@@ -124,7 +124,7 @@ function crearDropdownEstado(idProyecto, valorActual, clasesAdicionales) {
     }
     
     let html = '<div style="position: relative; display: inline-block;">';
-    html += '<button class="modern-select estado-select ' + estadoClass + ' ' + clasesAdicionales + '" onclick="toggleCustomDropdown(\'' + dropdownId + '\', this)" style="text-align: left; border: none; padding: 6px 10px; border-radius: 16px; cursor: pointer; font-size: 13px; font-weight: 400; font-family: \'Google Sans\', \'Roboto\', sans-serif; min-width: 100px; white-space: nowrap;">' + textoMostrado + '</button>';
+    html += '<button class="modern-select estado-select ' + estadoClass + ' ' + clasesAdicionales + '" onclick="toggleCustomDropdown(\'' + dropdownId + '\', this)" style="text-align: center; border: none; padding: 4px 8px; border-radius: 14px; cursor: pointer; font-size: 11px; font-weight: 500; font-family: \'Google Sans\', \'Roboto\', sans-serif; min-width: 80px; height: 28px; white-space: nowrap;">' + textoMostrado + '</button>';
     html += '<div id="' + dropdownId + '" class="custom-dropdown" style="display: none; position: absolute; top: 100%; left: 0; background: white; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.15); z-index: 10000; margin-top: 4px; overflow: hidden; min-width: 120px;">';
     opciones.forEach(opcion => {
         const isSelected = opcion.valor === valorActual;
@@ -157,7 +157,7 @@ function crearDropdownRiesgo(idProyecto, valorActual, clasesAdicionales) {
     }
     
     let html = '<div style="position: relative; display: inline-block;">';
-    html += '<button class="modern-select riesgo-select ' + riesgoClass + ' ' + clasesAdicionales + '" onclick="toggleCustomDropdown(\'' + dropdownId + '\', this)" style="text-align: left; border: none; background: #f8f9fa; padding: 6px 10px; border-radius: 16px; cursor: pointer; font-size: 20px; min-width: 50px; white-space: nowrap;">' + textoMostrado + '</button>';
+    html += '<button class="modern-select riesgo-select ' + riesgoClass + ' ' + clasesAdicionales + '" onclick="toggleCustomDropdown(\'' + dropdownId + '\', this)" style="text-align: center; border: none; background: #f8f9fa; padding: 4px 6px; border-radius: 12px; cursor: pointer; font-size: 16px; min-width: 36px; height: 28px; white-space: nowrap;">' + textoMostrado + '</button>';
     html += '<div id="' + dropdownId + '" class="custom-dropdown" style="display: none; position: absolute; top: 100%; left: 0; background: white; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.15); z-index: 10000; margin-top: 4px; overflow: hidden; min-width: 60px;">';
     opciones.forEach(opcion => {
         const isSelected = opcion.valor === valorActual || (valorActual === 'okey' && opcion.valor === 'ok') || (valorActual === 'redflag' && opcion.valor === 'red flag');
