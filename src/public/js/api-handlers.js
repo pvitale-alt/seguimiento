@@ -68,8 +68,18 @@ async function actualizarMantenimiento(id_proyecto, campo, valor) {
         if (result.success) {
             console.log('✅ Mantenimiento actualizado correctamente:', result.data);
             // Actualizar el texto de "Última Actualización" en el modal si está abierto
-            if (result.data && result.data.updated_at && typeof actualizarTextoUltimaActualizacion === 'function') {
-                actualizarTextoUltimaActualizacion(id_proyecto, result.data.updated_at);
+            if (result.data && result.data.updated_at) {
+                // Actualizar en el modal si está abierto
+                if (typeof actualizarTextoUltimaActualizacion === 'function') {
+                    actualizarTextoUltimaActualizacion(id_proyecto, result.data.updated_at);
+                }
+                // También actualizar en el array local de datos para futuras aperturas del modal
+                if (typeof datosTablaActual !== 'undefined' && Array.isArray(datosTablaActual)) {
+                    const proyecto = datosTablaActual.find(p => p.id_proyecto === parseInt(id_proyecto) || p.id_proyecto === id_proyecto);
+                    if (proyecto) {
+                        proyecto.updated_at = result.data.updated_at;
+                    }
+                }
             }
         } else {
             console.error('❌ Error al actualizar mantenimiento:', result.error);
@@ -99,8 +109,18 @@ async function actualizarProyecto(id_proyecto, campo, valor) {
         if (result.success) {
             console.log('✅ Proyecto actualizado correctamente:', result.data);
             // Actualizar el texto de "Última Actualización" en el modal si está abierto
-            if (result.data && result.data.updated_at && typeof actualizarTextoUltimaActualizacion === 'function') {
-                actualizarTextoUltimaActualizacion(id_proyecto, result.data.updated_at);
+            if (result.data && result.data.updated_at) {
+                // Actualizar en el modal si está abierto
+                if (typeof actualizarTextoUltimaActualizacion === 'function') {
+                    actualizarTextoUltimaActualizacion(id_proyecto, result.data.updated_at);
+                }
+                // También actualizar en el array local de datos para futuras aperturas del modal
+                if (typeof datosTablaActual !== 'undefined' && Array.isArray(datosTablaActual)) {
+                    const proyecto = datosTablaActual.find(p => p.id_proyecto === parseInt(id_proyecto) || p.id_proyecto === id_proyecto);
+                    if (proyecto) {
+                        proyecto.updated_at = result.data.updated_at;
+                    }
+                }
             }
         } else {
             console.error('❌ Error al actualizar proyecto:', result.error);

@@ -132,7 +132,12 @@ class ProyectosInternosModel {
                 return null;
             }
             
-            return await this.obtenerPorId(id_proyecto);
+            // Obtener los datos completos del proyecto y añadir updated_at del resultado
+            const proyectoCompleto = await this.obtenerPorId(id_proyecto);
+            if (proyectoCompleto && result.rows[0].updated_at) {
+                proyectoCompleto.updated_at = result.rows[0].updated_at;
+            }
+            return proyectoCompleto;
         } catch (error) {
             console.error('Error al actualizar proyecto interno:', error);
             throw error;
