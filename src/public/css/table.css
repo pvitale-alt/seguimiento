@@ -66,7 +66,8 @@
     white-space: nowrap;
 }
 
-/* Para proyectos, el header debe ocupar todo el ancho */
+/* Para todas las tablas, el header debe ocupar todo el ancho */
+.modern-table.mantenimiento .modern-table-header,
 .modern-table.proyectos .modern-table-header {
     min-width: 100%;
     box-sizing: border-box;
@@ -105,7 +106,11 @@
 .modern-table.mantenimiento .modern-table-header,
 .modern-table.mantenimiento .modern-table-row {
     grid-template-columns: 350px 90px 70px 70px 70px 70px 1fr;
-    gap: 0 16px;
+    padding-left: 12px;
+    padding-right: 12px;
+    gap: 0 8px; /* row-gap: 0, column-gap: 8px - unificado con proyectos */
+    min-width: 100%;
+    width: max-content;
 }
 
 /* Separar columna WIN de Satisfacción en mantenimiento */
@@ -119,7 +124,7 @@
 /* Proyectos: 13 columnas (con Categoria, Fecha Inicio y Fecha Fin) */
 .modern-table.proyectos .modern-table-header,
 .modern-table.proyectos .modern-table-row {
-    grid-template-columns: 30px 120px 280px 85px 105px 55px 55px 50px 50px 55px 80px 75px 85px;
+    grid-template-columns: 30px 120px 310px 85px 105px 55px 55px 50px 50px 55px 80px 75px 85px;
     padding-left: 12px;
     padding-right: 12px;
     gap: 0 8px; /* row-gap: 0, column-gap: 8px */
