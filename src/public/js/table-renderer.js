@@ -3,6 +3,31 @@
  * Seguimiento de Proyectos
  */
 
+// Función para abreviar nombres de categorías
+function abreviarCategoria(categoria) {
+    if (!categoria) return '-';
+    
+    const categoriaLower = categoria.toLowerCase().trim();
+    
+    // Mapeo de categorías a abreviaciones
+    const abreviaciones = {
+        'proyectos externos': 'P. Externos',
+        'proyectos internos': 'P. Internos',
+        'proyectos de bolsa': 'P. de bolsa',
+        'proyecto externo': 'P. Externos',
+        'proyecto interno': 'P. Internos',
+        'proyecto de bolsa': 'P. de bolsa'
+    };
+    
+    // Buscar coincidencia exacta (case-insensitive)
+    if (abreviaciones[categoriaLower]) {
+        return abreviaciones[categoriaLower];
+    }
+    
+    // Si no hay coincidencia, devolver el original
+    return categoria;
+}
+
 // Función para formatear fecha a YYYY-MM-DD
 function formatearFecha(fecha) {
     if (!fecha) return '';
@@ -240,7 +265,7 @@ function renderizarTablaProyectos(datos, contenido) {
         
         tablaHTML += '<div class="modern-table-cell item-text">' + (item.cliente || '-') + '</div>';
         tablaHTML += '<div class="modern-table-cell item-text"><a href="javascript:void(0);" onclick="abrirModalDetalle(' + item.id_proyecto + '); event.stopPropagation();" data-item="' + itemDataJson + '" style="color: var(--primary-color); text-decoration: none; cursor: pointer;">' + nombreProyecto + '</a></div>';
-        tablaHTML += '<div class="modern-table-cell item-text">' + (item.categoria || '-') + '</div>';
+        tablaHTML += '<div class="modern-table-cell item-text">' + abreviarCategoria(item.categoria) + '</div>';
         
         const estadoValue = item.estado || '';
         let estadoClass = '';
