@@ -15,6 +15,10 @@ class MantenimientoModel {
             const params = [];
             let paramCount = 1;
 
+            // Excluir categorías que no son de mantenimiento (solo incluir Mantenimiento y On-Site)
+            // Esto asegura que "Bolsa de Horas" y otras categorías no aparezcan en mantenimiento
+            query += ` AND (categoria = 'Mantenimiento' OR categoria = 'On-Site')`;
+
             // Filtro por producto
             if (filtros.producto) {
                 query += ` AND producto = $${paramCount}`;

@@ -49,30 +49,12 @@
                                 Mantenimiento
                             </a>
                             <% } %>
-                            <% if (typeof categoriasEquipo !== 'undefined' && categoriasEquipo.length > 0) { %>
-                                <% categoriasEquipo.forEach(function(categoria) { %>
-                                    <% 
-                                        // Convertir categoria a slug para el tipo
-                                        const tipoSlug = categoria.toLowerCase().replace(/\s+/g, '-');
-                                        // Verificar si esta categoría está activa comparando con categoriaActual
-                                        const isActive = (typeof categoriaActual !== 'undefined' && categoriaActual === categoria) || 
-                                                        (tipoActual !== 'mantenimiento' && tipoActual === tipoSlug);
-                                    %>
-                                    <a 
-                                        href="/?producto=<%= encodeURIComponent(productoActual || '') %>&equipo=<%= encodeURIComponent(equipoActual || '') %>&tipo=<%= tipoSlug %>&categoria=<%= encodeURIComponent(categoria) %>"
-                                        class="tab <%= isActive ? 'active' : '' %>"
-                                    >
-                                        <%= categoria %>
-                                    </a>
-                                <% }); %>
-                            <% } else { %>
-                                <a 
-                                    href="/?producto=<%= encodeURIComponent(productoActual || '') %>&equipo=<%= encodeURIComponent(equipoActual || '') %>&tipo=proyectos" 
-                                    class="tab <%= tipoActual === 'proyectos' ? 'active' : '' %>"
-                                >
-                                    Proyectos
-                                </a>
-                            <% } %>
+                            <a 
+                                href="/?producto=<%= encodeURIComponent(productoActual || '') %>&equipo=<%= encodeURIComponent(equipoActual || '') %>&tipo=proyectos" 
+                                class="tab <%= tipoActual !== 'mantenimiento' ? 'active' : '' %>"
+                            >
+                                Proyectos
+                            </a>
                         </div>
                     </div>
                     <!-- Filtros y buscador para proyectos (todas las categorías, no mantenimiento) -->
@@ -87,6 +69,15 @@
                         <span style="margin-left: 6px; font-size: 13px;">Cliente</span>
                     </button>
                     <div class="filter-dropdown" id="filterClientes" style="display: none;"></div>
+                    
+                    <!-- Filtro Categoria -->
+                    <button class="filter-btn" onclick="toggleFilterCategorias(this)" title="Filtrar por Categoría">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" style="width: 18px; height: 18px;">
+                            <path d="M10 18h4v-2h-4v2zM3 6v2h18V6H3zm3 7h12v-2H6v2z"/>
+                        </svg>
+                        <span style="margin-left: 6px; font-size: 13px;">Categoría</span>
+                    </button>
+                    <div class="filter-dropdown" id="filterCategorias" style="display: none;"></div>
                     
                     <!-- Filtro Estado -->
                     <button class="filter-btn" onclick="toggleFilterEstados(this)" title="Filtrar por Estado">
@@ -202,6 +193,7 @@
         // Variables de estado global
         let busquedaActual = '';
         let filtrosClientes = [];
+        let filtrosCategorias = [];
         let filtrosEstados = [];
         let datosTablaActual = [];
         let datosOriginales = [];

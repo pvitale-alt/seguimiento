@@ -118,6 +118,9 @@ function renderizarTablaProyectos(datos, contenido) {
         } else if (ordenActual.columna === 'proyecto') {
             valorA = (a.nombre_proyecto || '').toLowerCase();
             valorB = (b.nombre_proyecto || '').toLowerCase();
+        } else if (ordenActual.columna === 'categoria') {
+            valorA = (a.categoria || '').toLowerCase();
+            valorB = (b.categoria || '').toLowerCase();
         } else if (ordenActual.columna === 'estado') {
             const indexA = ordenEstados.indexOf((a.estado || '').toLowerCase());
             const indexB = ordenEstados.indexOf((b.estado || '').toLowerCase());
@@ -185,6 +188,7 @@ function renderizarTablaProyectos(datos, contenido) {
     tablaHTML += '<div class="modern-table-cell header-cell" style="width: 30px;"></div>';
     tablaHTML += '<div class="modern-table-cell header-cell" onclick="ordenarPor(\'cliente\')" style="cursor: pointer; user-select: none;' + (ordenActual.columna === 'cliente' ? ' color: var(--primary-color);' : '') + '">Cliente' + (ordenActual.columna === 'cliente' ? ' ' + (ordenActual.direccion === 'asc' ? flechaAsc : flechaDesc) : '') + '</div>';
     tablaHTML += '<div class="modern-table-cell header-cell" onclick="ordenarPor(\'proyecto\')" style="cursor: pointer; user-select: none;' + (ordenActual.columna === 'proyecto' ? ' color: var(--primary-color);' : '') + '">Proyecto' + (ordenActual.columna === 'proyecto' ? ' ' + (ordenActual.direccion === 'asc' ? flechaAsc : flechaDesc) : '') + '</div>';
+    tablaHTML += '<div class="modern-table-cell header-cell" onclick="ordenarPor(\'categoria\')" style="cursor: pointer; user-select: none;' + (ordenActual.columna === 'categoria' ? ' color: var(--primary-color);' : '') + '">Categoría' + (ordenActual.columna === 'categoria' ? ' ' + (ordenActual.direccion === 'asc' ? flechaAsc : flechaDesc) : '') + '</div>';
     tablaHTML += '<div class="modern-table-cell header-cell" onclick="ordenarPor(\'estado\')" style="cursor: pointer; user-select: none; text-align: center; justify-content: center;' + (ordenActual.columna === 'estado' ? ' color: var(--primary-color);' : '') + '">Estado' + (ordenActual.columna === 'estado' ? ' ' + (ordenActual.direccion === 'asc' ? flechaAsc : flechaDesc) : '') + '</div>';
     tablaHTML += '<div class="modern-table-cell header-cell" onclick="ordenarPor(\'overall\')" style="cursor: pointer; user-select: none; text-align: center;' + (ordenActual.columna === 'overall' ? ' color: var(--primary-color);' : '') + '">Overall' + (ordenActual.columna === 'overall' ? ' ' + (ordenActual.direccion === 'asc' ? flechaAsc : flechaDesc) : '') + '</div>';
     tablaHTML += '<div class="modern-table-cell header-cell" onclick="ordenarPor(\'alcance\')" style="cursor: pointer; user-select: none; text-align: center;' + (ordenActual.columna === 'alcance' ? ' color: var(--primary-color);' : '') + '">Alcance' + (ordenActual.columna === 'alcance' ? ' ' + (ordenActual.direccion === 'asc' ? flechaAsc : flechaDesc) : '') + '</div>';
@@ -236,6 +240,7 @@ function renderizarTablaProyectos(datos, contenido) {
         
         tablaHTML += '<div class="modern-table-cell item-text">' + (item.cliente || '-') + '</div>';
         tablaHTML += '<div class="modern-table-cell item-text"><a href="javascript:void(0);" onclick="abrirModalDetalle(' + item.id_proyecto + '); event.stopPropagation();" data-item="' + itemDataJson + '" style="color: var(--primary-color); text-decoration: none; cursor: pointer;">' + nombreProyecto + '</a></div>';
+        tablaHTML += '<div class="modern-table-cell item-text">' + (item.categoria || '-') + '</div>';
         
         const estadoValue = item.estado || '';
         let estadoClass = '';
@@ -388,7 +393,8 @@ function crearFilaSubproyecto(id_proyecto, subproyecto, filaProyectoPadre) {
     const celdas = [
         { class: 'modern-table-cell', style: 'width: 30px;', content: '' },
         { class: 'modern-table-cell item-text', content: '' },
-        { class: 'modern-table-cell item-text', style: 'padding-left: 16px; font-style: italic; color: var(--text-secondary); font-size: 12px;', content: subproyecto.nombre || '-' }
+        { class: 'modern-table-cell item-text', style: 'padding-left: 16px; font-style: italic; color: var(--text-secondary); font-size: 12px;', content: subproyecto.nombre || '-' },
+        { class: 'modern-table-cell item-text', style: 'font-size: 12px; color: var(--text-secondary);', content: '-' }
     ];
     
     celdas.forEach(celda => {

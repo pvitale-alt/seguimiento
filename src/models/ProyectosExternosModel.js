@@ -77,6 +77,14 @@ class ProyectosExternosModel {
                 paramCount++;
             }
 
+            // Excluir categorías específicas (para la solapa "Proyectos" que agrupa todas las categorías excepto mantenimiento)
+            if (filtros.excluirCategorias && Array.isArray(filtros.excluirCategorias) && filtros.excluirCategorias.length > 0) {
+                const placeholders = filtros.excluirCategorias.map((_, i) => `$${paramCount + i}`).join(', ');
+                query += ` AND categoria NOT IN (${placeholders})`;
+                params.push(...filtros.excluirCategorias);
+                paramCount += filtros.excluirCategorias.length;
+            }
+
             // Filtro por búsqueda
             if (filtros.busqueda) {
                 query += ` AND (

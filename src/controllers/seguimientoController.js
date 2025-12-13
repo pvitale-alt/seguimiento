@@ -59,7 +59,7 @@ async function index(req, res) {
             tieneMantenimiento = mantenimientos.length > 0 || proyectosOnSite.length > 0;
         }
         
-        // Si no hay tipo especificado o el tipo es 'mantenimiento' pero no hay proyectos de mantenimiento, redirigir a la primera solapa disponible
+        // Si no hay tipo especificado o el tipo es 'mantenimiento' pero no hay proyectos de mantenimiento, redirigir a proyectos
         if (producto && equipo) {
             // Si no hay tipo o es 'mantenimiento' pero no hay mantenimiento, determinar la primera solapa disponible
             if (!tipo || tipo === 'mantenimiento') {
@@ -68,11 +68,9 @@ async function index(req, res) {
                     if (!tipo) {
                         tipo = 'mantenimiento';
                     }
-                } else if (categoriasEquipo.length > 0) {
-                    // Si no hay mantenimiento pero hay categorías, redirigir a la primera categoría
-                    const primeraCategoria = categoriasEquipo[0];
-                    const tipoSlug = primeraCategoria.toLowerCase().replace(/\s+/g, '-');
-                    return res.redirect(`/?producto=${encodeURIComponent(producto)}&equipo=${encodeURIComponent(equipo)}&tipo=${tipoSlug}&categoria=${encodeURIComponent(primeraCategoria)}`);
+                } else {
+                    // Si no hay mantenimiento, redirigir a proyectos
+                    return res.redirect(`/?producto=${encodeURIComponent(producto)}&equipo=${encodeURIComponent(equipo)}&tipo=proyectos`);
                 }
             }
         }
@@ -195,11 +193,19 @@ async function obtenerProyectos(req, res) {
             direccion: req.query.direccion || direccionDefault
         };
         
+        // Si no hay categoría específica, excluir mantenimiento y on-site (se muestran en la solapa mantenimiento)
+        // Esto permite que la solapa "Proyectos" muestre todas las categorías excepto mantenimiento
+        if (!categoria) {
+            // No filtrar por categoría, pero excluir mantenimiento y on-site en la query
+            filtros.excluirCategorias = ['Mantenimiento', 'On-Site'];
+        }
+        
         console.log('📊 Obteniendo proyectos con filtros:', {
             producto: filtros.producto,
             equipo: filtros.equipo,
             categoria: filtros.categoria,
-            busqueda: filtros.busqueda
+            busqueda: filtros.busqueda,
+            excluirCategorias: filtros.excluirCategorias
         });
         
         const proyectos = await ProyectosExternosModel.obtenerTodos(filtros);

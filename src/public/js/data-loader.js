@@ -167,8 +167,27 @@ function actualizarFiltroClientesDesdeTabla() {
             `).join('');
             filterClientes.innerHTML = html;
         }
+        
+        // Actualizar también el filtro de categorías
+        const categorias = [...new Set(datosTablaActual.map(p => p.categoria).filter(c => c))].sort();
+        const filterCategorias = document.getElementById('filterCategorias');
+        if (filterCategorias) {
+            let html = '<div style="padding: 8px 16px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">';
+            html += '<button onclick="seleccionarTodosCategorias()" style="background: none; border: none; color: var(--primary-color); font-size: 13px; font-weight: 500; cursor: pointer; padding: 4px 8px;">Todos</button>';
+            html += '<button onclick="deseleccionarTodosCategorias()" style="background: none; border: none; color: var(--text-secondary); font-size: 13px; cursor: pointer; padding: 4px 8px;">Borrar todos</button>';
+            html += '</div>';
+            html += categorias.map(categoria => `
+                <label style="display: flex; align-items: center; padding: 10px 16px; cursor: pointer; transition: background 0.2s;" 
+                       onmouseover="this.style.background='#f1f3f4'" 
+                       onmouseout="this.style.background='white'">
+                    <input type="checkbox" class="filter-checkbox-categoria" value="${categoria}" style="margin-right: 8px; cursor: pointer;" onchange="aplicarFiltrosProyectos()" />
+                    <span style="font-size: 13px;">${categoria}</span>
+                </label>
+            `).join('');
+            filterCategorias.innerHTML = html;
+        }
     } catch (error) {
-        console.error('Error al actualizar filtro de clientes:', error);
+        console.error('Error al actualizar filtro de clientes y categorías:', error);
     }
 }
 
@@ -271,6 +290,9 @@ async function cargarDatos() {
             if (tipoActual !== 'mantenimiento') {
                 if (typeof filtrosClientes !== 'undefined' && filtrosClientes.length > 0) {
                     datosFiltrados = datosFiltrados.filter(d => filtrosClientes.includes(d.cliente));
+                }
+                if (typeof filtrosCategorias !== 'undefined' && filtrosCategorias.length > 0) {
+                    datosFiltrados = datosFiltrados.filter(d => filtrosCategorias.includes(d.categoria));
                 }
                 if (typeof filtrosEstados !== 'undefined' && filtrosEstados.length > 0) {
                     datosFiltrados = datosFiltrados.filter(d => filtrosEstados.includes(d.estado));

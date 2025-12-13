@@ -116,10 +116,10 @@
     margin-left: 8px;
 }
 
-/* Proyectos: 12 columnas (con Fecha Inicio y Fecha Fin) */
+/* Proyectos: 13 columnas (con Categoria, Fecha Inicio y Fecha Fin) */
 .modern-table.proyectos .modern-table-header,
 .modern-table.proyectos .modern-table-row {
-    grid-template-columns: 30px 140px 280px 105px 60px 60px 55px 55px 60px 90px 80px 90px;
+    grid-template-columns: 30px 120px 250px 100px 105px 55px 55px 50px 50px 55px 80px 75px 85px;
     padding-left: 12px;
     padding-right: 12px;
     gap: 0 8px; /* row-gap: 0, column-gap: 8px */

@@ -121,6 +121,8 @@ async function obtenerIdProyectoPorCodigo(codigoProyecto) {
     try {
         const baseUrl = REDMINE_URL.replace(/\/+$/, '');
         const url = `${baseUrl}/projects/${codigoProyecto}.json?key=${REDMINE_TOKEN}`;
+        const urlLog = url.replace(/key=[^&]+/, 'key=***');
+        console.log(`🔍 Consultando proyecto por código en Redmine: ${urlLog}`);
         
         const response = await fetch(url, {
             method: 'GET',
@@ -157,6 +159,8 @@ async function obtenerProyectoPorCodigo(codigoProyecto) {
     try {
         const baseUrl = REDMINE_URL.replace(/\/+$/, '');
         const url = `${baseUrl}/projects/${codigoProyecto}.json?key=${REDMINE_TOKEN}&include=parent`;
+        const urlLog = url.replace(/key=[^&]+/, 'key=***');
+        console.log(`🔍 Consultando proyecto completo por código en Redmine: ${urlLog}`);
         
         const response = await fetch(url, {
             method: 'GET',
@@ -374,6 +378,8 @@ function filtrarProyectosPorTipo(proyectos, tipo) {
 async function obtenerEpics(projectId) {
     validarCredenciales();
     
+    console.log(`🔍 Consultando epics de Redmine para proyecto ${projectId}...`);
+    
     const epics = [];
     let offset = 0;
     const limit = 100;
@@ -386,6 +392,9 @@ async function obtenerEpics(projectId) {
         url.searchParams.set('limit', limit.toString());
         url.searchParams.set('offset', offset.toString());
         url.searchParams.set('status_id', '*'); // Todos los estados
+        
+        const urlLog = url.toString().replace(/key=[^&]+/, 'key=***');
+        console.log(`   📥 Obteniendo epics (offset: ${offset}, limit: ${limit}): ${urlLog}`);
         
         const response = await fetch(url.toString(), {
             headers: {
