@@ -181,10 +181,29 @@ async function obtenerProyectos(req, res) {
         const producto = req.query.producto || null;
         const equipo = req.query.equipo || null;
         const categoria = req.query.categoria || null;
+        const proyecto_padre = req.query.proyecto_padre || null; // Nuevo filtro para obtener subproyectos de un proyecto padre
         const orden = req.query.orden || 'cliente';
         // Si no se especifica dirección y la columna es 'cliente', usar 'desc' por defecto
         const direccionDefault = (orden === 'cliente' && !req.query.direccion) ? 'desc' : 'asc';
         const incluirCerrados = req.query.incluirCerrados === 'true' || req.query.incluirCerrados === true;
+        
+        // Si se especifica proyecto_padre, devolver solo los subproyectos de ese proyecto
+        if (proyecto_padre) {
+            const proyectoPadreId = parseInt(proyecto_padre);
+            if (!proyectoPadreId) {
+                return res.status(400).json({
+                    success: false,
+                    error: 'ID de proyecto padre inválido'
+                });
+            }
+            
+            const subproyectos = await ProyectosExternosModel.obtenerSubproyectos([proyectoPadreId]);
+            return res.json({
+                success: true,
+                data: subproyectos
+            });
+        }
+        
         const filtros = {
             producto: producto,
             equipo: equipo,
@@ -593,6 +612,18 @@ async function sincronizarEpics(req, res) {
             });
         }
         
+        // Verificar si el proyecto es un proyecto padre (tiene subproyectos)
+        const subproyectos = await ProyectosExternosModel.obtenerSubproyectos([id_proyecto]);
+        const esProyectoPadre = subproyectos && subproyectos.length > 0;
+        
+        // Si es proyecto padre, no sincronizar epics
+        if (esProyectoPadre) {
+            return res.status(400).json({
+                success: false,
+                error: 'Los proyectos padre no pueden sincronizar epics. Solo los subproyectos pueden tener epics.'
+            });
+        }
+        
         // Obtener epics de Redmine
         const epics = await obtenerEpics(codigo_proyecto);
         
@@ -648,11 +679,25 @@ async function obtenerEpicsProyecto(req, res) {
             });
         }
         
+        // Verificar si el proyecto es un proyecto padre (tiene subproyectos)
+        const subproyectos = await ProyectosExternosModel.obtenerSubproyectos([id_proyecto]);
+        const esProyectoPadre = subproyectos && subproyectos.length > 0;
+        
+        // Si es proyecto padre, no buscar epics (solo mostrar subproyectos)
+        if (esProyectoPadre) {
+            return res.json({
+                success: true,
+                data: [],
+                es_proyecto_padre: true
+            });
+        }
+        
         const epics = await EpicsProyectoModel.obtenerPorProyecto(id_proyecto);
         
         res.json({
             success: true,
-            data: epics
+            data: epics,
+            es_proyecto_padre: false
         });
     } catch (error) {
         console.error('Error al obtener epics:', error);

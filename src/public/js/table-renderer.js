@@ -252,6 +252,7 @@ function renderizarTablaProyectos(datos, contenido) {
             fecha_fin: item.fecha_fin || '',
             win: item.win || '',
             tiene_epics: item.tiene_epics || false,
+            tiene_subproyectos: item.tiene_subproyectos || false,
             estado: item.estado || '',
             accionables: item.accionables || '',
             fecha_accionable: item.fecha_accionable || '',
