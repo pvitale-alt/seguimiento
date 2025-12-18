@@ -164,14 +164,17 @@ function actualizarFiltroClientesDesdeTabla() {
             html += '<button onclick="seleccionarTodosClientes()" style="background: none; border: none; color: var(--primary-color); font-size: 13px; font-weight: 500; cursor: pointer; padding: 4px 8px;">Todos</button>';
             html += '<button onclick="deseleccionarTodosClientes()" style="background: none; border: none; color: var(--text-secondary); font-size: 13px; cursor: pointer; padding: 4px 8px;">Borrar todos</button>';
             html += '</div>';
-            html += clientes.map(cliente => `
+            html += clientes.map(cliente => {
+                const checked = (typeof filtrosClientes !== 'undefined' && filtrosClientes.includes(cliente)) ? 'checked' : '';
+                return `
                 <label style="display: flex; align-items: center; padding: 10px 16px; cursor: pointer; transition: background 0.2s;" 
                        onmouseover="this.style.background='#f1f3f4'" 
                        onmouseout="this.style.background='white'">
-                    <input type="checkbox" class="filter-checkbox-cliente" value="${cliente}" style="margin-right: 8px; cursor: pointer;" onchange="aplicarFiltrosProyectos()" />
+                    <input type="checkbox" class="filter-checkbox-cliente" value="${cliente}" ${checked} style="margin-right: 8px; cursor: pointer;" onchange="aplicarFiltrosProyectos()" />
                     <span style="font-size: 13px;">${cliente}</span>
                 </label>
-            `).join('');
+            `;
+            }).join('');
             filterClientes.innerHTML = html;
         }
         
@@ -183,14 +186,17 @@ function actualizarFiltroClientesDesdeTabla() {
             html += '<button onclick="seleccionarTodosCategorias()" style="background: none; border: none; color: var(--primary-color); font-size: 13px; font-weight: 500; cursor: pointer; padding: 4px 8px;">Todos</button>';
             html += '<button onclick="deseleccionarTodosCategorias()" style="background: none; border: none; color: var(--text-secondary); font-size: 13px; cursor: pointer; padding: 4px 8px;">Borrar todos</button>';
             html += '</div>';
-            html += categorias.map(categoria => `
+            html += categorias.map(categoria => {
+                const checked = (typeof filtrosCategorias !== 'undefined' && filtrosCategorias.includes(categoria)) ? 'checked' : '';
+                return `
                 <label style="display: flex; align-items: center; padding: 10px 16px; cursor: pointer; transition: background 0.2s;" 
                        onmouseover="this.style.background='#f1f3f4'" 
                        onmouseout="this.style.background='white'">
-                    <input type="checkbox" class="filter-checkbox-categoria" value="${categoria}" style="margin-right: 8px; cursor: pointer;" onchange="aplicarFiltrosProyectos()" />
+                    <input type="checkbox" class="filter-checkbox-categoria" value="${categoria}" ${checked} style="margin-right: 8px; cursor: pointer;" onchange="aplicarFiltrosProyectos()" />
                     <span style="font-size: 13px;">${categoria}</span>
                 </label>
-            `).join('');
+            `;
+            }).join('');
             filterCategorias.innerHTML = html;
         }
     } catch (error) {

@@ -28,8 +28,9 @@
             <div class="content-area" style="position: relative;">
                 <div style="position: relative; z-index: 1; min-width: max-content;">
                 <% if (productoActual) { %>
-                <!-- Título y botón Sincronizar (sin contenedor) -->
-                <div style="padding: 16px 0; display: flex; justify-content: space-between; align-items: center;">
+                <div class="seguimiento-container">
+                <!-- Título y botón Sincronizar -->
+                <div class="seguimiento-header">
                     <h1 style="font-size: 32px; font-weight: 500; color: rgba(245, 112, 41, 1); margin: 0; font-family: 'Google Sans', 'Roboto', sans-serif;">
                         Seguimiento<% if (equipoNombre) { %> - <%= equipoNombre %><% } %>
                     </h1>
@@ -37,8 +38,8 @@
                     <button class="button button-secondary" onclick="sincronizar()" id="btnSincronizar">Sincronizar</button>
                     <% } %>
                 </div>
-                <!-- Tabs (sin contenedor) -->
-                <div class="tabs" style="padding: 0; margin: 0 0 16px 0; display: flex; align-items: center; border-bottom: 1px solid var(--border-color);">
+                <!-- Tabs -->
+                <div class="tabs seguimiento-tabs">
                     <div style="display: flex;">
                         <% if (typeof tieneMantenimiento !== 'undefined' && tieneMantenimiento) { %>
                         <a 
@@ -56,10 +57,10 @@
                         </a>
                     </div>
                 </div>
-                <!-- Filtros y buscador para proyectos (sin contenedor) -->
+                <!-- Filtros y buscador para proyectos -->
                 <% if (tipoActual !== 'mantenimiento') { %>
-                <div id="filtrosProyectos" style="padding: 16px 0; margin-bottom: 16px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
-                <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+                <div id="filtrosProyectos" class="seguimiento-filtros">
+                <div class="seguimiento-filtros-inner">
                     <!-- Filtro Cliente -->
                     <button class="filter-btn" onclick="toggleFilterClientes(this)" title="Filtrar por Cliente">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" style="width: 18px; height: 18px;">
@@ -117,10 +118,10 @@
                     </div>
                     </div>
                     
-                    <!-- Buscador (centrado) -->
-                    <div style="position: relative; flex: 1; max-width: 900px; min-width: 500px; margin: 0 auto; display: flex; justify-content: center;">
-                        <form onsubmit="buscar(event)" class="google-search-box" style="position: relative; width: 100%;">
-                            <div class="google-search-box-container" id="searchBoxContainer" style="display: flex; align-items: center;">
+                    <!-- Buscador -->
+                    <div class="seguimiento-buscador">
+                        <form onsubmit="buscar(event)" class="google-search-box">
+                            <div class="google-search-box-container" id="searchBoxContainer">
                                 <svg style="width: 20px; height: 20px; color: #9aa0a6; margin-right: 12px; flex-shrink: 0;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
                                     <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
                                 </svg>
@@ -154,16 +155,19 @@
                             <div id="searchSuggestions" class="google-search-suggestions"></div>
                         </form>
                     </div>
-                    
-                <!-- Checkbox "Incluir cerrados" -->
-                <div style="display: flex; align-items: center; gap: 12px; margin-left: auto;">
-                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; user-select: none;">
-                        <input type="checkbox" id="incluirCerrados" style="cursor: pointer;" onchange="aplicarFiltrosProyectos()" />
-                        <span style="font-size: 13px; color: var(--text-secondary);">Incluir cerrados</span>
-                        <span id="contadorProyectos" style="font-size: 13px; color: var(--text-secondary); font-weight: 500; margin-left: 4px;">total proyectos: 0</span>
-                    </label>
+
+                    <!-- Checkbox "Incluir cerrados" -->
+                    <div class="seguimiento-filtros-acciones">
+                        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; user-select: none;">
+                            <input type="checkbox" id="incluirCerrados" style="cursor: pointer;" onchange="aplicarFiltrosProyectos()" />
+                            <span style="font-size: 13px; color: var(--text-secondary);">Incluir cerrados</span>
+                            <span id="contadorProyectos" style="font-size: 13px; color: var(--text-secondary); font-weight: 500; margin-left: 4px;">Total proyectos: 0</span>
+                        </label>
+                    </div>
                 </div>
                 <% } %>
+                </div>
+                </div>
                 </div>
                 <!-- Chips de filtros aplicados -->
                 <div id="filtrosAplicados" style="display: none; padding: 12px 0; margin-bottom: 16px; flex-wrap: wrap; gap: 8px; align-items: center;"></div>
