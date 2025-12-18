@@ -26,41 +26,40 @@
         
         <div class="main-content">
             <div class="content-area" style="position: relative;">
-                <!-- Imagen de fondo con opacidad -->
-                <div style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; z-index: 0; opacity: 0.2; background-image: url('/images/cover.png'); background-size: cover; background-position: center; background-repeat: no-repeat; pointer-events: none;"></div>
-                <div style="position: relative; z-index: 1;">
+                <div style="position: relative; z-index: 1; min-width: max-content;">
                 <% if (productoActual) { %>
-                <!-- Contenedor agrupado: Título, Tabs y Filtros -->
-                <div style="background: white; border-radius: 12px; box-shadow: 0 1px 2px 0 rgba(60,64,67,.3), 0 1px 3px 1px rgba(60,64,67,.15); position: relative; z-index: 2; margin-bottom: 16px; overflow: hidden;">
-                    <!-- Título y botón Sincronizar -->
-                    <div style="padding: 16px 24px; position: relative; z-index: 2; display: flex; justify-content: space-between; align-items: center;">
-                        <h1 style="font-size: 32px; font-weight: 500; color: rgba(245, 112, 41, 1); margin: 0; font-family: 'Google Sans', 'Roboto', sans-serif;">
-                            Seguimiento<% if (equipoNombre) { %> - <%= equipoNombre %><% } %>
-                        </h1>
-                        <button class="button button-secondary" onclick="sincronizar()" id="btnSincronizar">Sincronizar</button>
-                    </div>
-                    <div class="tabs" style="padding: 0 24px; margin: 0; display: flex; justify-content: space-between; align-items: center; position: relative; z-index: 2; border-top: 1px solid var(--border-color);">
-                        <div style="display: flex;">
-                            <% if (typeof tieneMantenimiento !== 'undefined' && tieneMantenimiento) { %>
-                            <a 
-                                href="/?producto=<%= encodeURIComponent(productoActual || '') %>&equipo=<%= encodeURIComponent(equipoActual || '') %>&tipo=mantenimiento" 
-                                class="tab <%= tipoActual === 'mantenimiento' ? 'active' : '' %>"
-                            >
-                                Mantenimiento
-                            </a>
-                            <% } %>
-                            <a 
-                                href="/?producto=<%= encodeURIComponent(productoActual || '') %>&equipo=<%= encodeURIComponent(equipoActual || '') %>&tipo=proyectos" 
-                                class="tab <%= tipoActual !== 'mantenimiento' ? 'active' : '' %>"
-                            >
-                                Proyectos
-                            </a>
-                        </div>
-                    </div>
-                    <!-- Filtros y buscador para proyectos (todas las categorías, no mantenimiento) -->
+                <!-- Título y botón Sincronizar (sin contenedor) -->
+                <div style="padding: 16px 0; display: flex; justify-content: space-between; align-items: center;">
+                    <h1 style="font-size: 32px; font-weight: 500; color: rgba(245, 112, 41, 1); margin: 0; font-family: 'Google Sans', 'Roboto', sans-serif;">
+                        Seguimiento<% if (equipoNombre) { %> - <%= equipoNombre %><% } %>
+                    </h1>
                     <% if (tipoActual !== 'mantenimiento') { %>
-                    <div id="filtrosProyectos" style="padding: 16px 24px; margin-top: 0; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; position: relative; z-index: 2; border-top: 1px solid var(--border-color);">
-                    <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+                    <button class="button button-secondary" onclick="sincronizar()" id="btnSincronizar">Sincronizar</button>
+                    <% } %>
+                </div>
+                <!-- Tabs (sin contenedor) -->
+                <div class="tabs" style="padding: 0; margin: 0 0 16px 0; display: flex; align-items: center; border-bottom: 1px solid var(--border-color);">
+                    <div style="display: flex;">
+                        <% if (typeof tieneMantenimiento !== 'undefined' && tieneMantenimiento) { %>
+                        <a 
+                            href="/?producto=<%= encodeURIComponent(productoActual || '') %>&equipo=<%= encodeURIComponent(equipoActual || '') %>&tipo=mantenimiento" 
+                            class="tab <%= tipoActual === 'mantenimiento' ? 'active' : '' %>"
+                        >
+                            Mantenimiento
+                        </a>
+                        <% } %>
+                        <a 
+                            href="/?producto=<%= encodeURIComponent(productoActual || '') %>&equipo=<%= encodeURIComponent(equipoActual || '') %>&tipo=proyectos" 
+                            class="tab <%= tipoActual !== 'mantenimiento' ? 'active' : '' %>"
+                        >
+                            Proyectos
+                        </a>
+                    </div>
+                </div>
+                <!-- Filtros y buscador para proyectos (sin contenedor) -->
+                <% if (tipoActual !== 'mantenimiento') { %>
+                <div id="filtrosProyectos" style="padding: 16px 0; margin-bottom: 16px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+                <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
                     <!-- Filtro Cliente -->
                     <button class="filter-btn" onclick="toggleFilterClientes(this)" title="Filtrar por Cliente">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" style="width: 18px; height: 18px;">
@@ -156,18 +155,18 @@
                         </form>
                     </div>
                     
-                    <!-- Checkbox "Incluir cerrados" -->
-                    <div style="display: flex; align-items: center; gap: 12px; margin-left: auto;">
-                        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; user-select: none;">
-                            <input type="checkbox" id="incluirCerrados" style="cursor: pointer;" onchange="aplicarFiltrosProyectos()" />
-                            <span style="font-size: 13px; color: var(--text-secondary);">Incluir cerrados</span>
-                            <span id="contadorProyectos" style="font-size: 13px; color: var(--text-secondary); font-weight: 500; margin-left: 4px;">total proyectos: 0</span>
-                        </label>
-                    </div>
-                    <% } %>
+                <!-- Checkbox "Incluir cerrados" -->
+                <div style="display: flex; align-items: center; gap: 12px; margin-left: auto;">
+                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; user-select: none;">
+                        <input type="checkbox" id="incluirCerrados" style="cursor: pointer;" onchange="aplicarFiltrosProyectos()" />
+                        <span style="font-size: 13px; color: var(--text-secondary);">Incluir cerrados</span>
+                        <span id="contadorProyectos" style="font-size: 13px; color: var(--text-secondary); font-weight: 500; margin-left: 4px;">total proyectos: 0</span>
+                    </label>
                 </div>
-                <!-- Chips de filtros aplicados (debajo del panel de filtros) -->
-                <div id="filtrosAplicados" style="display: none; padding: 12px 24px; background: white; border-bottom: 1px solid var(--border-color); flex-wrap: wrap; gap: 8px; align-items: center; position: relative; z-index: 2;"></div>
+                <% } %>
+                </div>
+                <!-- Chips de filtros aplicados -->
+                <div id="filtrosAplicados" style="display: none; padding: 12px 0; margin-bottom: 16px; flex-wrap: wrap; gap: 8px; align-items: center;"></div>
                 <% } %>
 
                 <div id="contenido" class="table-container">

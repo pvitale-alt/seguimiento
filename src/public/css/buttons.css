@@ -82,23 +82,23 @@
     background: #0d47a1;
 }
 
-/* Variante blanca con letras azules */
+/* Variante azul con letras blancas (invertido) */
 .button.button-secondary {
-    background: white;
-    color: #1a73e8;
-    border: 1px solid #dadce0;
+    background: #1a73e8;
+    color: white;
+    border: 1px solid #1a73e8;
 }
 
 .button.button-secondary:hover {
-    background: #f1f3f4;
-    color: #1557b0;
-    border-color: #bdc1c6;
-    box-shadow: none;
+    background: #1557b0;
+    color: white;
+    border-color: #1557b0;
+    box-shadow: 0 1px 2px 0 rgba(60,64,67,.3), 0 1px 3px 1px rgba(60,64,67,.15);
 }
 
 .button.button-secondary:active {
-    background: #e8eaed;
-    color: #0d47a1;
+    background: #0d47a1;
+    color: white;
 }
 
 /* Botón estándar - Estilo Google Drive/Material Design */

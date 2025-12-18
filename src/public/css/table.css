@@ -3,42 +3,16 @@
  * Seguimiento de Proyectos
  */
 
-/* Contenedor de tabla con scroll horizontal solo cuando sea necesario */
+/* Contenedor de tabla - sin scroll propio, usa el del navegador */
 .modern-table-wrapper {
     background: white;
     border-radius: 12px;
     box-shadow: var(--shadow);
-    overflow-x: auto;
-    overflow-y: hidden;
-    width: 100%;
-    max-width: 100%;
+    overflow: visible; /* Sin scroll propio, usa el del navegador */
+    width: max-content; /* Permitir que expanda según contenido */
+    min-width: 100%;
     padding: 0;
     margin: 0;
-    -webkit-overflow-scrolling: touch; /* Scroll suave en iOS */
-}
-
-/* Ocultar scrollbar cuando no es necesario (solo en WebKit) */
-.modern-table-wrapper::-webkit-scrollbar {
-    height: 8px;
-}
-
-.modern-table-wrapper::-webkit-scrollbar-track {
-    background: transparent;
-}
-
-.modern-table-wrapper::-webkit-scrollbar-thumb {
-    background: #dadce0;
-    border-radius: 4px;
-}
-
-.modern-table-wrapper::-webkit-scrollbar-thumb:hover {
-    background: #bdc1c6;
-}
-
-/* Ocultar scrollbar cuando el contenido cabe (Firefox) */
-.modern-table-wrapper {
-    scrollbar-width: thin;
-    scrollbar-color: #dadce0 transparent;
 }
 
 /* Para proyectos, ajustar el ancho */
@@ -269,10 +243,9 @@
 
 /* Tablas legacy (mantener compatibilidad) */
 .table-container {
-    background: white;
-    border-radius: 12px;
-    box-shadow: var(--shadow);
-    overflow: hidden;
+    background: transparent;
+    overflow: visible; /* Sin scroll propio */
+    min-width: max-content; /* Permitir que expanda */
 }
 
 .table {
