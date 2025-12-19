@@ -325,7 +325,44 @@ function ordenarPor(columna) {
         // Si es cliente, usar 'desc' por defecto, sino 'asc'
         ordenActual.direccion = columna === 'cliente' ? 'desc' : 'asc';
     }
-    cargarDatos();
+    
+    // Optimización: ordenar en el cliente sin hacer petición al servidor
+    if (typeof datosOriginales !== 'undefined' && datosOriginales && datosOriginales.length > 0) {
+        // Aplicar filtros a los datos originales
+        let datosFiltrados = [...datosOriginales];
+        
+        // Aplicar filtro de incluir cerrados
+        const incluirCerrados = document.getElementById('incluirCerrados')?.checked || false;
+        if (!incluirCerrados) {
+            datosFiltrados = datosFiltrados.filter(d => (d.estado || '').toLowerCase() !== 'cerrado');
+        }
+        
+        // Aplicar filtros de clientes
+        if (typeof filtrosClientes !== 'undefined' && filtrosClientes.length > 0) {
+            datosFiltrados = datosFiltrados.filter(d => filtrosClientes.includes(d.cliente));
+        }
+        
+        // Aplicar filtros de categorías
+        if (typeof filtrosCategorias !== 'undefined' && filtrosCategorias.length > 0) {
+            datosFiltrados = datosFiltrados.filter(d => filtrosCategorias.includes(d.categoria));
+        }
+        
+        // Aplicar filtros de estados
+        if (typeof filtrosEstados !== 'undefined' && filtrosEstados.length > 0) {
+            datosFiltrados = datosFiltrados.filter(d => filtrosEstados.includes(d.estado));
+        }
+        
+        // Renderizar tabla con datos filtrados (el ordenamiento se hace en renderizarTablaProyectos)
+        if (typeof renderizarTabla === 'function') {
+            renderizarTabla(datosFiltrados);
+        } else {
+            // Si no hay función renderizarTabla, hacer petición al servidor como fallback
+            cargarDatos();
+        }
+    } else {
+        // Si no hay datos en memoria, hacer petición al servidor
+        cargarDatos();
+    }
 }
 
 

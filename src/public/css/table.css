@@ -83,7 +83,16 @@
 .modern-table-row .modern-table-cell:has(.modern-select),
 .modern-table-row .modern-table-cell:has(.modern-input),
 .modern-table-row .modern-table-cell:has(.progress-bar-container) {
-    justify-content: center;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    text-align: center !important;
+}
+
+/* Centrar los contenedores de los botones desplegables */
+.modern-table-row .modern-table-cell:has(.modern-select) > div {
+    display: inline-block;
+    margin: 0 auto;
     text-align: center;
 }
 
@@ -110,7 +119,7 @@
 .modern-table.proyectos .modern-table-header,
 .modern-table.proyectos .modern-table-row {
     /* Última columna (WIN) mucho más ancha */
-    grid-template-columns: 30px 120px 400px 85px 105px 85px 55px 55px 50px 50px 55px 80px 140px;
+    grid-template-columns: 30px 160px 400px 95px 105px 85px 55px 55px 50px 50px 55px 80px 80px;
     padding-left: 12px;
     padding-right: 12px;
     gap: 0 8px; /* row-gap: 0, column-gap: 8px */
@@ -122,7 +131,7 @@
 .modern-table.proyectos-internos .modern-table-header,
 .modern-table.proyectos-internos .modern-table-row {
     /* Última columna (WIN) mucho más ancha */
-    grid-template-columns: 30px 120px 400px 105px 85px 55px 55px 50px 50px 55px 80px 140px;
+    grid-template-columns: 30px 160px 400px 105px 85px 55px 55px 50px 50px 55px 80px 80px;
     padding-left: 12px;
     padding-right: 12px;
     gap: 0 8px; /* row-gap: 0, column-gap: 8px */
@@ -170,7 +179,7 @@
 
 /* Asegurar que los subproyectos tengan el mismo grid que las filas principales */
 .modern-table.proyectos .modern-table-row.subproyecto-row:not(.subproyectos-ocultos) {
-    grid-template-columns: 30px 120px 400px 85px 105px 85px 55px 55px 50px 50px 55px 80px 75px;
+    grid-template-columns: 30px 160px 400px 95px 105px 85px 55px 55px 50px 50px 55px 80px 80px;
 }
 
 .modern-table-row.subproyecto-row .modern-table-cell {
