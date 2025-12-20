@@ -128,11 +128,19 @@ function renderizarTablaMantenimiento(datos, contenido) {
     let tablaHTML = '<div class="modern-table-wrapper mantenimiento-wrapper"><div class="modern-table mantenimiento"><div class="modern-table-header" style="position: relative;">';
     tablaHTML += '<div class="modern-table-cell header-cell">Cliente</div>';
     tablaHTML += '<div class="modern-table-cell header-cell" style="text-align: center; justify-content: center;">Límite Horas</div>';
-    tablaHTML += '<div class="modern-table-cell header-cell">Overall</div>';
+    tablaHTML += '<div class="modern-table-cell header-cell" style="text-align: center; justify-content: center;">Overall</div>';
     tablaHTML += '<div class="modern-table-cell header-cell">Demanda</div>';
     tablaHTML += '<div class="modern-table-cell header-cell">Estabilidad</div>';
     tablaHTML += '<div class="modern-table-cell header-cell">Satisfacción</div>';
-    tablaHTML += '<div class="modern-table-cell header-cell" style="flex: 1;">WIN</div>';
+    tablaHTML += '<div class="modern-table-cell header-cell" style="flex: 1; display: flex; align-items: center; gap: 6px;">';
+    tablaHTML += '<span>WIN</span>';
+    tablaHTML += '<div class="win-info-icon" style="position: relative; display: inline-flex; align-items: center; cursor: help;">';
+    tablaHTML += '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="color: #5f6368; opacity: 0.7;" onmouseover="this.style.opacity=\'1\'" onmouseout="this.style.opacity=\'0.7\'">';
+    tablaHTML += '<path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/>';
+    tablaHTML += '</svg>';
+    tablaHTML += '<div class="win-tooltip">What\'s Important Now</div>';
+    tablaHTML += '</div>';
+    tablaHTML += '</div>';
     tablaHTML += '<button onclick="sincronizar()" style="position: absolute; right: 16px; top: 50%; transform: translateY(-50%); display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 50%; border: 1px solid #dfe1e5; background: white; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background=\'#f1f3f4\'" onmouseout="this.style.background=\'white\'" title="Actualizar mantenimiento">';
     tablaHTML += '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" style="color: #5f6368;">';
     tablaHTML += '<path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/>';
@@ -265,6 +273,15 @@ function renderizarTablaProyectos(datos, contenido) {
     tablaHTML += '<div class="modern-table-cell header-cell" style="text-align: center; justify-content: center;">Accionables</div>';
     tablaHTML += '<div class="modern-table-cell header-cell" onclick="ordenarPor(\'fecha_inicio\')" style="cursor: pointer; user-select: none; text-align: center; justify-content: center;' + (ordenActual.columna === 'fecha_inicio' ? ' color: var(--primary-color);' : '') + '">Fecha Inicio' + (ordenActual.columna === 'fecha_inicio' ? ' ' + (ordenActual.direccion === 'asc' ? flechaAsc : flechaDesc) : '') + '</div>';
     tablaHTML += '<div class="modern-table-cell header-cell" onclick="ordenarPor(\'fecha_fin\')" style="cursor: pointer; user-select: none; text-align: center; justify-content: center;' + (ordenActual.columna === 'fecha_fin' ? ' color: var(--primary-color);' : '') + '">Fecha Fin' + (ordenActual.columna === 'fecha_fin' ? ' ' + (ordenActual.direccion === 'asc' ? flechaAsc : flechaDesc) : '') + '</div>';
+    tablaHTML += '<div class="modern-table-cell header-cell" style="flex: 1; display: flex; align-items: center; gap: 6px;">';
+    tablaHTML += '<span>WIN</span>';
+    tablaHTML += '<div class="win-info-icon" style="position: relative; display: inline-flex; align-items: center; cursor: help; z-index: 99999;" onmouseenter="const icon = this; const tooltip = icon.querySelector(\'.win-tooltip\'); if (tooltip) { const rect = icon.getBoundingClientRect(); tooltip.style.top = (rect.top - tooltip.offsetHeight - 8) + \'px\'; tooltip.style.left = rect.left + (rect.width / 2) + \'px\'; tooltip.style.transform = \'translateX(-50%)\'; }">';
+    tablaHTML += '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="color: #5f6368; opacity: 0.7;" onmouseover="this.style.opacity=\'1\'" onmouseout="this.style.opacity=\'0.7\'">';
+    tablaHTML += '<path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/>';
+    tablaHTML += '</svg>';
+    tablaHTML += '<div class="win-tooltip">What\'s Important Now</div>';
+    tablaHTML += '</div>';
+    tablaHTML += '</div>';
     tablaHTML += '</div>';
     
     // Filtrar proyectos con estado "Cerrado" según el checkbox "Incluir cerrados"
@@ -395,6 +412,7 @@ function renderizarTablaProyectos(datos, contenido) {
         
         tablaHTML += '<div class="modern-table-cell" style="font-size: 11px; text-align: center; justify-content: center; color: var(--text-secondary);">' + fechaInicioCorta + '</div>';
         tablaHTML += '<div class="modern-table-cell" style="font-size: 11px; text-align: center; justify-content: center; color: var(--text-secondary);">' + fechaFinCorta + '</div>';
+        tablaHTML += '<div class="modern-table-cell"><textarea class="modern-input win-textarea" onchange="actualizarProyecto(' + item.id_proyecto + ', \'win\', this.value)">' + (item.win || '') + '</textarea></div>';
         
         tablaHTML += '</div>';
         
@@ -510,6 +528,7 @@ function crearFilaSubproyectoHTML(id_proyecto, subproyecto) {
 
     filaHTML += '<div class="modern-table-cell" style="font-size: 11px; text-align: center; justify-content: center; color: var(--text-secondary);">' + fechaInicioSubCorta + '</div>';
     filaHTML += '<div class="modern-table-cell" style="font-size: 11px; text-align: center; justify-content: center; color: var(--text-secondary);">' + fechaFinSubCorta + '</div>';
+    filaHTML += '<div class="modern-table-cell"><textarea class="modern-input win-textarea" onchange="actualizarProyecto(' + subproyecto.id_proyecto + ', \'win\', this.value)">' + (subproyecto.win || '') + '</textarea></div>';
     filaHTML += '</div>';
     
     return filaHTML;

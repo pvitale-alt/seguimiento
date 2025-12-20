@@ -380,6 +380,8 @@ select.modern-select::-ms-expand {
 
 /* Textarea de WIN */
 .win-textarea {
+    width: 100% !important;
+    box-sizing: border-box !important;
     background-color: transparent !important;
     border-radius: 0 !important;
     border: none !important;

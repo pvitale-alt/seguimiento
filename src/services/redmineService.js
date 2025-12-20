@@ -276,8 +276,6 @@ async function obtenerProyectos(options = {}) {
         // Actualizar total_count si se filtró
         const totalCount = proyectos.length;
         
-        console.log(`✅ Proyectos obtenidos: ${proyectos.length} (total Redmine: ${data.total_count || proyectos.length})`);
-        
         return {
             projects: proyectos,
             total_count: totalCount,
@@ -308,10 +306,7 @@ async function obtenerProyectosMapeados(options = {}) {
     let hasMore = true;
     
     const lineaServicio = options.linea_servicio || 'Si';
-    console.log(`📥 Obteniendo proyectos de Redmine (línea de servicio: ${lineaServicio})...`);
-    if (maxTotalSolicitado) {
-        console.log(`   ⚠️ Modo prueba: limitado a ${maxTotalSolicitado} proyectos`);
-    }
+    const categoria = options.categoria || 'Sin categoría';
     
     while (hasMore && proyectos.length < tope) {
         const restantes = tope - proyectos.length;
@@ -345,7 +340,7 @@ async function obtenerProyectosMapeados(options = {}) {
     }
     
     const proyectosLimitados = proyectos.slice(0, tope);
-    console.log(`✅ Proyectos preparados: ${proyectosLimitados.length}`);
+    console.log(`   📊 Categoría: ${categoria} | Proyectos obtenidos: ${proyectosLimitados.length}`);
     
     return proyectosLimitados.map(mapearProyecto);
 }

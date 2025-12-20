@@ -22,7 +22,7 @@ async function sincronizarMantenimiento(producto = null, equipo = null, maxTotal
     
     try {
         // 1. Obtener proyectos de Redmine con filtros (hacer dos llamados: Mantenimiento y On-Site)
-        console.log('📥 Paso 1: Obteniendo proyectos de Redmine...');
+        console.log('📥 Obteniendo proyectos de Redmine...');
         
         // Obtener código de proyecto padre si existe
         let codigoProyectoPadre = null;
@@ -54,7 +54,7 @@ async function sincronizarMantenimiento(producto = null, equipo = null, maxTotal
         }
         
         // Llamado para categoría "Mantenimiento"
-        console.log('   📋 Obteniendo proyectos de categoría "Mantenimiento"...');
+        console.log('   📋 Request: Categoría "Mantenimiento"');
         const proyectosMantenimiento = await redmineService.obtenerProyectosMapeados({
             producto,
             equipo,
@@ -62,10 +62,9 @@ async function sincronizarMantenimiento(producto = null, equipo = null, maxTotal
             codigo_proyecto_padre: codigoProyectoPadre,
             maxTotal
         });
-        console.log(`   ✅ ${proyectosMantenimiento.length} proyectos de categoría "Mantenimiento" obtenidos`);
         
         // Llamado para categoría "On-Site"
-        console.log('   📋 Obteniendo proyectos de categoría "On-Site"...');
+        console.log('   📋 Request: Categoría "On-Site"');
         const proyectosOnSite = await redmineService.obtenerProyectosMapeados({
             producto,
             equipo,
@@ -73,7 +72,6 @@ async function sincronizarMantenimiento(producto = null, equipo = null, maxTotal
             codigo_proyecto_padre: codigoProyectoPadre,
             maxTotal
         });
-        console.log(`   ✅ ${proyectosOnSite.length} proyectos de categoría "On-Site" obtenidos`);
         
         // Combinar todos los resultados y eliminar duplicados por id_proyecto
         const proyectosMap = new Map();
@@ -84,17 +82,26 @@ async function sincronizarMantenimiento(producto = null, equipo = null, maxTotal
         });
         
         // Excluir proyectos cuyo cliente sea "Mercap"
+        let proyectosExcluidos = 0;
         const proyectosMapeados = Array.from(proyectosMap.values()).filter(p => {
             const cliente = (p.cliente || '').toLowerCase().trim();
             if (cliente === 'mercap') {
-                console.log(`   ⏭️ Excluyendo proyecto con cliente "Mercap": ${p.nombre_proyecto}`);
+                proyectosExcluidos++;
                 return false;
             }
             return true;
         });
-        console.log(`   📊 Total proyectos después de excluir "Mercap": ${proyectosMapeados.length}`);
         
-        if (proyectosMapeados.length === 0) {
+        // Filtrar proyectos excluyendo "Licencias"
+        const proyectosMantenimientoFiltrados = proyectosMapeados.filter(p => {
+            if (p.categoria === 'Licencias') {
+                proyectosExcluidos++;
+                return false;
+            }
+            return true;
+        });
+        
+        if (proyectosMantenimientoFiltrados.length === 0) {
             console.log('⚠️ No se encontraron proyectos para sincronizar');
             return {
                 success: true,
@@ -105,16 +112,10 @@ async function sincronizarMantenimiento(producto = null, equipo = null, maxTotal
             };
         }
         
-        console.log(`✅ ${proyectosMapeados.length} proyectos únicos obtenidos de Redmine (Mantenimiento + On-Site)\n`);
-        
-        // 2. Filtrar proyectos excluyendo "Licencias" (ya están filtrados por categoría)
-        const proyectosMantenimientoFiltrados = proyectosMapeados.filter(p => 
-            p.categoria !== 'Licencias'
-        );
-        console.log(`✅ ${proyectosMantenimientoFiltrados.length} proyectos de mantenimiento/on-site (excluyendo licencias)\n`);
+        console.log(`\n   📊 Resumen: ${proyectosMantenimientoFiltrados.length} proyectos a sincronizar | ${proyectosExcluidos} proyectos excluidos\n`);
         
         // 3. Insertar/actualizar en redmine_mantenimiento
-        console.log('💾 Paso 2: Guardando proyectos en la base de datos...');
+        console.log('💾 Sincronizando proyectos en la base de datos...');
         
         let insertados = 0;
         let actualizados = 0;
@@ -171,7 +172,7 @@ async function sincronizarMantenimiento(producto = null, equipo = null, maxTotal
             }
         }
         
-        console.log(`✅ Proyectos guardados: ${insertados} insertados, ${actualizados} actualizados\n`);
+        console.log(`   ✅ Proyectos sincronizados: ${insertados} insertados, ${actualizados} actualizados\n`);
         
         // 4. Crear registros editables vacíos para proyectos nuevos
         console.log('🔄 Paso 3: Creando registros editables para proyectos nuevos...');
@@ -266,7 +267,8 @@ async function sincronizarProyectos(producto = null, equipo = null, maxTotal = n
         }
         
         // 1. Obtener proyectos de Redmine con línea de servicio "Si" (proyectos principales)
-        console.log('📥 Paso 1: Obteniendo proyectos principales de Redmine (cf_28=Si)...');
+        console.log('📥 Obteniendo proyectos de Redmine...');
+        console.log('   📋 Request: Línea de servicio "Si"');
         const proyectosPrincipales = await redmineService.obtenerProyectosMapeados({
             producto,
             equipo,
@@ -276,7 +278,7 @@ async function sincronizarProyectos(producto = null, equipo = null, maxTotal = n
         });
         
         // 2. Obtener proyectos de Redmine con línea de servicio "Hereda" (subproyectos)
-        console.log('📥 Paso 2: Obteniendo proyectos heredados de Redmine (cf_28=Hereda)...');
+        console.log('   📋 Request: Línea de servicio "Hereda"');
         const proyectosHeredados = await redmineService.obtenerProyectosMapeados({
             producto,
             equipo,
@@ -288,7 +290,17 @@ async function sincronizarProyectos(producto = null, equipo = null, maxTotal = n
         // Combinar ambos arrays
         const todosLosProyectos = [...proyectosPrincipales, ...proyectosHeredados];
         
-        if (todosLosProyectos.length === 0) {
+        // Filtrar proyectos que NO sean de categoría "Mantenimiento" ni "Licencias"
+        let proyectosExcluidos = 0;
+        const proyectosFiltrados = todosLosProyectos.filter(p => {
+            if (p.categoria === 'Mantenimiento' || p.categoria === 'Licencias' || !p.categoria || p.categoria === '') {
+                proyectosExcluidos++;
+                return false;
+            }
+            return true;
+        });
+        
+        if (proyectosFiltrados.length === 0) {
             console.log('⚠️ No se encontraron proyectos para sincronizar');
             return {
                 success: true,
@@ -299,20 +311,10 @@ async function sincronizarProyectos(producto = null, equipo = null, maxTotal = n
             };
         }
         
-        console.log(`✅ ${proyectosPrincipales.length} proyectos principales obtenidos de Redmine`);
-        console.log(`✅ ${proyectosHeredados.length} proyectos heredados obtenidos de Redmine\n`);
-        
-        // 3. Filtrar proyectos que NO sean de categoría "Mantenimiento" ni "Licencias"
-        const proyectosFiltrados = todosLosProyectos.filter(p => 
-            p.categoria !== 'Mantenimiento' && 
-            p.categoria !== 'Licencias' && 
-            p.categoria !== null && 
-            p.categoria !== ''
-        );
-        console.log(`✅ ${proyectosFiltrados.length} proyectos (no mantenimiento, no licencias) filtrados\n`);
+        console.log(`\n   📊 Resumen: ${proyectosFiltrados.length} proyectos a sincronizar | ${proyectosExcluidos} proyectos excluidos\n`);
         
         // 3. Insertar/actualizar en redmine_proyectos_externos
-        console.log('💾 Paso 2: Guardando proyectos en la base de datos...');
+        console.log('💾 Sincronizando proyectos en la base de datos...');
         
         let insertados = 0;
         let actualizados = 0;
@@ -369,7 +371,7 @@ async function sincronizarProyectos(producto = null, equipo = null, maxTotal = n
             }
         }
         
-        console.log(`✅ Proyectos guardados: ${insertados} insertados, ${actualizados} actualizados\n`);
+        console.log(`   ✅ Proyectos sincronizados: ${insertados} insertados, ${actualizados} actualizados\n`);
         
         // 4. Crear registros editables vacíos para proyectos nuevos
         console.log('🔄 Paso 3: Creando registros editables para proyectos nuevos...');
@@ -452,7 +454,7 @@ async function sincronizarProyectosInternos(producto = null, maxTotal = null) {
         }
                     
         // 1. Obtener proyectos de Redmine con filtro de categoría "Proyectos Internos"
-        console.log('📥 Paso 1: Obteniendo proyectos de Redmine con categoría "Proyectos Internos"...');
+        console.log('   📋 Request: Categoría "Proyectos Internos"');
         const proyectosMapeados = await redmineService.obtenerProyectosMapeados({
             producto,
             equipo: null, // No filtrar por equipo
@@ -472,10 +474,10 @@ async function sincronizarProyectosInternos(producto = null, maxTotal = null) {
             };
         }
         
-        console.log(`✅ ${proyectosMapeados.length} proyectos obtenidos de Redmine\n`);
+        console.log(`\n   📊 Resumen: ${proyectosMapeados.length} proyectos a sincronizar | 0 proyectos excluidos\n`);
         
         // 2. Insertar/actualizar en redmine_proyectos_externos (misma tabla que proyectos)
-        console.log('💾 Paso 2: Guardando proyectos en la base de datos (redmine_proyectos_externos)...');
+        console.log('💾 Sincronizando proyectos en la base de datos...');
         
         let insertados = 0;
         let actualizados = 0;
@@ -532,7 +534,7 @@ async function sincronizarProyectosInternos(producto = null, maxTotal = null) {
             }
         }
         
-        console.log(`✅ Proyectos guardados: ${insertados} insertados, ${actualizados} actualizados\n`);
+        console.log(`   ✅ Proyectos sincronizados: ${insertados} insertados, ${actualizados} actualizados\n`);
         
         // 3. Crear registros editables vacíos para proyectos nuevos (en proyectos_externos)
         console.log('🔄 Paso 3: Creando registros editables para proyectos nuevos...');

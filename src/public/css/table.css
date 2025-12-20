@@ -17,12 +17,12 @@
     border: 1px solid var(--border-color); /* Agregar borde completo (izquierdo y derecho) */
 }
 
-/* Para proyectos, hacer el wrapper responsive */
+/* Para proyectos, hacer el wrapper responsive - ocupar todo el ancho */
 .modern-table-wrapper.proyectos-wrapper {
     display: block;
-    width: calc(100% - 32px); /* Restar márgenes laterales (16px * 2) */
+    width: calc(100% - 32px); /* Ocupar todo el ancho menos márgenes */
     max-width: calc(100% - 32px); /* Asegurar que no exceda el contenedor */
-    overflow: hidden; /* Ocultar todo overflow para que el borde sea visible */
+    overflow: visible; /* Permitir que se vea el contenido completo */
     box-sizing: border-box;
     min-width: 0; /* Permitir que se reduzca */
     margin-left: 16px; /* Margen izquierdo */
@@ -30,6 +30,7 @@
     border: 1px solid var(--border-color); /* Borde completo igual al izquierdo */
     border-radius: 12px; /* Mantener esquinas redondeadas */
     position: relative; /* Para asegurar que el borde sea visible */
+    padding: 0; /* Sin padding extra */
 }
 
 /* Centrar la tabla de mantenimiento en la página */
@@ -45,11 +46,11 @@
 .modern-table-wrapper.proyectos-wrapper .modern-table.proyectos {
     margin: 0;
     padding: 0;
-    width: 100%;     /* Permitir que la tabla se ajuste al contenedor */
+    width: 100%;     /* Ocupar todo el ancho disponible */
     min-width: 0;   /* Permitir que el grid sea flexible */
     max-width: 100%;
     box-sizing: border-box;
-    overflow: hidden; /* Asegurar que no se extienda más allá */
+    overflow: visible; /* Permitir que se vea el contenido completo */
 }
 
 .modern-table {
@@ -116,12 +117,29 @@
 }
 
 .modern-table-row .modern-table-cell:has(.modern-select),
-.modern-table-row .modern-table-cell:has(.modern-input),
+.modern-table-row .modern-table-cell:has(.modern-input):not(:has(.win-textarea)),
 .modern-table-row .modern-table-cell:has(.progress-bar-container) {
     display: flex !important;
     justify-content: center !important;
     align-items: center !important;
     text-align: center !important;
+}
+
+/* Celdas con textarea WIN deben ocupar todo el ancho */
+.modern-table-row .modern-table-cell:has(.win-textarea) {
+    display: block !important;
+    padding: 8px !important;
+    width: 100% !important;
+    align-items: flex-start !important;
+    justify-content: flex-start !important;
+}
+
+.modern-table-row .modern-table-cell:has(.win-textarea) .win-textarea {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 100% !important;
+    box-sizing: border-box !important;
+    display: block !important;
 }
 
 /* Centrar los contenedores de los botones desplegables */
@@ -150,16 +168,54 @@
     margin-left: 8px;
 }
 
-/* Proyectos: 14 columnas (con Categoria, Accionables, Fecha Inicio y Fecha Fin) - Avance después de Estado */
+/* Separar columna WIN de Fecha Fin en proyectos */
+.modern-table.proyectos .modern-table-header > .modern-table-cell:last-of-type,
+.modern-table.proyectos .modern-table-row > .modern-table-cell:last-of-type {
+    padding-left: 24px;
+    padding-right: 0 !important;
+    border-left: 1px solid #e8eaed;
+    margin-left: 8px;
+    margin-right: 0 !important;
+    min-width: 380px !important;
+    width: 380px !important;
+    max-width: 380px !important;
+}
+
+/* Asegurar que la tabla ocupe todo el ancho sin espacio extra */
+.modern-table-wrapper.proyectos-wrapper .modern-table.proyectos {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    padding-right: 0 !important;
+    margin-right: 0 !important;
+}
+
+/* Proyectos: 15 columnas (con Categoria, Accionables, Fecha Inicio, Fecha Fin y WIN) - Avance después de Estado */
+/* 
+ * Orden de columnas (índice 0-based):
+ * 0: Vacío (30px)
+ * 1: Cliente (150px)
+ * 2: Proyecto (minmax(80px, 1fr)) - Responsive
+ * 3: Categoría (90px)
+ * 4: Estado (100px)
+ * 5: Avance (80px)
+ * 6: Overall (50px)
+ * 7: Alcance (50px)
+ * 8: Costo (45px)
+ * 9: Plazos (45px)
+ * 10: Accionables (70px) - NO MODIFICAR sin consultar
+ * 11: Fecha Inicio (100px)
+ * 12: Fecha Fin (75px)
+ * 13: WIN (400px) - Última columna
+ */
 .modern-table.proyectos .modern-table-header,
 .modern-table.proyectos .modern-table-row {
-    /* Columna Proyecto es responsive usando minmax (mínimo 80px, máximo flexible con 1fr) - reducido para aprovechar más espacio */
-    /* Suma de columnas fijas: 30 + 150 + 90 + 100 + 80 + 50 + 50 + 45 + 45 + 50 + 120 + 75 + 75 = 1010px (reducido) */
-    /* Gaps: 13 gaps de 8px = 104px, Padding: 24px total = 24px, Total fijo: ~1138px */
-    /* Usar 1fr para que sea responsive pero con mínimo de 80px para aprovechar más espacio */
-    grid-template-columns: 30px 150px minmax(80px, 1fr) 90px 100px 80px 50px 50px 45px 45px 50px 120px 75px 75px;
+    /* Columna Proyecto es responsive usando minmax (mínimo 80px, máximo flexible con 1fr) */
+    /* Suma de columnas fijas: 30 + 150 + 90 + 100 + 80 + 50 + 50 + 45 + 45 + 70 + 100 + 75 + 75 + 380 = 1390px */
+    /* Gaps: 14 gaps de 8px = 112px, Padding: 12px izquierdo = 12px, Total fijo: ~1514px */
+    grid-template-columns: 30px 150px minmax(80px, 1fr) 90px 100px 80px 50px 50px 45px 45px 70px 100px 75px 75px 380px;
     padding-left: 12px;
-    padding-right: 12px;
+    padding-right: 0 !important;
     gap: 0 8px; /* row-gap: 0, column-gap: 8px = 13 gaps de 8px = 104px */
     width: 100%;
     min-width: 0; /* Permitir que el grid sea flexible */
@@ -176,6 +232,28 @@
     overflow: hidden !important;
     width: 100%;
     min-width: 0 !important;
+}
+
+/* NOTA: No agregar estilos específicos para Accionables (columna 10) - usar solo el grid-template-columns */
+
+/* Forzar ancho de la columna WIN (posición 14, última columna) */
+.modern-table.proyectos .modern-table-header > .modern-table-cell:nth-child(14),
+.modern-table.proyectos .modern-table-row > .modern-table-cell:nth-child(14),
+.modern-table.proyectos .modern-table-header > .modern-table-cell:last-child,
+.modern-table.proyectos .modern-table-row > .modern-table-cell:last-child {
+    min-width: 380px !important;
+    width: 380px !important;
+    max-width: 380px !important;
+}
+
+/* Asegurar que el textarea WIN ocupe todo el ancho de su celda */
+.modern-table.proyectos .modern-table-row > .modern-table-cell:nth-child(14) .win-textarea,
+.modern-table.proyectos .modern-table-row > .modern-table-cell:last-child .win-textarea {
+    width: 100% !important;
+    min-width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    display: block !important;
 }
 
 /* Proyectos Internos: 12 columnas (sin Categoria) - Avance después de Estado */
@@ -264,8 +342,9 @@
 }
 
 /* Asegurar que los subproyectos tengan el mismo grid que las filas principales */
+/* IMPORTANTE: Mantener el mismo orden y anchos que el grid principal */
 .modern-table.proyectos .modern-table-row.subproyecto-row:not(.subproyectos-ocultos) {
-    grid-template-columns: 30px 150px minmax(80px, 1fr) 90px 100px 80px 50px 50px 45px 45px 50px 120px 75px 75px;
+    grid-template-columns: 30px 150px minmax(80px, 1fr) 90px 100px 80px 50px 50px 45px 45px 70px 100px 75px 75px 380px;
 }
 
 .modern-table-row.subproyecto-row .modern-table-cell {
@@ -405,6 +484,51 @@
 
 .table tbody tr:last-child td {
     border-bottom: none;
+}
+
+/* Tooltip para el ícono de información WIN */
+.win-tooltip {
+    position: fixed !important;
+    top: 0;
+    left: 0;
+    margin: 0;
+    padding: 8px 12px;
+    background: #202124;
+    color: white;
+    border-radius: 4px;
+    font-size: 12px;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s;
+    z-index: 99999 !important;
+    font-family: 'Google Sans', 'Roboto', sans-serif;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.win-tooltip::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 5px solid transparent;
+    border-top-color: #202124;
+}
+
+/* Mostrar tooltip al pasar el cursor sobre el contenedor del ícono */
+.win-info-icon {
+    position: relative;
+}
+
+.win-info-icon:hover .win-tooltip {
+    opacity: 1;
+}
+
+/* Posicionar el tooltip dinámicamente usando JavaScript inline */
+.win-info-icon:hover {
+    position: relative;
+    z-index: 99999;
 }
 
 
