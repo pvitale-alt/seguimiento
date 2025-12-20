@@ -6,9 +6,9 @@
 // Función para abreviar nombres de categorías
 function abreviarCategoria(categoria) {
     if (!categoria) return '-';
-    
+
     const categoriaLower = categoria.toLowerCase().trim();
-    
+
     // Mapeo de categorías a abreviaciones
     const abreviaciones = {
         'proyectos externos': 'P. Externos',
@@ -18,12 +18,12 @@ function abreviarCategoria(categoria) {
         'proyecto interno': 'P. Internos',
         'proyecto de bolsa': 'P. de bolsa'
     };
-    
+
     // Buscar coincidencia exacta (case-insensitive)
     if (abreviaciones[categoriaLower]) {
         return abreviaciones[categoriaLower];
     }
-    
+
     // Si no hay coincidencia, devolver el original
     return categoria;
 }
@@ -31,29 +31,29 @@ function abreviarCategoria(categoria) {
 // Función para abreviar nombres de clientes si exceden 20 caracteres
 function abreviarCliente(cliente) {
     if (!cliente || cliente === '-') return cliente || '-';
-    
+
     // Si el nombre tiene 20 caracteres o menos, devolverlo sin cambios
     if (cliente.length <= 20) {
         return cliente;
     }
-    
+
     // Dividir el nombre en palabras
     const palabras = cliente.split(' ').filter(p => p.trim() !== '');
-    
+
     // Si hay menos de 2 palabras, no abreviar
     if (palabras.length < 2) {
         return cliente;
     }
-    
+
     // Abreviar la primera palabra: mostrar solo la primera letra seguida de punto
     const primeraPalabra = palabras[0];
     const primeraLetra = primeraPalabra.charAt(0);
     const primeraAbreviada = primeraLetra + '.';
-    
+
     // Construir el resultado con la primera palabra abreviada y el resto sin cambios
     const palabrasAbreviadas = [primeraAbreviada, ...palabras.slice(1)];
     let resultado = palabrasAbreviadas.join(' ');
-    
+
     // Si después de abreviar la primera palabra sigue siendo muy largo, abreviar también palabras intermedias
     if (resultado.length > 20 && palabras.length > 2) {
         const palabrasFinales = resultado.split(' ');
@@ -66,7 +66,7 @@ function abreviarCliente(cliente) {
         });
         resultado = abreviadas.join(' ');
     }
-    
+
     return resultado;
 }
 
@@ -115,7 +115,7 @@ function formatearFechaCorta(fecha) {
 
 function renderizarTabla(datos) {
     const contenido = document.getElementById('contenido');
-    
+
     if (tipoActual === 'mantenimiento') {
         renderizarTablaMantenimiento(datos, contenido);
     } else {
@@ -146,8 +146,8 @@ function renderizarTablaMantenimiento(datos, contenido) {
     tablaHTML += '<path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/>';
     tablaHTML += '</svg></button>';
     tablaHTML += '</div>';
-    
-    datos.forEach(function(item) {
+
+    datos.forEach(function (item) {
         // Truncar nombre_proyecto: solo la parte a la derecha de " | "
         let nombreProyectoTruncado = '';
         if (item.nombre_proyecto) {
@@ -160,7 +160,7 @@ function renderizarTablaMantenimiento(datos, contenido) {
                 nombreProyectoTruncado = item.nombre_proyecto;
             }
         }
-        
+
         tablaHTML += '<div class="modern-table-row">';
         tablaHTML += '<div class="modern-table-cell item-text" style="display: flex; flex-direction: column; align-items: flex-start; gap: 4px;">';
         tablaHTML += '<div style="line-height: 1.4; font-size: 15px;">' + (item.cliente || '-') + '</div>';
@@ -176,7 +176,7 @@ function renderizarTablaMantenimiento(datos, contenido) {
         tablaHTML += '<div class="modern-table-cell"><textarea class="modern-input win-textarea" onchange="actualizarMantenimiento(' + item.id_proyecto + ', \'win\', this.value)">' + (item.win || '') + '</textarea></div>';
         tablaHTML += '</div>';
     });
-    
+
     tablaHTML += '</div></div>';
     contenido.innerHTML = tablaHTML;
 }
@@ -190,7 +190,7 @@ function renderizarTablaProyectos(datos, contenido) {
     let datosOrdenados = [...datos];
     datosOrdenados.sort((a, b) => {
         let valorA, valorB;
-        
+
         if (ordenActual.columna === 'cliente') {
             valorA = (a.cliente || '').toLowerCase();
             valorB = (b.cliente || '').toLowerCase();
@@ -237,10 +237,10 @@ function renderizarTablaProyectos(datos, contenido) {
         } else {
             return 0;
         }
-        
+
         if (valorA < valorB) return ordenActual.direccion === 'asc' ? -1 : 1;
         if (valorA > valorB) return ordenActual.direccion === 'asc' ? 1 : -1;
-        
+
         if (ordenActual.columna !== 'cliente' && ordenActual.columna !== 'estado') {
             const clienteA = (a.cliente || '').toLowerCase();
             const clienteB = (b.cliente || '').toLowerCase();
@@ -255,11 +255,13 @@ function renderizarTablaProyectos(datos, contenido) {
         }
         return 0;
     });
-    
-    let tablaHTML = '<div class="modern-table-wrapper proyectos-wrapper"><div class="modern-table proyectos"><div class="modern-table-header">';
+
+    // Crear estructura con scrollbar fija inferior (estilo Google Sheets)
+    let tablaHTML = '<div class="proyectos-table-container"><div class="proyectos-scroll-wrapper">';
+    tablaHTML += '<div class="modern-table-wrapper proyectos-wrapper"><div class="modern-table proyectos"><div class="modern-table-header">';
     const flechaAsc = '▲';
     const flechaDesc = '▼';
-    
+
     tablaHTML += '<div class="modern-table-cell header-cell" style="width: 30px;"></div>';
     tablaHTML += '<div class="modern-table-cell header-cell" onclick="ordenarPor(\'cliente\')" style="cursor: pointer; user-select: none;' + (ordenActual.columna === 'cliente' ? ' color: var(--primary-color);' : '') + '">Cliente' + (ordenActual.columna === 'cliente' ? ' ' + (ordenActual.direccion === 'asc' ? flechaAsc : flechaDesc) : '') + '</div>';
     tablaHTML += '<div class="modern-table-cell header-cell" onclick="ordenarPor(\'proyecto\')" style="cursor: pointer; user-select: none;' + (ordenActual.columna === 'proyecto' ? ' color: var(--primary-color);' : '') + '">Proyecto' + (ordenActual.columna === 'proyecto' ? ' ' + (ordenActual.direccion === 'asc' ? flechaAsc : flechaDesc) : '') + '</div>';
@@ -283,22 +285,22 @@ function renderizarTablaProyectos(datos, contenido) {
     tablaHTML += '</div>';
     tablaHTML += '</div>';
     tablaHTML += '</div>';
-    
+
     // Filtrar proyectos con estado "Cerrado" según el checkbox "Incluir cerrados"
     const incluirCerrados = document.getElementById('incluirCerrados')?.checked || false;
-    const datosFiltrados = incluirCerrados 
-        ? datosOrdenados 
+    const datosFiltrados = incluirCerrados
+        ? datosOrdenados
         : datosOrdenados.filter(item => item.estado !== 'Cerrado');
-    
-    datosFiltrados.forEach(function(item) {
+
+    datosFiltrados.forEach(function (item) {
         const redmineUrl = 'https://redmine.mercap.net/projects/' + (item.codigo_proyecto || '');
         let nombreProyecto = item.nombre_proyecto || '-';
         if (nombreProyecto.includes(' | ')) {
             nombreProyecto = nombreProyecto.split(' | ').slice(1).join(' | ');
         }
-        
+
         const tieneSecundarios = item.tiene_subproyectos || false;
-        
+
         const itemData = {
             id_proyecto: item.id_proyecto,
             nombre_proyecto: item.nombre_proyecto || '',
@@ -320,9 +322,9 @@ function renderizarTablaProyectos(datos, contenido) {
             redmineUrl: redmineUrl
         };
         const itemDataJson = JSON.stringify(itemData).replace(/"/g, '&quot;').replace(/'/g, '&#39;');
-        
+
         tablaHTML += '<div class="modern-table-row" data-id-proyecto="' + item.id_proyecto + '">';
-        
+
         // Botón para expandir/contraer subproyectos (solo si tiene subproyectos)
         if (tieneSecundarios && item.subproyectos && item.subproyectos.length > 0) {
             tablaHTML += '<div class="modern-table-cell" style="width: 30px; display: flex; align-items: center; justify-content: center; cursor: pointer;" onclick="toggleSubproyectos(' + item.id_proyecto + '); event.stopPropagation();" title="Expandir/Contraer subproyectos">';
@@ -333,11 +335,11 @@ function renderizarTablaProyectos(datos, contenido) {
         } else {
             tablaHTML += '<div class="modern-table-cell" style="width: 30px;"></div>';
         }
-        
+
         tablaHTML += '<div class="modern-table-cell item-text">' + abreviarCliente(item.cliente || '-') + '</div>';
         tablaHTML += '<div class="modern-table-cell item-text" style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0;"><a href="javascript:void(0);" onclick="abrirModalDetalle(' + item.id_proyecto + '); event.stopPropagation();" data-item="' + itemDataJson + '" style="color: var(--primary-color); text-decoration: none; cursor: pointer; display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%;">' + nombreProyecto + '</a></div>';
         tablaHTML += '<div class="modern-table-cell item-text">' + abreviarCategoria(item.categoria) + '</div>';
-        
+
         const estadoValue = item.estado || '';
         let estadoClass = '';
         if (estadoValue === 'Entregado' || estadoValue === 'Cerrado') {
@@ -354,7 +356,7 @@ function renderizarTablaProyectos(datos, contenido) {
             estadoClass = 'estado-bloqueado';
         }
         tablaHTML += '<div class="modern-table-cell" style="text-align: center; justify-content: center;">' + crearDropdownEstado(item.id_proyecto, estadoValue, estadoClass) + '</div>';
-        
+
         const avanceValue = parseInt(item.avance) || 0;
         let avanceGradient = 'linear-gradient(90deg, #66bb6a 0%, #34a853 100%)';
         if (avanceValue <= 25) {
@@ -367,7 +369,7 @@ function renderizarTablaProyectos(datos, contenido) {
             avanceGradient = 'linear-gradient(90deg, #4caf50 0%, #34a853 50%, #1e8e3e 100%)';
         }
         tablaHTML += '<div class="modern-table-cell"><div class="progress-bar-container" data-id="' + item.id_proyecto + '"><div class="progress-bar" style="width: ' + avanceValue + '%; background: ' + avanceGradient + ';"></div><input type="range" min="0" max="100" step="5" value="' + avanceValue + '" class="progress-slider" oninput="actualizarBarraProgreso(this);" onchange="actualizarProyecto(' + item.id_proyecto + ', \'avance\', this.value);" /></div></div>';
-        
+
         tablaHTML += '<div class="modern-table-cell">' + crearDropdownOverall(item.id_proyecto, 'overall', item.overall || '', '') + '</div>';
         tablaHTML += '<div class="modern-table-cell">' + crearDropdownOverall(item.id_proyecto, 'alcance', item.alcance || '', '') + '</div>';
         tablaHTML += '<div class="modern-table-cell">' + crearDropdownOverall(item.id_proyecto, 'costo', item.costo || '', '') + '</div>';
@@ -378,7 +380,7 @@ function renderizarTablaProyectos(datos, contenido) {
         } else {
             tablaHTML += '<div class="modern-table-cell" style="text-align: center; justify-content: center; color: var(--text-secondary);">-</div>';
         }
-        
+
         // Formatear fechas para mostrar en formato corto (dd/mm).
         // Regla: tomar SIEMPRE la fecha de inicio mínima y la fecha fin máxima
         // considerando proyecto + subproyectos + epics (cuando existan).
@@ -386,16 +388,16 @@ function renderizarTablaProyectos(datos, contenido) {
         const fechasFinAll = [];
 
         if (item.fecha_inicio_epics) fechasInicioAll.push(item.fecha_inicio_epics);
-        if (item.fecha_inicio)      fechasInicioAll.push(item.fecha_inicio);
-        if (item.fecha_fin_epics)   fechasFinAll.push(item.fecha_fin_epics);
-        if (item.fecha_fin)         fechasFinAll.push(item.fecha_fin);
+        if (item.fecha_inicio) fechasInicioAll.push(item.fecha_inicio);
+        if (item.fecha_fin_epics) fechasFinAll.push(item.fecha_fin_epics);
+        if (item.fecha_fin) fechasFinAll.push(item.fecha_fin);
 
         if (item.tiene_subproyectos && Array.isArray(item.subproyectos) && item.subproyectos.length > 0) {
             item.subproyectos.forEach(sp => {
                 if (sp.fecha_inicio_epics) fechasInicioAll.push(sp.fecha_inicio_epics);
-                if (sp.fecha_inicio)      fechasInicioAll.push(sp.fecha_inicio);
-                if (sp.fecha_fin_epics)   fechasFinAll.push(sp.fecha_fin_epics);
-                if (sp.fecha_fin)         fechasFinAll.push(sp.fecha_fin);
+                if (sp.fecha_inicio) fechasInicioAll.push(sp.fecha_inicio);
+                if (sp.fecha_fin_epics) fechasFinAll.push(sp.fecha_fin_epics);
+                if (sp.fecha_fin) fechasFinAll.push(sp.fecha_fin);
             });
         }
 
@@ -409,40 +411,150 @@ function renderizarTablaProyectos(datos, contenido) {
         }
         const fechaInicioCorta = fechaInicio ? formatearFechaCorta(fechaInicio) : '-';
         const fechaFinCorta = fechaFin ? formatearFechaCorta(fechaFin) : '-';
-        
+
         tablaHTML += '<div class="modern-table-cell" style="font-size: 11px; text-align: center; justify-content: center; color: var(--text-secondary);">' + fechaInicioCorta + '</div>';
         tablaHTML += '<div class="modern-table-cell" style="font-size: 11px; text-align: center; justify-content: center; color: var(--text-secondary);">' + fechaFinCorta + '</div>';
         tablaHTML += '<div class="modern-table-cell"><textarea class="modern-input win-textarea" onchange="actualizarProyecto(' + item.id_proyecto + ', \'win\', this.value)">' + (item.win || '') + '</textarea></div>';
-        
+
         tablaHTML += '</div>';
-        
+
         // Renderizar subproyectos directamente después del proyecto padre
         // Por defecto están ocultos (clase "subproyectos-ocultos")
         // Filtrar según el checkbox "Incluir cerrados"
         if (item.subproyectos && item.subproyectos.length > 0) {
             const incluirCerrados = document.getElementById('incluirCerrados')?.checked || false;
-            const subproyectosFiltrados = incluirCerrados 
-                ? item.subproyectos 
+            const subproyectosFiltrados = incluirCerrados
+                ? item.subproyectos
                 : item.subproyectos.filter(sub => sub.estado !== 'Cerrado');
-            subproyectosFiltrados.forEach(function(subproyecto) {
+            subproyectosFiltrados.forEach(function (subproyecto) {
                 tablaHTML += crearFilaSubproyectoHTML(item.id_proyecto, subproyecto);
             });
         }
     });
-    
-    tablaHTML += '</div></div>';
+
+    // Cerrar divs: modern-table, modern-table-wrapper, proyectos-scroll-wrapper, proyectos-table-container
+    tablaHTML += '</div></div></div></div>';
+
+    // Agregar scrollbar fija en la parte inferior (fuera del contenedor de la tabla)
+    tablaHTML += '<div class="fixed-scrollbar-container" id="fixed-scrollbar"><div class="fixed-scrollbar-content" id="fixed-scrollbar-content"></div></div>';
+
     contenido.innerHTML = tablaHTML;
-    
+
     const contadorProyectos = document.getElementById('contadorProyectos');
     if (contadorProyectos) {
         contadorProyectos.textContent = 'Total proyectos: ' + datosFiltrados.length;
     }
-    
-    // Ocultar scroll horizontal si no es necesario
+
+    // Configurar scrollbar fija
     setTimeout(() => {
+        configurarScrollbarFija();
         ajustarScrollHorizontal();
     }, 100);
 }
+
+// Función para configurar la scrollbar fija inferior (estilo Google Sheets)
+let fixedScrollHandler = null;
+let tableScrollHandler = null;
+let scrollWrapperHandler = null;
+
+function configurarScrollbarFija() {
+    const fixedScrollbar = document.getElementById('fixed-scrollbar');
+    const fixedContent = document.getElementById('fixed-scrollbar-content');
+    const tableWrapper = document.querySelector('.modern-table-wrapper.proyectos-wrapper');
+    const table = tableWrapper?.querySelector('.modern-table');
+    const scrollWrapper = document.querySelector('.proyectos-scroll-wrapper');
+
+    if (!fixedScrollbar || !fixedContent || !tableWrapper || !table) {
+        return;
+    }
+
+    // Remover event listeners anteriores si existen
+    if (fixedScrollHandler) {
+        fixedScrollbar.removeEventListener('scroll', fixedScrollHandler);
+    }
+    if (tableScrollHandler) {
+        tableWrapper.removeEventListener('scroll', tableScrollHandler);
+    }
+    if (scrollWrapperHandler && scrollWrapper) {
+        scrollWrapper.removeEventListener('scroll', scrollWrapperHandler);
+    }
+
+    // Establecer el ancho del contenido de la scrollbar fija
+    const tableWidth = table.scrollWidth;
+    fixedContent.style.width = tableWidth + 'px';
+
+    // Verificar si se necesita scroll horizontal
+    const wrapperWidth = tableWrapper.clientWidth;
+    const needsScroll = tableWidth > wrapperWidth;
+
+    if (!needsScroll) {
+        fixedScrollbar.style.display = 'none';
+        return;
+    }
+
+    // Ajustar el ancho y posición de la scrollbar fija para que coincida con la tabla
+    const tableRect = tableWrapper.getBoundingClientRect();
+    fixedScrollbar.style.left = tableRect.left + 'px';
+    fixedScrollbar.style.width = tableRect.width + 'px';
+    fixedScrollbar.style.right = 'auto';
+
+    // Sincronizar scroll
+    let isSyncingFixed = false;
+    let isSyncingTable = false;
+
+    fixedScrollHandler = function () {
+        if (isSyncingTable) {
+            isSyncingTable = false;
+            return;
+        }
+        isSyncingFixed = true;
+        tableWrapper.scrollLeft = fixedScrollbar.scrollLeft;
+    };
+
+    tableScrollHandler = function () {
+        if (isSyncingFixed) {
+            isSyncingFixed = false;
+            return;
+        }
+        isSyncingTable = true;
+        fixedScrollbar.scrollLeft = tableWrapper.scrollLeft;
+    };
+
+    fixedScrollbar.addEventListener('scroll', fixedScrollHandler);
+    tableWrapper.addEventListener('scroll', tableScrollHandler);
+
+    // Mostrar/ocultar la scrollbar fija según si la tabla está visible en el viewport
+    function actualizarVisibilidadScrollbar() {
+        if (!scrollWrapper || !tableWrapper) {
+            fixedScrollbar.style.display = 'block';
+            return;
+        }
+
+        const tableWrapperRect = tableWrapper.getBoundingClientRect();
+        const viewportHeight = window.innerHeight;
+
+        // Mostrar la scrollbar fija si la parte inferior de la tabla NO está visible en el viewport
+        // (es decir, si el usuario tiene que hacer scroll para ver la scrollbar de la tabla)
+        if (tableWrapperRect.bottom > viewportHeight - 50) {
+            fixedScrollbar.style.display = 'block';
+        } else {
+            fixedScrollbar.style.display = 'none';
+        }
+    }
+
+    // Actualizar visibilidad al hacer scroll
+    if (scrollWrapper) {
+        scrollWrapperHandler = actualizarVisibilidadScrollbar;
+        scrollWrapper.addEventListener('scroll', scrollWrapperHandler);
+    }
+
+    // Actualizar visibilidad al hacer scroll en la ventana
+    window.addEventListener('scroll', actualizarVisibilidadScrollbar);
+
+    // Actualizar visibilidad inicial
+    actualizarVisibilidadScrollbar();
+}
+
 
 // Función para crear una fila de subproyecto (ahora renderiza directamente como HTML)
 function crearFilaSubproyectoHTML(id_proyecto, subproyecto) {
@@ -451,7 +563,7 @@ function crearFilaSubproyectoHTML(id_proyecto, subproyecto) {
     if (nombreSubproyecto.includes(' | ')) {
         nombreSubproyecto = nombreSubproyecto.split(' | ').slice(1).join(' | ');
     }
-    
+
     const subproyectoData = {
         id_proyecto: subproyecto.id_proyecto,
         nombre_proyecto: subproyecto.nombre_proyecto || '',
@@ -472,7 +584,7 @@ function crearFilaSubproyectoHTML(id_proyecto, subproyecto) {
         redmineUrl: redmineUrl
     };
     const subproyectoDataJson = JSON.stringify(subproyectoData).replace(/"/g, '&quot;').replace(/'/g, '&#39;');
-    
+
     const estadoSubproyecto = subproyecto.estado || '';
     let estadoClassSub = '';
     if (estadoSubproyecto === 'Entregado' || estadoSubproyecto === 'Cerrado') {
@@ -488,7 +600,7 @@ function crearFilaSubproyectoHTML(id_proyecto, subproyecto) {
     } else if (estadoSubproyecto === 'Bloqueado') {
         estadoClassSub = 'estado-bloqueado';
     }
-    
+
     const avanceSubproyecto = parseInt(subproyecto.avance) || 0;
     let avanceGradientSub = 'linear-gradient(90deg, #66bb6a 0%, #34a853 100%)';
     if (avanceSubproyecto <= 25) {
@@ -500,7 +612,7 @@ function crearFilaSubproyectoHTML(id_proyecto, subproyecto) {
     } else {
         avanceGradientSub = 'linear-gradient(90deg, #4caf50 0%, #34a853 50%, #1e8e3e 100%)';
     }
-    
+
     let filaHTML = '';
     filaHTML += '<div class="modern-table-row proyecto-secundario-' + id_proyecto + ' subproyecto-row subproyectos-ocultos" data-id-proyecto="' + id_proyecto + '" data-id-subproyecto="' + subproyecto.id_proyecto + '" style="display: none;">';
     filaHTML += '<div class="modern-table-cell" style="width: 30px;"></div>';
@@ -530,7 +642,7 @@ function crearFilaSubproyectoHTML(id_proyecto, subproyecto) {
     filaHTML += '<div class="modern-table-cell" style="font-size: 11px; text-align: center; justify-content: center; color: var(--text-secondary);">' + fechaFinSubCorta + '</div>';
     filaHTML += '<div class="modern-table-cell"><textarea class="modern-input win-textarea" onchange="actualizarProyecto(' + subproyecto.id_proyecto + ', \'win\', this.value)">' + (subproyecto.win || '') + '</textarea></div>';
     filaHTML += '</div>';
-    
+
     return filaHTML;
 }
 
@@ -543,7 +655,7 @@ function ajustarScrollHorizontal() {
             // Verificar si el contenido es más ancho que el contenedor
             const wrapperWidth = wrapper.clientWidth;
             const tableWidth = table.scrollWidth;
-            
+
             // Si el contenido cabe en el contenedor, ocultar scroll
             if (tableWidth <= wrapperWidth) {
                 wrapper.style.overflowX = 'hidden';
@@ -555,23 +667,23 @@ function ajustarScrollHorizontal() {
 }
 
 // Función para expandir/contraer subproyectos (disponible globalmente)
-window.toggleSubproyectos = function(idProyectoPadre) {
+window.toggleSubproyectos = function (idProyectoPadre) {
     const subproyectosRows = document.querySelectorAll('.proyecto-secundario-' + idProyectoPadre + '.subproyecto-row');
     const icon = document.getElementById('icon-subproyectos-' + idProyectoPadre);
-    
+
     if (!subproyectosRows || subproyectosRows.length === 0) {
         console.log('No se encontraron subproyectos para el proyecto:', idProyectoPadre);
         return;
     }
-    
+
     // Verificar si están visibles: verificar tanto el estilo inline como el computed
     const primerSubproyecto = subproyectosRows[0];
     const estiloInline = primerSubproyecto.style.display;
     const computedStyle = window.getComputedStyle(primerSubproyecto);
     const estaVisible = estiloInline !== 'none' && computedStyle.display !== 'none';
-    
+
     console.log('Toggle subproyectos para proyecto:', idProyectoPadre, 'Visible:', estaVisible, 'Rows encontrados:', subproyectosRows.length, 'Icon encontrado:', !!icon);
-    
+
     // Actualizar el ícono PRIMERO
     if (icon) {
         if (estaVisible) {
@@ -586,9 +698,9 @@ window.toggleSubproyectos = function(idProyectoPadre) {
     } else {
         console.error('No se encontró el ícono para el proyecto:', idProyectoPadre, 'ID buscado: icon-subproyectos-' + idProyectoPadre);
     }
-    
+
     // Toggle de visibilidad
-    subproyectosRows.forEach(function(row) {
+    subproyectosRows.forEach(function (row) {
         if (estaVisible) {
             // Ocultar: usar setProperty con important para asegurar que se oculte
             row.style.setProperty('display', 'none', 'important');
@@ -600,7 +712,7 @@ window.toggleSubproyectos = function(idProyectoPadre) {
             row.style.setProperty('display', 'grid', 'important');
         }
     });
-    
+
     // Verificar después de un pequeño delay
     setTimeout(() => {
         const primerSubproyecto = subproyectosRows[0];
@@ -619,6 +731,7 @@ if (typeof window !== 'undefined') {
     window.addEventListener('resize', () => {
         clearTimeout(resizeTimeout);
         resizeTimeout = setTimeout(() => {
+            configurarScrollbarFija();
             ajustarScrollHorizontal();
         }, 250);
     });

@@ -8,41 +8,119 @@
     background: white;
     border-radius: 12px;
     box-shadow: var(--shadow);
-    overflow: visible;          /* El scroll horizontal lo maneja el contenedor padre si hace falta */
-    display: inline-block;      /* El ancho del contenedor se ajusta al contenido (hasta la última columna) */
+    overflow: visible;
+    /* El scroll horizontal lo maneja el contenedor padre si hace falta */
+    display: inline-block;
+    /* El ancho del contenedor se ajusta al contenido (hasta la última columna) */
     width: auto;
-    max-width: calc(100% - 32px); /* Respeta márgenes laterales */
+    max-width: calc(100% - 32px);
+    /* Respeta márgenes laterales */
     padding: 0;
-    margin: 0 16px 0 16px; /* Separar visualmente de la sidebar y del borde derecho */
-    border: 1px solid var(--border-color); /* Agregar borde completo (izquierdo y derecho) */
+    margin: 0 16px 0 16px;
+    /* Separar visualmente de la sidebar y del borde derecho */
+    border: 1px solid var(--border-color);
+    /* Agregar borde completo (izquierdo y derecho) */
 }
 
-/* Para proyectos, wrapper con scroll horizontal siempre visible */
+/* Contenedor principal para tabla de proyectos */
+.proyectos-table-container {
+    position: relative;
+    width: calc(100% - 32px);
+    margin-left: 16px;
+    margin-right: 16px;
+    margin-bottom: 60px;
+    /* Espacio para la scrollbar fija */
+}
+
+/* Wrapper de la tabla - contenedor estructural INVISIBLE (sin estilos visuales) */
+.proyectos-scroll-wrapper {
+    background: transparent; /* Sin fondo */
+    border-radius: 0; /* Sin bordes redondeados */
+    box-shadow: none; /* Sin sombra */
+    border: none; /* Sin borde */
+    overflow-y: visible; /* SIN scroll vertical - usa el del contenedor padre #contenido */
+    overflow-x: hidden;
+}
+
+/* Wrapper de tabla para proyectos - contiene la tabla real */
 .modern-table-wrapper.proyectos-wrapper {
     display: block;
-    width: calc(100% - 32px); /* Ocupar todo el ancho menos márgenes */
-    max-width: calc(100% - 32px); /* Asegurar que no exceda el contenedor */
-    overflow-x: scroll !important; /* Scroll horizontal SIEMPRE visible (no 'auto') */
-    overflow-y: visible; /* SIN scroll vertical - el contenido fluye naturalmente */
+    width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
     box-sizing: border-box;
-    min-width: 0; /* Permitir que se reduzca */
-    margin-left: 16px; /* Margen izquierdo */
-    margin-right: 16px; /* Margen derecho */
-    border: 1px solid var(--border-color); /* Borde completo igual al izquierdo */
-    border-radius: 12px; /* Mantener esquinas redondeadas */
-    position: relative;
-    padding: 0; /* Sin padding extra */
-    padding-bottom: 12px; /* Espacio para el scrollbar horizontal siempre visible */
+    min-width: 0;
+    background: white;
+    margin: 0;
+    padding: 0;
+}
+
+/* Scrollbar fija en la parte inferior - SIN fondo, más grande */
+.fixed-scrollbar-container {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 24px; /* Más alto para mejor visibilidad */
+    background: transparent; /* SIN fondo blanco */
+    border-top: none; /* Sin borde superior */
+    box-shadow: none; /* Sin sombra */
+    z-index: 1000;
+    overflow-x: auto;
+    overflow-y: hidden;
+    display: none;
+    /* Oculto por defecto, se muestra con JS cuando es necesario */
+}
+
+.fixed-scrollbar-content {
+    height: 1px;
+    pointer-events: none;
+}
+
+/* Estilos para la scrollbar fija - MÁS GRANDE y visible */
+.fixed-scrollbar-container::-webkit-scrollbar {
+    height: 18px; /* Scrollbar más alta para mejor visibilidad */
+    background: rgba(241, 243, 244, 0.9); /* Fondo semi-transparente solo en el scrollbar */
+    border-radius: 9px;
+}
+
+.fixed-scrollbar-container::-webkit-scrollbar-track {
+    background: rgba(241, 243, 244, 0.9);
+    border-radius: 9px;
+    margin: 0 4px; /* Pequeño margen lateral */
+}
+
+.fixed-scrollbar-container::-webkit-scrollbar-thumb {
+    background: #5f6368; /* Color más oscuro para mejor visibilidad */
+    border-radius: 9px;
+    border: 3px solid rgba(241, 243, 244, 0.9);
+    min-width: 60px; /* Mínimo ancho del thumb para fácil arrastre */
+}
+
+.fixed-scrollbar-container::-webkit-scrollbar-thumb:hover {
+    background: #3c4043; /* Aún más oscuro al hover */
+}
+
+.fixed-scrollbar-container::-webkit-scrollbar-thumb:active {
+    background: #202124; /* Oscuro al hacer clic */
+}
+
+/* Firefox scrollbar - más visible */
+.fixed-scrollbar-container {
+    scrollbar-width: auto; /* Ancho normal para mejor visibilidad */
+    scrollbar-color: #5f6368 transparent; /* Thumb oscuro, track transparente */
 }
 
 /* Estilo del scrollbar horizontal - siempre visible */
 .modern-table-wrapper.proyectos-wrapper::-webkit-scrollbar {
-    height: 12px; /* Solo scrollbar horizontal */
+    height: 12px;
+    /* Solo scrollbar horizontal */
     background: #f1f3f4;
 }
 
 .modern-table-wrapper.proyectos-wrapper::-webkit-scrollbar:horizontal {
-    display: block; /* Forzar visibilidad del scrollbar horizontal */
+    display: block;
+    /* Forzar visibilidad del scrollbar horizontal */
 }
 
 .modern-table-wrapper.proyectos-wrapper::-webkit-scrollbar-track {
@@ -79,10 +157,13 @@
 .modern-table-wrapper.proyectos-wrapper .modern-table.proyectos {
     margin: 0;
     padding: 0;
-    width: 100%; /* Ocupar todo el ancho disponible - permite que 1fr se expanda */
-    min-width: 1650px; /* Ancho mínimo fijo - activa scroll cuando viewport < 1650px */
+    width: 100%;
+    /* Ocupar todo el ancho disponible - permite que 1fr se expanda */
+    min-width: 1650px;
+    /* Ancho mínimo fijo - activa scroll cuando viewport < 1650px */
     box-sizing: border-box;
-    overflow: visible; /* Permitir que se vea el contenido completo */
+    overflow: visible;
+    /* Permitir que se vea el contenido completo */
 }
 
 .modern-table {
@@ -93,7 +174,8 @@
 
 /* Para proyectos, ancho mínimo fijo para consistencia */
 .modern-table.proyectos {
-    min-width: 1650px; /* Ancho mínimo fijo */
+    min-width: 1650px;
+    /* Ancho mínimo fijo */
 }
 
 .modern-table-header {
@@ -106,7 +188,8 @@
     color: var(--text-secondary);
     border-bottom: none;
     white-space: nowrap;
-    min-width: 0; /* Permitir que se reduzca */
+    min-width: 0;
+    /* Permitir que se reduzca */
     width: 100%;
     box-sizing: border-box;
 }
@@ -114,20 +197,25 @@
 /* Para todas las tablas, el header debe ocupar todo el ancho */
 .modern-table.mantenimiento .modern-table-header {
     width: 100%;
-    min-width: 0; /* Permitir que se reduzca */
+    min-width: 0;
+    /* Permitir que se reduzca */
     box-sizing: border-box;
 }
 
 /* Para proyectos, el header se expande igual que las filas */
 /* Header STICKY: queda fijo al scrollear verticalmente dentro del wrapper */
 .modern-table.proyectos .modern-table-header {
-    width: 100%; /* Se expande al 100% igual que las filas */
-    min-width: 1764px; /* Mismo ancho mínimo que las filas (con Proyecto mínimo 300px) */
+    width: 100%;
+    /* Se expande al 100% igual que las filas */
+    min-width: 1764px;
+    /* Mismo ancho mínimo que las filas (con Proyecto mínimo 300px) */
     box-sizing: border-box;
     position: sticky;
     top: 0;
-    z-index: 10; /* Por encima de las filas */
-    background: rgba(230, 235, 239, 1); /* Mismo color que el header base */
+    z-index: 10;
+    /* Por encima de las filas */
+    background: rgba(230, 235, 239, 1);
+    /* Mismo color que el header base */
 }
 
 .modern-table-header .modern-table-cell {
@@ -186,7 +274,7 @@
 }
 
 /* Centrar los contenedores de los botones desplegables */
-.modern-table-row .modern-table-cell:has(.modern-select) > div {
+.modern-table-row .modern-table-cell:has(.modern-select)>div {
     display: inline-block;
     margin: 0 auto;
     text-align: center;
@@ -195,25 +283,27 @@
 /* Mantenimiento: 7 columnas - WIN con ancho muy amplio al final */
 .modern-table.mantenimiento .modern-table-header,
 .modern-table.mantenimiento .modern-table-row {
-    grid-template-columns: 320px 90px 70px 70px 70px 70px 520px; /* última columna = WIN mucho más ancha */
+    grid-template-columns: 320px 90px 70px 70px 70px 70px 520px;
+    /* última columna = WIN mucho más ancha */
     padding-left: 12px;
     padding-right: 12px;
-    gap: 0 8px; /* row-gap: 0, column-gap: 8px - unificado con proyectos */
+    gap: 0 8px;
+    /* row-gap: 0, column-gap: 8px - unificado con proyectos */
     min-width: 100%;
     width: max-content;
 }
 
 /* Separar columna WIN de Satisfacción en mantenimiento */
-.modern-table.mantenimiento .modern-table-header > .modern-table-cell:last-of-type,
-.modern-table.mantenimiento .modern-table-row > .modern-table-cell:last-of-type {
+.modern-table.mantenimiento .modern-table-header>.modern-table-cell:last-of-type,
+.modern-table.mantenimiento .modern-table-row>.modern-table-cell:last-of-type {
     padding-left: 24px;
     border-left: 1px solid #e8eaed;
     margin-left: 8px;
 }
 
 /* Separar columna WIN de Fecha Fin en proyectos */
-.modern-table.proyectos .modern-table-header > .modern-table-cell:last-of-type,
-.modern-table.proyectos .modern-table-row > .modern-table-cell:last-of-type {
+.modern-table.proyectos .modern-table-header>.modern-table-cell:last-of-type,
+.modern-table.proyectos .modern-table-row>.modern-table-cell:last-of-type {
     padding-left: 24px;
     padding-right: 0 !important;
     border-left: 1px solid #e8eaed;
@@ -226,8 +316,10 @@
 
 /* Tabla se expande al 100% del viewport, con min-width para activar scroll */
 .modern-table-wrapper.proyectos-wrapper .modern-table.proyectos {
-    width: 100%; /* Se expande al 100% - Proyecto absorbe el espacio extra */
-    min-width: 1764px; /* Ancho mínimo (con Proyecto mínimo 300px) */
+    width: 100%;
+    /* Se expande al 100% - Proyecto absorbe el espacio extra */
+    min-width: 1764px;
+    /* Ancho mínimo (con Proyecto mínimo 300px) */
     padding-right: 0 !important;
     margin-right: 0 !important;
 }
@@ -265,19 +357,24 @@
     /* WIN tiene ancho FIJO de 380px - NO responsive, SIN gap al final */
     grid-template-columns: 30px 150px minmax(300px, 1fr) 90px 100px 80px 50px 50px 45px 45px 70px 100px 75px 75px 380px;
     padding-left: 12px;
-    padding-right: 0; /* SIN padding derecho - WIN termina en el borde */
-    gap: 0 8px; /* row-gap: 0, column-gap: 8px */
-    width: 100%; /* Se expande al 100% - Proyecto absorbe espacio extra */
-    min-width: 1764px; /* Ancho mínimo para activar scroll */
+    padding-right: 0;
+    /* SIN padding derecho - WIN termina en el borde */
+    gap: 0 8px;
+    /* row-gap: 0, column-gap: 8px */
+    width: 100%;
+    /* Se expande al 100% - Proyecto absorbe espacio extra */
+    min-width: 1764px;
+    /* Ancho mínimo para activar scroll */
     box-sizing: border-box;
     overflow: visible;
 }
 
 /* Columna Proyecto (índice 3) - RESPONSIVE: mínimo 300px, se expande */
-.modern-table.proyectos .modern-table-header > .modern-table-cell:nth-child(3),
-.modern-table.proyectos .modern-table-row > .modern-table-cell:nth-child(3) {
+.modern-table.proyectos .modern-table-header>.modern-table-cell:nth-child(3),
+.modern-table.proyectos .modern-table-row>.modern-table-cell:nth-child(3) {
     grid-column: 3;
-    min-width: 300px; /* Mínimo 300px */
+    min-width: 300px;
+    /* Mínimo 300px */
     /* max-width: NO se define para permitir expansión con 1fr */
     overflow: hidden !important;
     text-overflow: ellipsis;
@@ -287,18 +384,18 @@
 /* NOTA: No agregar estilos específicos para Accionables (columna 10) - usar solo el grid-template-columns */
 
 /* Forzar ancho de la columna WIN (posición 14, última columna) */
-.modern-table.proyectos .modern-table-header > .modern-table-cell:nth-child(14),
-.modern-table.proyectos .modern-table-row > .modern-table-cell:nth-child(14),
-.modern-table.proyectos .modern-table-header > .modern-table-cell:last-child,
-.modern-table.proyectos .modern-table-row > .modern-table-cell:last-child {
+.modern-table.proyectos .modern-table-header>.modern-table-cell:nth-child(14),
+.modern-table.proyectos .modern-table-row>.modern-table-cell:nth-child(14),
+.modern-table.proyectos .modern-table-header>.modern-table-cell:last-child,
+.modern-table.proyectos .modern-table-row>.modern-table-cell:last-child {
     min-width: 380px !important;
     width: 380px !important;
     max-width: 380px !important;
 }
 
 /* Asegurar que el textarea WIN ocupe todo el ancho de su celda */
-.modern-table.proyectos .modern-table-row > .modern-table-cell:nth-child(14) .win-textarea,
-.modern-table.proyectos .modern-table-row > .modern-table-cell:last-child .win-textarea {
+.modern-table.proyectos .modern-table-row>.modern-table-cell:nth-child(14) .win-textarea,
+.modern-table.proyectos .modern-table-row>.modern-table-cell:last-child .win-textarea {
     width: 100% !important;
     min-width: 100% !important;
     max-width: 100% !important;
@@ -313,23 +410,27 @@
     grid-template-columns: 30px 160px 400px 105px 85px 55px 55px 50px 50px 55px 80px 80px;
     padding-left: 12px;
     padding-right: 12px;
-    gap: 0 8px; /* row-gap: 0, column-gap: 8px */
+    gap: 0 8px;
+    /* row-gap: 0, column-gap: 8px */
     min-width: 100%;
     width: max-content;
 }
 
 /* Tabla se expande al 100%, con min-width para activar scroll */
 .modern-table.proyectos {
-    width: 100%; /* Se expande al 100% - Proyecto absorbe espacio extra */
-    min-width: 1764px; /* Ancho mínimo (con Proyecto mínimo 300px) */
+    width: 100%;
+    /* Se expande al 100% - Proyecto absorbe espacio extra */
+    min-width: 1764px;
+    /* Ancho mínimo (con Proyecto mínimo 300px) */
     box-sizing: border-box;
     overflow: visible;
 }
 
 /* Columna Proyecto - RESPONSIVE: mínimo 300px, se expande en pantallas grandes */
-.modern-table.proyectos .modern-table-header > .modern-table-cell:nth-child(3),
-.modern-table.proyectos .modern-table-row > .modern-table-cell:nth-child(3) {
-    min-width: 300px; /* Mínimo 300px */
+.modern-table.proyectos .modern-table-header>.modern-table-cell:nth-child(3),
+.modern-table.proyectos .modern-table-row>.modern-table-cell:nth-child(3) {
+    min-width: 300px;
+    /* Mínimo 300px */
     /* NO max-width ni width fijo - permite expansión con 1fr */
     overflow: hidden;
     text-overflow: ellipsis;
@@ -339,7 +440,7 @@
 }
 
 /* Asegurar que los enlaces dentro de la columna Proyecto también se corten */
-.modern-table.proyectos .modern-table-row > .modern-table-cell:nth-child(3) a {
+.modern-table.proyectos .modern-table-row>.modern-table-cell:nth-child(3) a {
     display: block;
     overflow: hidden !important;
     text-overflow: ellipsis !important;
@@ -352,9 +453,10 @@
 }
 
 /* Última columna (WIN) - sin padding derecho para terminar en el borde */
-.modern-table.proyectos .modern-table-header > .modern-table-cell:last-child,
-.modern-table.proyectos .modern-table-row > .modern-table-cell:last-child {
-    padding-right: 0 !important; /* SIN padding - termina exactamente en el borde */
+.modern-table.proyectos .modern-table-header>.modern-table-cell:last-child,
+.modern-table.proyectos .modern-table-row>.modern-table-cell:last-child {
+    padding-right: 0 !important;
+    /* SIN padding - termina exactamente en el borde */
     margin-right: 0 !important;
 }
 
@@ -395,8 +497,10 @@
 .modern-table.proyectos .modern-table-row.subproyecto-row:not(.subproyectos-ocultos) {
     /* Mismo grid que las filas principales - Proyecto RESPONSIVE con minmax(300px, 1fr) */
     grid-template-columns: 30px 150px minmax(300px, 1fr) 90px 100px 80px 50px 50px 45px 45px 70px 100px 75px 75px 380px;
-    min-width: 1764px; /* Mismo ancho mínimo que las filas principales */
-    width: 100%; /* Se expande igual que las filas principales */
+    min-width: 1764px;
+    /* Mismo ancho mínimo que las filas principales */
+    width: 100%;
+    /* Se expande igual que las filas principales */
 }
 
 .modern-table-row.subproyecto-row .modern-table-cell {
@@ -425,7 +529,8 @@
     transition: all 0.2s;
     align-items: center;
     white-space: nowrap;
-    min-width: 0; /* Permitir que se reduzca */
+    min-width: 0;
+    /* Permitir que se reduzca */
     width: 100%;
     box-sizing: border-box;
 }
@@ -466,7 +571,8 @@
     white-space: nowrap;
     word-wrap: break-word;
     max-width: 100%;
-    min-width: 0; /* Permitir que se contraiga */
+    min-width: 0;
+    /* Permitir que se contraiga */
     box-sizing: border-box;
     position: relative;
 }
@@ -491,8 +597,10 @@
 /* Tablas legacy (mantener compatibilidad) */
 .table-container {
     background: transparent;
-    overflow: visible; /* Sin scroll propio */
-    min-width: max-content; /* Permitir que expanda */
+    overflow: visible;
+    /* Sin scroll propio */
+    min-width: max-content;
+    /* Permitir que expanda */
 }
 
 /* Para proyectos, hacer el table-container responsive */
@@ -582,7 +690,3 @@
     position: relative;
     z-index: 99999;
 }
-
-
-
-
