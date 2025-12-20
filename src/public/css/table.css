@@ -17,12 +17,13 @@
     border: 1px solid var(--border-color); /* Agregar borde completo (izquierdo y derecho) */
 }
 
-/* Para proyectos, hacer el wrapper responsive - ocupar todo el ancho */
+/* Para proyectos, hacer el wrapper con scroll horizontal */
 .modern-table-wrapper.proyectos-wrapper {
     display: block;
     width: calc(100% - 32px); /* Ocupar todo el ancho menos márgenes */
     max-width: calc(100% - 32px); /* Asegurar que no exceda el contenedor */
-    overflow: visible; /* Permitir que se vea el contenido completo */
+    overflow-x: auto; /* Scroll horizontal cuando sea necesario */
+    overflow-y: visible; /* Permitir que el contenido vertical se vea */
     box-sizing: border-box;
     min-width: 0; /* Permitir que se reduzca */
     margin-left: 16px; /* Margen izquierdo */
@@ -210,18 +211,16 @@
  */
 .modern-table.proyectos .modern-table-header,
 .modern-table.proyectos .modern-table-row {
-    /* Columna Proyecto es responsive usando minmax (mínimo 80px, máximo flexible con 1fr) */
-    /* Suma de columnas fijas: 30 + 150 + 90 + 100 + 80 + 50 + 50 + 45 + 45 + 70 + 100 + 75 + 75 + 380 = 1390px */
-    /* Gaps: 14 gaps de 8px = 112px, Padding: 12px izquierdo = 12px, Total fijo: ~1514px */
-    grid-template-columns: 30px 150px minmax(80px, 1fr) 90px 100px 80px 50px 50px 45px 45px 70px 100px 75px 75px 380px;
+    /* Columna Proyecto es responsive usando minmax (mínimo 160px, máximo flexible con 1fr) */
+    /* Suma de columnas fijas: 30 + 150 + 160 + 90 + 100 + 80 + 50 + 50 + 45 + 45 + 70 + 100 + 75 + 75 + 380 = 1500px */
+    /* Gaps: 14 gaps de 8px = 112px, Padding: 12px izquierdo = 12px, Total fijo: ~1624px */
+    grid-template-columns: 30px 150px minmax(160px, 1fr) 90px 100px 80px 50px 50px 45px 45px 70px 100px 75px 75px 380px;
     padding-left: 12px;
     padding-right: 0 !important;
     gap: 0 8px; /* row-gap: 0, column-gap: 8px = 13 gaps de 8px = 104px */
-    width: 100%;
-    min-width: 0; /* Permitir que el grid sea flexible */
-    max-width: 100%; /* No permitir que se expanda más allá del contenedor */
+    width: max-content; /* Usar el ancho necesario para el contenido */
+    min-width: 100%; /* Mínimo el ancho del contenedor */
     box-sizing: border-box;
-    overflow: hidden; /* Asegurar que el contenido no se extienda más allá */
 }
 
 /* Forzar que la tercera columna (Proyecto) respete el ancho del grid y se reduzca */
@@ -344,7 +343,7 @@
 /* Asegurar que los subproyectos tengan el mismo grid que las filas principales */
 /* IMPORTANTE: Mantener el mismo orden y anchos que el grid principal */
 .modern-table.proyectos .modern-table-row.subproyecto-row:not(.subproyectos-ocultos) {
-    grid-template-columns: 30px 150px minmax(80px, 1fr) 90px 100px 80px 50px 50px 45px 45px 70px 100px 75px 75px 380px;
+    grid-template-columns: 30px 150px minmax(160px, 1fr) 90px 100px 80px 50px 50px 45px 45px 70px 100px 75px 75px 380px;
 }
 
 .modern-table-row.subproyecto-row .modern-table-cell {
