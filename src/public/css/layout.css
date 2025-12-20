@@ -239,8 +239,12 @@
     /* Permitir que se reduzca para proyectos responsive */
     overflow-x: visible;
     /* Permitir ver el borde derecho de la tabla */
-    overflow-y: hidden;
-    /* Sin scrollbar vertical */
+    overflow-y: auto;
+    /* Permitir scroll vertical pero ocultar scrollbar */
+    scrollbar-width: none;
+    /* Ocultar scrollbar en Firefox */
+    -ms-overflow-style: none;
+    /* Ocultar scrollbar en IE y Edge */
     width: 100%;
     box-sizing: border-box;
     display: flex;
@@ -248,6 +252,11 @@
     /* Para que content-area ocupe todo el espacio */
     padding: 0 8px 24px 8px;
     /* Padding lateral (8px) y bottom (24px) para todos los hijos */
+}
+
+/* Ocultar scrollbar en Chrome, Safari y Opera */
+.main-content::-webkit-scrollbar {
+    display: none;
 }
 
 /* El ajuste del margen se maneja con JavaScript para mejor compatibilidad */
@@ -259,8 +268,8 @@
     /* Permitir que se reduzca para proyectos responsive */
     overflow-x: visible;
     /* Permitir ver el borde derecho de la tabla */
-    overflow-y: hidden;
-    /* Sin scrollbar vertical - contenedor fijo */
+    overflow-y: visible;
+    /* Permitir scroll (el scroll lo maneja main-content) */
     width: 100%;
     box-sizing: border-box;
     height: auto;
@@ -290,10 +299,10 @@
     margin: 0 0 24px 0;
     /* Margen inferior para mantener distancia con la tabla */
     box-sizing: border-box;
-    overflow-y: hidden;
-    /* Sin scrollbar vertical */
-    overflow-x: hidden;
-    /* Sin scrollbar horizontal */
+    overflow-y: visible;
+    /* Permitir scroll (lo maneja main-content) */
+    overflow-x: visible;
+    /* Permitir scroll horizontal si es necesario */
     height: fit-content;
     /* Altura según contenido, sin ajustes adicionales */
     flex-shrink: 0;

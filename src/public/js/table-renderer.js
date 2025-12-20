@@ -455,9 +455,6 @@ function renderizarTablaProyectos(datos, contenido) {
             ajustarAlturaTextarea(textarea);
             // Agregar listener para ajustar altura mientras escribe
             textarea.addEventListener('input', function() {
-                // #region agent log
-                fetch('http://127.0.0.1:7242/ingest/c387d317-3dcc-4598-b290-b71e313e8754',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'table-renderer.js:457',message:'Evento INPUT disparado',data:{valueLength:this.value.length,currentHeight:this.clientHeight,currentRows:this.getAttribute('rows')},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
-                // #endregion
                 ajustarAlturaTextarea(this);
             });
         });
@@ -509,10 +506,6 @@ function configurarScrollbarFija() {
     fixedScrollbar.style.left = tableRect.left + 'px';
     fixedScrollbar.style.width = tableRect.width + 'px';
     fixedScrollbar.style.right = 'auto';
-    
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/c387d317-3dcc-4598-b290-b71e313e8754',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'table-renderer.js:configurarScrollbarFija',message:'Scrollbar fija configurada',data:{tableRectLeft:tableRect.left,tableRectWidth:tableRect.width,tableRectTop:tableRect.top,tableRectBottom:tableRect.bottom},timestamp:Date.now(),sessionId:'debug-session',runId:'resize-debug',hypothesisId:'D'})}).catch(()=>{});
-    // #endregion
 
     // Sincronizar scroll
     let isSyncingFixed = false;
@@ -746,17 +739,10 @@ window.toggleSubproyectos = function (idProyectoPadre) {
 function ajustarAlturaTextarea(textarea) {
     if (!textarea) return;
     
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/c387d317-3dcc-4598-b290-b71e313e8754',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'table-renderer.js:739',message:'ajustarAlturaTextarea ENTRY',data:{textareaExists:!!textarea,valueLength:textarea?.value?.length||0},timestamp:Date.now(),sessionId:'debug-session',runId:'post-fix',hypothesisId:'A'})}).catch(()=>{});
-    // #endregion
-    
     const contenido = textarea.value;
     
     // Si está vacío, mantener en 1 renglón
     if (!contenido.trim()) {
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/c387d317-3dcc-4598-b290-b71e313e8754',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'table-renderer.js:747',message:'textarea vacío - manteniendo 1 renglón',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'post-fix',hypothesisId:'A'})}).catch(()=>{});
-        // #endregion
         textarea.setAttribute('rows', '1');
         textarea.style.height = '20px';
         return;
@@ -769,10 +755,6 @@ function ajustarAlturaTextarea(textarea) {
     const alturaActual = textarea.clientHeight;
     const rowsActual = parseInt(textarea.getAttribute('rows')) || 1;
     
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/c387d317-3dcc-4598-b290-b71e313e8754',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'table-renderer.js:760',message:'ANTES de modificar altura',data:{alturaActual,rowsActual,lineasReales,contenidoLength:contenido.length},timestamp:Date.now(),sessionId:'debug-session',runId:'post-fix',hypothesisId:'B'})}).catch(()=>{});
-    // #endregion
-    
     // Estrategia: Verificar overflow real usando la altura actual (sin forzar altura mínima)
     // Solo expandir cuando realmente hay overflow o saltos de línea
     
@@ -782,16 +764,9 @@ function ajustarAlturaTextarea(textarea) {
         const scrollHeightActual = textarea.scrollHeight;
         const hayOverflow = scrollHeightActual > alturaActual;
         
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/c387d317-3dcc-4598-b290-b71e313e8754',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'table-renderer.js:771',message:'Verificación overflow (rows=1)',data:{hayOverflow,scrollHeightActual,alturaActual,lineasReales},timestamp:Date.now(),sessionId:'debug-session',runId:'post-fix',hypothesisId:'C'})}).catch(()=>{});
-        // #endregion
-        
         // Si no hay overflow y solo hay 1 línea de texto (sin saltos de línea)
         if (!hayOverflow && lineasReales === 1) {
             // Mantener en 1 renglón - no expandir
-            // #region agent log
-            fetch('http://127.0.0.1:7242/ingest/c387d317-3dcc-4598-b290-b71e313e8754',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'table-renderer.js:777',message:'Mantener en 1 renglón (no overflow, 1 línea)',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'post-fix',hypothesisId:'A'})}).catch(()=>{});
-            // #endregion
             return; // No hacer nada, ya está bien
         }
         
@@ -802,10 +777,6 @@ function ajustarAlturaTextarea(textarea) {
         const scrollHeight = textarea.scrollHeight;
         textarea.style.height = alturaTemporal; // Restaurar inmediatamente
         
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/c387d317-3dcc-4598-b290-b71e313e8754',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'table-renderer.js:789',message:'Calculando altura necesaria (overflow o múltiples líneas)',data:{scrollHeight,lineasReales},timestamp:Date.now(),sessionId:'debug-session',runId:'post-fix',hypothesisId:'B'})}).catch(()=>{});
-        // #endregion
-        
         // Calcular número de líneas necesarias
         const lineHeight = parseFloat(getComputedStyle(textarea).lineHeight) || 19.5;
         const padding = 8;
@@ -814,9 +785,6 @@ function ajustarAlturaTextarea(textarea) {
         
         // Expandir
         if (lineasNecesarias > 1) {
-            // #region agent log
-            fetch('http://127.0.0.1:7242/ingest/c387d317-3dcc-4598-b290-b71e313e8754',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'table-renderer.js:802',message:'AJUSTANDO altura del textarea (expandir)',data:{lineasNecesarias,scrollHeight},timestamp:Date.now(),sessionId:'debug-session',runId:'post-fix',hypothesisId:'D'})}).catch(()=>{});
-            // #endregion
             textarea.setAttribute('rows', lineasNecesarias);
             textarea.style.height = scrollHeight + 'px';
         }
@@ -830,10 +798,6 @@ function ajustarAlturaTextarea(textarea) {
     const scrollHeight = textarea.scrollHeight;
     textarea.style.height = alturaTemporal; // Restaurar inmediatamente
     
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/c387d317-3dcc-4598-b290-b71e313e8754',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'table-renderer.js:815',message:'Verificando altura en múltiples renglones',data:{scrollHeight,alturaActual,lineasReales},timestamp:Date.now(),sessionId:'debug-session',runId:'post-fix',hypothesisId:'D'})}).catch(()=>{});
-    // #endregion
-    
     // Calcular número de líneas necesarias
     const lineHeight = parseFloat(getComputedStyle(textarea).lineHeight) || 19.5;
     const padding = 8;
@@ -843,9 +807,6 @@ function ajustarAlturaTextarea(textarea) {
     // Solo ajustar si la altura necesaria es diferente a la actual
     // (con un margen de 2px para evitar ajustes mínimos)
     if (Math.abs(scrollHeight - alturaActual) > 2 || rowsActual !== lineasNecesarias) {
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/c387d317-3dcc-4598-b290-b71e313e8754',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'table-renderer.js:825',message:'AJUSTANDO altura del textarea',data:{lineasNecesarias,scrollHeight,alturaActual,rowsActual},timestamp:Date.now(),sessionId:'debug-session',runId:'post-fix',hypothesisId:'D'})}).catch(()=>{});
-        // #endregion
         if (lineasNecesarias > 1) {
             textarea.setAttribute('rows', lineasNecesarias);
             textarea.style.height = scrollHeight + 'px';
@@ -853,156 +814,18 @@ function ajustarAlturaTextarea(textarea) {
             textarea.setAttribute('rows', '1');
             textarea.style.height = '20px';
         }
-    } else {
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/c387d317-3dcc-4598-b290-b71e313e8754',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'table-renderer.js:833',message:'NO ajustar - altura ya es correcta',data:{scrollHeight,alturaActual,diferencia:Math.abs(scrollHeight-alturaActual)},timestamp:Date.now(),sessionId:'debug-session',runId:'post-fix',hypothesisId:'D'})}).catch(()=>{});
-        // #endregion
     }
-}
-
-// Función para rastrear posiciones y estilos de contenedores
-function rastrearPosicionesContenedores() {
-    const seguimientoContainer = document.querySelector('.seguimiento-container');
-    const tableContainer = document.querySelector('#contenido');
-    const proyectosTableContainer = document.querySelector('.proyectos-table-container');
-    const seguimientoWrapper = document.querySelector('.seguimiento-wrapper');
-    const contentArea = document.querySelector('.content-area');
-    const mainContent = document.querySelector('.main-content');
-    
-    const datos = {
-        windowWidth: window.innerWidth,
-        windowHeight: window.innerHeight,
-        scrollY: window.scrollY,
-        scrollX: window.scrollX
-    };
-    
-    if (seguimientoContainer) {
-        const rect = seguimientoContainer.getBoundingClientRect();
-        const styles = window.getComputedStyle(seguimientoContainer);
-        datos.seguimientoContainer = {
-            top: rect.top,
-            left: rect.left,
-            width: rect.width,
-            height: rect.height,
-            position: styles.position,
-            display: styles.display,
-            marginTop: styles.marginTop,
-            marginBottom: styles.marginBottom
-        };
-    }
-    
-    if (tableContainer) {
-        const rect = tableContainer.getBoundingClientRect();
-        const styles = window.getComputedStyle(tableContainer);
-        datos.tableContainer = {
-            top: rect.top,
-            left: rect.left,
-            width: rect.width,
-            height: rect.height,
-            position: styles.position,
-            display: styles.display,
-            marginTop: styles.marginTop,
-            marginBottom: styles.marginBottom
-        };
-    }
-    
-    if (proyectosTableContainer) {
-        const rect = proyectosTableContainer.getBoundingClientRect();
-        const styles = window.getComputedStyle(proyectosTableContainer);
-        datos.proyectosTableContainer = {
-            top: rect.top,
-            left: rect.left,
-            width: rect.width,
-            height: rect.height,
-            position: styles.position,
-            display: styles.display,
-            marginTop: styles.marginTop,
-            marginBottom: styles.marginBottom
-        };
-    }
-    
-    if (seguimientoWrapper) {
-        const rect = seguimientoWrapper.getBoundingClientRect();
-        const styles = window.getComputedStyle(seguimientoWrapper);
-        datos.seguimientoWrapper = {
-            top: rect.top,
-            left: rect.left,
-            width: rect.width,
-            height: rect.height,
-            position: styles.position,
-            display: styles.display
-        };
-    }
-    
-    if (contentArea) {
-        const rect = contentArea.getBoundingClientRect();
-        const styles = window.getComputedStyle(contentArea);
-        datos.contentArea = {
-            top: rect.top,
-            left: rect.left,
-            width: rect.width,
-            height: rect.height,
-            position: styles.position,
-            display: styles.display,
-            overflowY: styles.overflowY,
-            overflowX: styles.overflowX
-        };
-    }
-    
-    if (mainContent) {
-        const rect = mainContent.getBoundingClientRect();
-        const styles = window.getComputedStyle(mainContent);
-        datos.mainContent = {
-            top: rect.top,
-            left: rect.left,
-            width: rect.width,
-            height: rect.height,
-            position: styles.position,
-            display: styles.display,
-            overflowY: styles.overflowY,
-            overflowX: styles.overflowX
-        };
-    }
-    
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/c387d317-3dcc-4598-b290-b71e313e8754',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'table-renderer.js:rastrearPosicionesContenedores',message:'Posiciones y estilos de contenedores',data:datos,timestamp:Date.now(),sessionId:'debug-session',runId:'resize-debug',hypothesisId:'A'})}).catch(()=>{});
-    // #endregion
-    
-    return datos;
 }
 
 // Ajustar scroll cuando se redimensiona la ventana
 if (typeof window !== 'undefined') {
     let resizeTimeout;
     window.addEventListener('resize', () => {
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/c387d317-3dcc-4598-b290-b71e313e8754',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'table-renderer.js:resize',message:'Resize event disparado',data:{windowWidth:window.innerWidth,windowHeight:window.innerHeight},timestamp:Date.now(),sessionId:'debug-session',runId:'resize-debug',hypothesisId:'B'})}).catch(()=>{});
-        // #endregion
-        
-        // Rastrear posiciones ANTES del timeout
-        rastrearPosicionesContenedores();
-        
         clearTimeout(resizeTimeout);
         resizeTimeout = setTimeout(() => {
-            // #region agent log
-            fetch('http://127.0.0.1:7242/ingest/c387d317-3dcc-4598-b290-b71e313e8754',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'table-renderer.js:resize-timeout',message:'Resize timeout ejecutado',data:{windowWidth:window.innerWidth,windowHeight:window.innerHeight},timestamp:Date.now(),sessionId:'debug-session',runId:'resize-debug',hypothesisId:'C'})}).catch(()=>{});
-            // #endregion
-            
             configurarScrollbarFija();
             ajustarScrollHorizontal();
-            
-            // Rastrear posiciones DESPUÉS del timeout
-            setTimeout(() => {
-                rastrearPosicionesContenedores();
-            }, 100);
         }, 250);
-    });
-    
-    // Rastrear posiciones iniciales al cargar
-    window.addEventListener('load', () => {
-        setTimeout(() => {
-            rastrearPosicionesContenedores();
-        }, 500);
     });
 }
 
