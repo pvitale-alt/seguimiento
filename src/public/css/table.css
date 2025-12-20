@@ -22,22 +22,30 @@
     display: block;
     width: calc(100% - 32px); /* Ocupar todo el ancho menos márgenes */
     max-width: calc(100% - 32px); /* Asegurar que no exceda el contenedor */
-    overflow-x: auto; /* Scroll horizontal cuando el contenido excede */
-    overflow-y: visible; /* Permitir que el contenido vertical se vea */
+    overflow-x: scroll !important; /* Scroll horizontal SIEMPRE visible (no 'auto') */
+    overflow-y: visible; /* SIN scroll vertical - el contenido fluye naturalmente */
     box-sizing: border-box;
     min-width: 0; /* Permitir que se reduzca */
     margin-left: 16px; /* Margen izquierdo */
     margin-right: 16px; /* Margen derecho */
     border: 1px solid var(--border-color); /* Borde completo igual al izquierdo */
     border-radius: 12px; /* Mantener esquinas redondeadas */
-    position: sticky; /* Para que el scrollbar sea visible */
+    position: relative;
     padding: 0; /* Sin padding extra */
-    padding-bottom: 8px; /* Espacio para el scrollbar */
+    padding-bottom: 12px; /* Espacio para el scrollbar horizontal siempre visible */
 }
 
 /* Estilo del scrollbar horizontal - siempre visible */
 .modern-table-wrapper.proyectos-wrapper::-webkit-scrollbar {
-    height: 12px;
+    height: 12px; /* Solo scrollbar horizontal */
+    background: #f1f3f4;
+}
+
+.modern-table-wrapper.proyectos-wrapper::-webkit-scrollbar:horizontal {
+    display: block; /* Forzar visibilidad del scrollbar horizontal */
+}
+
+.modern-table-wrapper.proyectos-wrapper::-webkit-scrollbar-track {
     background: #f1f3f4;
     border-radius: 6px;
 }
@@ -52,9 +60,9 @@
     background: #9aa0a6;
 }
 
-/* Firefox scrollbar */
+/* Firefox scrollbar - solo horizontal */
 .modern-table-wrapper.proyectos-wrapper {
-    scrollbar-width: auto;
+    scrollbar-width: thin;
     scrollbar-color: #bdc1c6 #f1f3f4;
 }
 
@@ -67,12 +75,12 @@
     max-width: calc(100% - 32px);
 }
 
-/* Para proyectos, tabla con ancho mínimo fijo para scroll horizontal */
+/* Para proyectos, tabla que se expande al viewport pero con ancho mínimo para scroll */
 .modern-table-wrapper.proyectos-wrapper .modern-table.proyectos {
     margin: 0;
     padding: 0;
-    width: max-content; /* Ancho basado en el contenido */
-    min-width: 1650px; /* Ancho mínimo fijo para consistencia */
+    width: 100%; /* Ocupar todo el ancho disponible - permite que 1fr se expanda */
+    min-width: 1650px; /* Ancho mínimo fijo - activa scroll cuando viewport < 1650px */
     box-sizing: border-box;
     overflow: visible; /* Permitir que se vea el contenido completo */
 }
@@ -83,9 +91,9 @@
     min-width: max-content;
 }
 
-/* Para proyectos, permitir que sea responsive */
+/* Para proyectos, ancho mínimo fijo para consistencia */
 .modern-table.proyectos {
-    min-width: 0;
+    min-width: 1650px; /* Ancho mínimo fijo */
 }
 
 .modern-table-header {
@@ -104,11 +112,22 @@
 }
 
 /* Para todas las tablas, el header debe ocupar todo el ancho */
-.modern-table.mantenimiento .modern-table-header,
-.modern-table.proyectos .modern-table-header {
+.modern-table.mantenimiento .modern-table-header {
     width: 100%;
     min-width: 0; /* Permitir que se reduzca */
     box-sizing: border-box;
+}
+
+/* Para proyectos, el header debe tener el mismo ancho mínimo que las filas */
+/* Header STICKY: queda fijo al scrollear verticalmente dentro del wrapper */
+.modern-table.proyectos .modern-table-header {
+    width: 100%;
+    min-width: 1650px; /* Mismo ancho mínimo que las filas */
+    box-sizing: border-box;
+    position: sticky;
+    top: 0;
+    z-index: 10; /* Por encima de las filas */
+    background: rgba(230, 235, 239, 1); /* Mismo color que el header base */
 }
 
 .modern-table-header .modern-table-cell {
@@ -205,10 +224,10 @@
     max-width: 380px !important;
 }
 
-/* Asegurar que la tabla tenga ancho consistente */
+/* Asegurar que la tabla se expanda al viewport y elimine espacios */
 .modern-table-wrapper.proyectos-wrapper .modern-table.proyectos {
-    width: max-content;
-    min-width: 1650px; /* Ancho mínimo fijo */
+    width: 100%; /* Expandir al 100% del wrapper - 1fr absorbe espacio extra */
+    min-width: 1650px; /* Ancho mínimo fijo para consistencia */
     padding-right: 0 !important;
     margin-right: 0 !important;
 }
@@ -242,9 +261,9 @@
     /* WIN tiene ancho FIJO de 380px - NO responsive */
     grid-template-columns: 30px 150px minmax(160px, 1fr) 90px 100px 80px 50px 50px 45px 45px 70px 100px 75px 75px 380px;
     padding-left: 12px;
-    padding-right: 12px;
+    padding-right: 0; /* SIN padding derecho - WIN termina en el borde */
     gap: 0 8px; /* row-gap: 0, column-gap: 8px */
-    width: 100%; /* Ocupar todo el ancho de la tabla */
+    width: 100%; /* Ocupar todo el ancho de la tabla - 1fr absorbe espacio */
     min-width: 1650px; /* Ancho mínimo fijo para consistencia */
     box-sizing: border-box;
     overflow: visible;
@@ -329,10 +348,11 @@
     position: relative;
 }
 
-/* Remover el borde derecho de la última columna ya que el wrapper tiene el borde completo */
+/* Última columna (WIN) - sin padding derecho para terminar en el borde */
 .modern-table.proyectos .modern-table-header > .modern-table-cell:last-child,
 .modern-table.proyectos .modern-table-row > .modern-table-cell:last-child {
-    padding-right: 12px; /* Mantener padding consistente */
+    padding-right: 0 !important; /* SIN padding - termina exactamente en el borde */
+    margin-right: 0 !important;
 }
 
 /* Texto de cliente más bold */
@@ -370,7 +390,8 @@
 /* Asegurar que los subproyectos tengan el mismo grid que las filas principales */
 /* IMPORTANTE: Mantener el mismo orden y anchos que el grid principal */
 .modern-table.proyectos .modern-table-row.subproyecto-row:not(.subproyectos-ocultos) {
-    grid-template-columns: 30px 150px minmax(80px, 1fr) 90px 100px 80px 50px 50px 45px 45px 70px 100px 75px 75px 380px;
+    grid-template-columns: 30px 150px minmax(160px, 1fr) 90px 100px 80px 50px 50px 45px 45px 70px 100px 75px 75px 380px;
+    min-width: 1650px; /* Mismo ancho mínimo que las filas principales */
 }
 
 .modern-table-row.subproyecto-row .modern-table-cell {
