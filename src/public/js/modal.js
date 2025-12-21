@@ -71,6 +71,7 @@ window.abrirModalDetalle = async function abrirModalDetalle(id_proyecto, mostrar
         const modalBody = document.getElementById('modalBody');
 
         // Guardar el proyecto actual en el historial si existe uno abierto
+        // Solo agregar al historial si no estamos volviendo desde un subproyecto
         const proyectoActual = modalBody.getAttribute('data-proyecto-actual');
         if (proyectoActual && proyectoActual !== String(id_proyecto)) {
             modalHistorial.push({
@@ -82,7 +83,7 @@ window.abrirModalDetalle = async function abrirModalDetalle(id_proyecto, mostrar
 
         modalTitulo.textContent = itemData.nombre_proyecto || 'Detalle del Proyecto';
 
-        // Actualizar botón "Volver" en el header
+        // Actualizar botón "Volver" en el header (después de actualizar el historial)
         actualizarBotonVolver();
 
         // Verificar si es proyecto padre
@@ -893,12 +894,23 @@ window.volverProyectoAnterior = function volverProyectoAnterior() {
 
     const proyectoAnterior = modalHistorial.pop();
     if (proyectoAnterior && proyectoAnterior.id) {
-        // Limpiar el historial para evitar loops
-        const historialTemp = [...modalHistorial];
+        // Limpiar el historial completamente antes de abrir el proyecto anterior
+        // Esto asegura que cuando se abra el proyecto padre, el historial esté vacío
         modalHistorial = [];
+        
+        // Ocultar el botón inmediatamente
+        const btnVolver = document.getElementById('btnVolverModal');
+        if (btnVolver) {
+            btnVolver.style.display = 'none';
+        }
 
         // Abrir el proyecto anterior
         abrirModalDetalle(proyectoAnterior.id);
+        
+        // Asegurar que el botón se oculte después de abrir (doble verificación)
+        setTimeout(() => {
+            actualizarBotonVolver();
+        }, 200);
     }
 }
 

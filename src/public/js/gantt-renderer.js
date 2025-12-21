@@ -14,7 +14,7 @@ let ganttEpicsCache = {}; // Cache de epics cargados por proyecto
 const GANTT_CONFIG = {
     rowHeight: 40,
     headerHeight: 50,
-    sidebarWidth: 260
+    sidebarWidth: 320
 };
 
 /**
@@ -193,7 +193,7 @@ async function renderizarGanttEquipo(proyectos) {
     html += '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="color: #5f6368; opacity: 0.7;" onmouseover="this.style.opacity=\'1\'" onmouseout="this.style.opacity=\'0.7\'">';
     html += '<path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/>';
     html += '</svg>';
-    html += '<div class="win-tooltip">Construido a partir de Fecha inicio y Fin planificada de los epics</div>';
+    html += '<div class="win-tooltip">Gantt de proyectos a partir de fecha inicio/fin planificada de sus epics</div>';
     html += '</div>';
     html += '</div>';
     html += '<div class="gantt-controls">';
@@ -753,28 +753,87 @@ function calcularBarraGantt(fechaInicio, fechaFin, timelineCols, zoom, baseCellW
         const colDate = new Date(col.date);
         colDate.setHours(0, 0, 0, 0);
 
-        // Lógica simplificada de rango
-        // Para mayor precisión se necesitaría la lógica completa de meses/días
-        // Aquí asumimos granularidad de celda para simplificar el puerto, 
-        // pero idealmente deberíamos copiar la lógica detallada del original si es crítica.
-        // Copiamos la lógica básica de intersección
+        let cellStart = currentLeft;
+        let cellEnd = currentLeft + cellWidth;
+        let cellStartDate = null;
+        let cellEndDate = null;
+        let totalDaysInCell = 0;
+        let daysInRange = 0;
 
-        let fechaEnRango = false;
-
+        // Calcular fechas de inicio y fin de la celda según el zoom
         if (zoom === 'weeks') {
-            fechaEnRango = (colDate >= inicio && colDate <= fin);
+            cellStartDate = new Date(colDate);
+            cellEndDate = new Date(colDate);
+            cellEndDate.setDate(cellEndDate.getDate() + 1);
+            totalDaysInCell = 1;
         } else if (zoom === 'months') {
-            const colEnd = new Date(colDate.getFullYear(), colDate.getMonth() + 1, 0);
-            fechaEnRango = (inicio <= colEnd && fin >= colDate);
-        } else {
+            cellStartDate = new Date(colDate.getFullYear(), colDate.getMonth(), 1);
+            cellEndDate = new Date(colDate.getFullYear(), colDate.getMonth() + 1, 0);
+            cellEndDate.setHours(23, 59, 59, 999);
+            totalDaysInCell = col.daysInMonth || 30;
+        } else { // quarters
             const q = Math.floor(colDate.getMonth() / 3);
-            const colEnd = new Date(colDate.getFullYear(), (q + 1) * 3, 0);
-            fechaEnRango = (inicio <= colEnd && fin >= colDate);
+            cellStartDate = new Date(colDate.getFullYear(), q * 3, 1);
+            cellEndDate = new Date(colDate.getFullYear(), (q + 1) * 3, 0);
+            cellEndDate.setHours(23, 59, 59, 999);
+            totalDaysInCell = col.daysInQuarter || 90;
         }
 
-        if (fechaEnRango) {
-            if (startLeft < 0) startLeft = currentLeft;
-            endLeft = currentLeft + cellWidth;
+        // Verificar si la celda intersecta con el rango del proyecto
+        const intersecta = (inicio <= cellEndDate && fin >= cellStartDate);
+
+        if (intersecta) {
+            // Calcular el inicio real dentro de la celda
+            const inicioReal = inicio > cellStartDate ? inicio : cellStartDate;
+            const finReal = fin < cellEndDate ? fin : cellEndDate;
+
+            // Calcular offset de inicio dentro de la celda
+            let offsetInicio = 0;
+            if (inicioReal > cellStartDate) {
+                if (zoom === 'weeks') {
+                    offsetInicio = 0; // Para semanas, no hay offset (cada día es una celda)
+                } else if (zoom === 'months') {
+                    const diasDesdeInicio = inicioReal.getDate() - 1;
+                    offsetInicio = (cellWidth * diasDesdeInicio) / totalDaysInCell;
+                } else { // quarters
+                    const diasDesdeInicio = Math.floor((inicioReal.getTime() - cellStartDate.getTime()) / (1000 * 60 * 60 * 24));
+                    offsetInicio = (cellWidth * diasDesdeInicio) / totalDaysInCell;
+                }
+            }
+
+            // Calcular ancho proporcional dentro de la celda
+            let anchoEnCelda = cellWidth;
+            if (inicioReal > cellStartDate || finReal < cellEndDate) {
+                // Calcular días dentro del rango para esta celda
+                if (zoom === 'weeks') {
+                    anchoEnCelda = cellWidth; // Semanas: ancho completo
+                } else if (zoom === 'months') {
+                    const inicioDia = inicioReal.getDate();
+                    const finDia = finReal.getDate();
+                    const diasEnRango = finDia - inicioDia + 1;
+                    anchoEnCelda = (cellWidth * diasEnRango) / totalDaysInCell;
+                } else { // quarters
+                    const diasDesdeInicio = Math.floor((inicioReal.getTime() - cellStartDate.getTime()) / (1000 * 60 * 60 * 24));
+                    const diasHastaFin = Math.floor((finReal.getTime() - cellStartDate.getTime()) / (1000 * 60 * 60 * 24));
+                    const diasEnRango = diasHastaFin - diasDesdeInicio + 1;
+                    anchoEnCelda = (cellWidth * diasEnRango) / totalDaysInCell;
+                }
+            }
+
+            if (startLeft < 0) {
+                // Primera celda que intersecta
+                startLeft = cellStart + offsetInicio;
+                endLeft = cellStart + offsetInicio + anchoEnCelda;
+            } else {
+                // Celdas intermedias o final
+                if (fin <= cellEndDate) {
+                    // Última celda - usar ancho proporcional
+                    endLeft = cellStart + offsetInicio + anchoEnCelda;
+                } else {
+                    // Celda intermedia - usar ancho completo
+                    endLeft = cellEnd;
+                }
+            }
         }
 
         currentLeft += cellWidth;
@@ -782,7 +841,7 @@ function calcularBarraGantt(fechaInicio, fechaFin, timelineCols, zoom, baseCellW
 
     if (startLeft < 0) return null;
 
-    return { left: startLeft, width: (endLeft - startLeft) };
+    return { left: startLeft, width: Math.max(0, endLeft - startLeft) };
 }
 
 function renderizarGanttVacio() {
