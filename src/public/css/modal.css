@@ -360,13 +360,18 @@
     cursor: pointer;
 }
 
-.gantt-sidebar-row:hover {
-    background: #f1f3f4;
-}
-
 .gantt-sidebar-row.is-parent {
     font-weight: 500;
-    background: #ffffff;
+    background: rgba(0, 0, 0, 0.01) !important;
+    color: #5f6368;
+}
+
+.gantt-sidebar-row.is-parent:hover {
+    background: #f1f3f4 !important;
+}
+
+.gantt-sidebar-row:hover {
+    background: #f1f3f4;
 }
 
 .gantt-sidebar-row.is-child {
@@ -496,6 +501,7 @@
     height: 40px;
     border-right: 1px solid #f1f3f4;
     flex-shrink: 0;
+    background: rgba(0, 0, 0, 0.01);
 }
 
 .gantt-timeline-bg-cell.is-weekend {
