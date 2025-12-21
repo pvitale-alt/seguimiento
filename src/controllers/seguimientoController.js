@@ -16,10 +16,10 @@ async function index(req, res) {
         const equipo = req.query.equipo || null;
         const tipo = req.query.tipo || 'mantenimiento';
         const categoriaActual = req.query.categoria || null;
-        
+
         // Obtener productos con equipos
         const productosEquipos = await ProductosEquiposModel.obtenerTodos();
-        
+
         // Obtener nombre del equipo actual si existe
         let equipoNombre = null;
         if (equipo) {
@@ -31,13 +31,13 @@ async function index(req, res) {
                 }
             }
         }
-        
+
         // Obtener categorías disponibles para el equipo (para solapas dinámicas)
         let categoriasEquipo = [];
         if (equipo) {
             categoriasEquipo = await ProyectosExternosModel.obtenerCategoriasEquipo(equipo);
         }
-        
+
         // Verificar si hay proyectos de mantenimiento para este equipo/producto
         let tieneMantenimiento = false;
         if (producto && equipo) {
@@ -46,7 +46,7 @@ async function index(req, res) {
                 equipo: equipo
             };
             const mantenimientos = await MantenimientoModel.obtenerTodos(filtrosMantenimiento);
-            
+
             // También verificar proyectos de "On-Site"
             const filtrosOnSite = {
                 producto: producto,
@@ -54,11 +54,11 @@ async function index(req, res) {
                 categoria: 'On-Site'
             };
             const proyectosOnSite = await ProyectosExternosModel.obtenerTodos(filtrosOnSite);
-            
+
             // Si hay al menos un proyecto de mantenimiento u on-site, mostrar la solapa
             tieneMantenimiento = mantenimientos.length > 0 || proyectosOnSite.length > 0;
         }
-        
+
         // Si no hay tipo especificado o el tipo es 'mantenimiento' pero no hay proyectos de mantenimiento, redirigir a proyectos
         if (producto && equipo) {
             // Si no hay tipo o es 'mantenimiento' pero no hay mantenimiento, determinar la primera solapa disponible
@@ -74,7 +74,7 @@ async function index(req, res) {
                 }
             }
         }
-        
+
         res.render('pages/index', {
             title: 'Seguimiento de Proyectos',
             productosEquipos: productosEquipos,
@@ -111,17 +111,17 @@ async function obtenerMantenimiento(req, res) {
             orden: req.query.orden || 'nombre_proyecto',
             direccion: req.query.direccion || 'asc'
         };
-        
+
         // Obtener proyectos de mantenimiento (Mantenimiento + On-Site)
         const mantenimientos = await MantenimientoModel.obtenerTodos(filtros);
-        
+
         const todosLosProyectos = mantenimientos;
-        
+
         // Aplicar ordenamiento
         const ordenValido = ['nombre_proyecto', 'cliente', 'equipo', 'producto', 'fecha_creacion'];
         const orden = ordenValido.includes(filtros.orden) ? filtros.orden : 'nombre_proyecto';
         const direccion = filtros.direccion === 'asc' ? 'ASC' : 'DESC';
-        
+
         todosLosProyectos.sort((a, b) => {
             const aVal = a[orden] || '';
             const bVal = b[orden] || '';
@@ -131,7 +131,7 @@ async function obtenerMantenimiento(req, res) {
                 return aVal < bVal ? 1 : aVal > bVal ? -1 : 0;
             }
         });
-        
+
         res.json({
             success: true,
             data: todosLosProyectos
@@ -157,9 +157,9 @@ async function obtenerProyectosExternos(req, res) {
             orden: req.query.orden || 'nombre_proyecto',
             direccion: req.query.direccion || 'asc'
         };
-        
+
         const proyectos = await ProyectosExternosModel.obtenerTodos(filtros);
-        
+
         res.json({
             success: true,
             data: proyectos
@@ -186,7 +186,7 @@ async function obtenerProyectos(req, res) {
         // Si no se especifica dirección y la columna es 'cliente', usar 'desc' por defecto
         const direccionDefault = (orden === 'cliente' && !req.query.direccion) ? 'desc' : 'asc';
         const incluirCerrados = req.query.incluirCerrados === 'true' || req.query.incluirCerrados === true;
-        
+
         // Si se especifica proyecto_padre, devolver solo los subproyectos de ese proyecto
         if (proyecto_padre) {
             const proyectoPadreId = parseInt(proyecto_padre);
@@ -196,14 +196,14 @@ async function obtenerProyectos(req, res) {
                     error: 'ID de proyecto padre inválido'
                 });
             }
-            
+
             const subproyectos = await ProyectosExternosModel.obtenerSubproyectos([proyectoPadreId]);
             return res.json({
                 success: true,
                 data: subproyectos
             });
         }
-        
+
         const filtros = {
             producto: producto,
             equipo: equipo,
@@ -213,14 +213,14 @@ async function obtenerProyectos(req, res) {
             direccion: req.query.direccion || direccionDefault,
             incluirCerrados: incluirCerrados
         };
-        
+
         // Si no hay categoría específica, excluir mantenimiento y on-site (se muestran en la solapa mantenimiento)
         // Esto permite que la solapa "Proyectos" muestre todas las categorías excepto mantenimiento
         if (!categoria) {
             // No filtrar por categoría, pero excluir mantenimiento y on-site en la query
             filtros.excluirCategorias = ['Mantenimiento', 'On-Site'];
         }
-        
+
         console.log('📊 Obteniendo proyectos con filtros:', {
             producto: filtros.producto,
             equipo: filtros.equipo,
@@ -228,16 +228,16 @@ async function obtenerProyectos(req, res) {
             busqueda: filtros.busqueda,
             excluirCategorias: filtros.excluirCategorias
         });
-        
+
         // Obtener proyectos principales (linea_servicio != 'Hereda' o NULL)
         const proyectos = await ProyectosExternosModel.obtenerTodos(filtros);
-        
+
         console.log(`✅ Proyectos obtenidos de BD: ${proyectos.length}`);
-        
+
         // Obtener subproyectos (proyectos con linea_servicio = 'Hereda' y proyecto_padre en los proyectos principales)
         const ids_proyectos = proyectos.map(p => p.id_proyecto);
         const subproyectos = await ProyectosExternosModel.obtenerSubproyectos(ids_proyectos);
-        
+
         // Agrupar subproyectos por proyecto padre (usar comparación como string para evitar problemas de tipos)
         const subproyectosPorPadre = {};
         subproyectos.forEach(sub => {
@@ -249,7 +249,7 @@ async function obtenerProyectos(req, res) {
                 subproyectosPorPadre[proyectoPadreId].push(sub);
             }
         });
-        
+
         // Calcular rangos de fechas por epics para todos los proyectos (padres y subproyectos)
         const todosLosIds = new Set();
         proyectos.forEach(p => {
@@ -258,7 +258,7 @@ async function obtenerProyectos(req, res) {
         subproyectos.forEach(sp => {
             if (sp.id_proyecto) todosLosIds.add(sp.id_proyecto);
         });
-        
+
         const totalesPorProyecto = {};
         await Promise.all(
             Array.from(todosLosIds).map(async (id) => {
@@ -272,7 +272,7 @@ async function obtenerProyectos(req, res) {
                 }
             })
         );
-        
+
         // Obtener información de qué proyectos tienen accionables
         const todosLosIdsProyectos = [...ids_proyectos];
         subproyectos.forEach(sub => {
@@ -280,19 +280,19 @@ async function obtenerProyectos(req, res) {
                 todosLosIdsProyectos.push(sub.id_proyecto);
             }
         });
-        
+
         const proyectosConAccionablesMap = await AccionablesProyectoModel.verificarProyectosConAccionables(todosLosIdsProyectos);
-        
+
         // Agregar subproyectos y fechas agregadas (inicio mínimo / fin máximo) a cada proyecto padre
         const proyectosConSubproyectosYFechas = proyectos.map(proyecto => {
             const proyectoId = proyecto.id_proyecto;
             const proyectoIdStr = String(proyectoId);
             const subproyectosDelProyecto = subproyectosPorPadre[proyectoIdStr] || [];
-            
+
             // Candidatos de fechas para calcular rango global
             const candidatosInicio = [];
             const candidatosFin = [];
-            
+
             const totalesPadre = totalesPorProyecto[proyectoId];
             if (totalesPadre) {
                 if (totalesPadre.fecha_inicio_minima) candidatosInicio.push(totalesPadre.fecha_inicio_minima);
@@ -300,23 +300,23 @@ async function obtenerProyectos(req, res) {
             }
             if (proyecto.fecha_inicio) candidatosInicio.push(proyecto.fecha_inicio);
             if (proyecto.fecha_fin) candidatosFin.push(proyecto.fecha_fin);
-            
+
             // Enriquecer subproyectos con fechas de epics y acumular en candidatos
             const subproyectosEnriquecidos = subproyectosDelProyecto.map(sub => {
                 const totalesSub = totalesPorProyecto[sub.id_proyecto] || {};
                 const inicioSub = totalesSub.fecha_inicio_minima || sub.fecha_inicio || null;
                 const finSub = totalesSub.fecha_fin_maxima || sub.fecha_fin || null;
-                
+
                 if (inicioSub) candidatosInicio.push(inicioSub);
                 if (finSub) candidatosFin.push(finSub);
-                
+
                 return {
                     ...sub,
                     fecha_inicio: inicioSub || sub.fecha_inicio,
                     fecha_fin: finSub || sub.fecha_fin
                 };
             });
-            
+
             // Calcular inicio mínimo y fin máximo global
             let fechaInicioGlobal = proyecto.fecha_inicio || null;
             let fechaFinGlobal = proyecto.fecha_fin || null;
@@ -326,13 +326,13 @@ async function obtenerProyectos(req, res) {
             if (candidatosFin.length > 0) {
                 fechaFinGlobal = candidatosFin.slice().sort().reverse()[0];
             }
-            
+
             // Agregar tiene_accionables a cada subproyecto
             const subproyectosConAccionables = subproyectosEnriquecidos.map(sub => ({
                 ...sub,
                 tiene_accionables: proyectosConAccionablesMap[sub.id_proyecto] || false
             }));
-            
+
             return {
                 ...proyecto,
                 fecha_inicio: fechaInicioGlobal,
@@ -342,7 +342,7 @@ async function obtenerProyectos(req, res) {
                 tiene_accionables: proyectosConAccionablesMap[proyectoId] || false
             };
         });
-        
+
         res.json({
             success: true,
             data: proyectosConSubproyectosYFechas
@@ -363,28 +363,83 @@ async function obtenerProyectoPorId(req, res) {
     try {
         const { id_proyecto } = req.params;
         const idProyectoNum = parseInt(id_proyecto);
-        
+
         if (!idProyectoNum || isNaN(idProyectoNum)) {
             return res.status(400).json({
                 success: false,
                 error: 'ID de proyecto inválido'
             });
         }
-        
+
         // Intentar obtener como proyecto externo primero
         const proyecto = await ProyectosExternosModel.obtenerPorId(idProyectoNum);
-        
+
         if (proyecto) {
             // Verificar si tiene accionables
             const proyectosConAccionablesMap = await AccionablesProyectoModel.verificarProyectosConAccionables([idProyectoNum]);
             proyecto.tiene_accionables = proyectosConAccionablesMap[idProyectoNum] || false;
-            
+
+            // Obtener subproyectos para calcular fechas agregadas (si es un proyecto padre)
+            const subproyectos = await ProyectosExternosModel.obtenerSubproyectos([idProyectoNum]);
+
+            if (subproyectos && subproyectos.length > 0) {
+                // Es un proyecto padre, calcular rango de fechas basado en subproyectos y epics
+                const candidatosInicio = [];
+                const candidatosFin = [];
+
+                // 1. Fechas del padre (epics o directas)
+                const totalesPadre = await EpicsProyectoModel.obtenerTotalesPorProyecto(idProyectoNum);
+                if (totalesPadre) {
+                    if (totalesPadre.fecha_inicio_minima) candidatosInicio.push(totalesPadre.fecha_inicio_minima);
+                    if (totalesPadre.fecha_fin_maxima) candidatosFin.push(totalesPadre.fecha_fin_maxima);
+                }
+                if (proyecto.fecha_inicio) candidatosInicio.push(proyecto.fecha_inicio);
+                if (proyecto.fecha_fin) candidatosFin.push(proyecto.fecha_fin);
+
+                // 2. Fechas de subproyectos (incluyendo sus epics)
+                await Promise.all(subproyectos.map(async (sub) => {
+                    const totalesSub = await EpicsProyectoModel.obtenerTotalesPorProyecto(sub.id_proyecto);
+                    const inicioSub = (totalesSub && totalesSub.fecha_inicio_minima) || sub.fecha_inicio;
+                    const finSub = (totalesSub && totalesSub.fecha_fin_maxima) || sub.fecha_fin;
+
+                    if (inicioSub) candidatosInicio.push(inicioSub);
+                    if (finSub) candidatosFin.push(finSub);
+                }));
+
+                // 3. Calcular Min/Max Global usando timestamps para ordenamiento correcto
+                if (candidatosInicio.length > 0) {
+                    const fechasOrdenadas = candidatosInicio
+                        .map(f => new Date(f))
+                        .filter(d => !isNaN(d.getTime())) // Filtrar fechas inválidas
+                        .sort((a, b) => a.getTime() - b.getTime()); // Orden Ascendente
+
+                    if (fechasOrdenadas.length > 0) {
+                        proyecto.fecha_inicio = fechasOrdenadas[0]; // La primera es la menor
+                    }
+                }
+
+                if (candidatosFin.length > 0) {
+                    const fechasOrdenadas = candidatosFin
+                        .map(f => new Date(f))
+                        .filter(d => !isNaN(d.getTime())) // Filtrar fechas inválidas
+                        .sort((a, b) => b.getTime() - a.getTime()); // Orden Descendente (Mayor primero)
+
+                    if (fechasOrdenadas.length > 0) {
+                        proyecto.fecha_fin = fechasOrdenadas[0]; // La primera es la mayor
+                    }
+                }
+
+                // Marcar que tiene subproyectos (útil para el frontend)
+                proyecto.tiene_subproyectos = true;
+                proyecto.subproyectos = subproyectos; // Opcional: enviar subproyectos si el modal los necesita
+            }
+
             return res.json({
                 success: true,
                 data: proyecto
             });
         }
-        
+
         // Si no se encuentra como proyecto externo, intentar como mantenimiento
         const mantenimiento = await MantenimientoModel.obtenerPorId(idProyectoNum);
         if (mantenimiento) {
@@ -393,7 +448,7 @@ async function obtenerProyectoPorId(req, res) {
                 data: mantenimiento
             });
         }
-        
+
         return res.status(404).json({
             success: false,
             error: 'Proyecto no encontrado'
@@ -414,16 +469,16 @@ async function actualizarMantenimiento(req, res) {
     try {
         const { id_proyecto } = req.params;
         const datos = req.body;
-        
+
         const resultado = await MantenimientoModel.actualizar(id_proyecto, datos);
-        
+
         if (!resultado) {
             return res.status(404).json({
                 success: false,
                 error: 'Mantenimiento no encontrado'
             });
         }
-        
+
         res.json({
             success: true,
             data: resultado
@@ -444,16 +499,16 @@ async function actualizarProyectoExterno(req, res) {
     try {
         const { id_proyecto } = req.params;
         const datos = req.body;
-        
+
         const resultado = await ProyectosExternosModel.actualizar(id_proyecto, datos);
-        
+
         if (!resultado) {
             return res.status(404).json({
                 success: false,
                 error: 'Proyecto externo no encontrado'
             });
         }
-        
+
         res.json({
             success: true,
             data: resultado
@@ -474,16 +529,16 @@ async function actualizarProyecto(req, res) {
     try {
         const { id_proyecto } = req.params;
         const datos = req.body;
-        
+
         const resultado = await ProyectosExternosModel.actualizar(id_proyecto, datos);
-        
+
         if (!resultado) {
             return res.status(404).json({
                 success: false,
                 error: 'Proyecto no encontrado'
             });
         }
-        
+
         res.json({
             success: true,
             data: resultado
@@ -502,7 +557,7 @@ async function actualizarAccionables(req, res) {
     try {
         const { id_proyecto } = req.params;
         const { accionables, fecha_accionable, asignado_accionable } = req.body;
-        
+
         const datosActualizar = {};
         if ('accionables' in req.body) {
             datosActualizar.accionables = accionables || null;
@@ -513,16 +568,16 @@ async function actualizarAccionables(req, res) {
         if ('asignado_accionable' in req.body) {
             datosActualizar.asignado_accionable = asignado_accionable || null;
         }
-        
+
         const resultado = await ProyectosExternosModel.actualizar(id_proyecto, datosActualizar);
-        
+
         if (!resultado) {
             return res.status(404).json({
                 success: false,
                 error: 'Proyecto no encontrado'
             });
         }
-        
+
         res.json({
             success: true,
             data: resultado
@@ -541,7 +596,7 @@ async function obtenerAccionablesProyecto(req, res) {
     try {
         const { id_proyecto } = req.params;
         const accionables = await AccionablesProyectoModel.obtenerPorProyecto(id_proyecto);
-        
+
         res.json({
             success: true,
             data: accionables
@@ -560,14 +615,14 @@ async function crearAccionable(req, res) {
     try {
         const { id_proyecto } = req.params;
         const { fecha_accionable, asignado_accionable, accionable, estado } = req.body;
-        
+
         const nuevoAccionable = await AccionablesProyectoModel.crear(id_proyecto, {
             fecha_accionable: fecha_accionable || null,
             asignado_accionable: asignado_accionable || null,
             accionable: accionable || null,
             estado: estado || null
         });
-        
+
         res.json({
             success: true,
             data: nuevoAccionable
@@ -586,7 +641,7 @@ async function actualizarAccionable(req, res) {
     try {
         const { id } = req.params;
         const { fecha_accionable, asignado_accionable, accionable, estado } = req.body;
-        
+
         const datosActualizar = {};
         if ('fecha_accionable' in req.body) {
             datosActualizar.fecha_accionable = fecha_accionable || null;
@@ -600,16 +655,16 @@ async function actualizarAccionable(req, res) {
         if ('estado' in req.body) {
             datosActualizar.estado = estado || null;
         }
-        
+
         const accionableActualizado = await AccionablesProyectoModel.actualizar(id, datosActualizar);
-        
+
         if (!accionableActualizado) {
             return res.status(404).json({
                 success: false,
                 error: 'Accionable no encontrado'
             });
         }
-        
+
         res.json({
             success: true,
             data: accionableActualizado
@@ -628,14 +683,14 @@ async function eliminarAccionable(req, res) {
     try {
         const { id } = req.params;
         const eliminado = await AccionablesProyectoModel.eliminar(id);
-        
+
         if (!eliminado) {
             return res.status(404).json({
                 success: false,
                 error: 'Accionable no encontrado'
             });
         }
-        
+
         res.json({
             success: true,
             message: 'Accionable eliminado correctamente'
@@ -655,22 +710,22 @@ async function eliminarAccionable(req, res) {
 async function obtenerSugerenciasMantenimiento(req, res) {
     try {
         const query = req.query.q || '';
-        
+
         if (!query || query.length < 2) {
             return res.json({
                 success: true,
                 sugerencias: []
             });
         }
-        
+
         const filtros = {
             producto: req.query.producto || null,
             equipo: req.query.equipo || null,
             busqueda: query
         };
-        
+
         const mantenimientos = await MantenimientoModel.obtenerTodos(filtros);
-        
+
         // Limitar a 8 sugerencias
         const sugerencias = mantenimientos.slice(0, 8).map(item => ({
             id_proyecto: item.id_proyecto,
@@ -678,7 +733,7 @@ async function obtenerSugerenciasMantenimiento(req, res) {
             cliente: item.cliente || '',
             producto: item.producto || ''
         }));
-        
+
         res.json({
             success: true,
             sugerencias
@@ -698,22 +753,22 @@ async function obtenerSugerenciasMantenimiento(req, res) {
 async function obtenerSugerenciasProyectos(req, res) {
     try {
         const query = req.query.q || '';
-        
+
         if (!query || query.length < 2) {
             return res.json({
                 success: true,
                 sugerencias: []
             });
         }
-        
+
         const filtros = {
             producto: req.query.producto || null,
             equipo: req.query.equipo || null,
             busqueda: query
         };
-        
+
         const proyectos = await ProyectosExternosModel.obtenerTodos(filtros);
-        
+
         // Limitar a 8 sugerencias
         const sugerencias = proyectos.slice(0, 8).map(item => ({
             id_proyecto: item.id_proyecto,
@@ -721,7 +776,7 @@ async function obtenerSugerenciasProyectos(req, res) {
             cliente: item.cliente || '',
             producto: item.producto || ''
         }));
-        
+
         res.json({
             success: true,
             sugerencias
@@ -741,18 +796,18 @@ async function obtenerSugerenciasProyectos(req, res) {
 async function sincronizarEpics(req, res) {
     try {
         const { id_proyecto, codigo_proyecto } = req.body;
-        
+
         if (!id_proyecto || !codigo_proyecto) {
             return res.status(400).json({
                 success: false,
                 error: 'ID de proyecto y código son requeridos'
             });
         }
-        
+
         // Verificar si el proyecto es un proyecto padre (tiene subproyectos)
         const subproyectos = await ProyectosExternosModel.obtenerSubproyectos([id_proyecto]);
         const esProyectoPadre = subproyectos && subproyectos.length > 0;
-        
+
         // Si es proyecto padre, no sincronizar epics
         if (esProyectoPadre) {
             return res.status(400).json({
@@ -760,19 +815,19 @@ async function sincronizarEpics(req, res) {
                 error: 'Los proyectos padre no pueden sincronizar epics. Solo los subproyectos pueden tener epics.'
             });
         }
-        
+
         // Obtener epics de Redmine
         const epics = await obtenerEpics(codigo_proyecto);
-        
+
         // Mapear epics
         const epicsMapeados = epics.map(mapearEpic);
-        
+
         // Guardar en base de datos
         const resultado = await EpicsProyectoModel.guardarEpics(id_proyecto, epicsMapeados);
-        
+
         // Obtener totales actualizados
         const totales = await EpicsProyectoModel.obtenerTotalesPorProyecto(id_proyecto);
-        
+
         // Actualizar fechas del proyecto si hay epics (sin actualizar updated_at)
         if (totales.total_epics > 0) {
             await ProyectosExternosModel.actualizar(id_proyecto, {
@@ -780,7 +835,7 @@ async function sincronizarEpics(req, res) {
                 fecha_fin: totales.fecha_fin_maxima
             }, false); // false = no actualizar updated_at
         }
-        
+
         res.json({
             success: true,
             data: {
@@ -808,18 +863,18 @@ async function sincronizarEpics(req, res) {
 async function obtenerEpicsProyecto(req, res) {
     try {
         const id_proyecto = parseInt(req.params.id_proyecto);
-        
+
         if (!id_proyecto) {
             return res.status(400).json({
                 success: false,
                 error: 'ID de proyecto es requerido'
             });
         }
-        
+
         // Verificar si el proyecto es un proyecto padre (tiene subproyectos)
         const subproyectos = await ProyectosExternosModel.obtenerSubproyectos([id_proyecto]);
         const esProyectoPadre = subproyectos && subproyectos.length > 0;
-        
+
         // Si es proyecto padre, no buscar epics (solo mostrar subproyectos)
         if (esProyectoPadre) {
             return res.json({
@@ -828,9 +883,9 @@ async function obtenerEpicsProyecto(req, res) {
                 es_proyecto_padre: true
             });
         }
-        
+
         const epics = await EpicsProyectoModel.obtenerPorProyecto(id_proyecto);
-        
+
         res.json({
             success: true,
             data: epics,
@@ -851,7 +906,7 @@ async function obtenerEpicsProyecto(req, res) {
 async function obtenerMetricasDashboard(req, res) {
     try {
         const metricas = await ProyectosExternosModel.obtenerMetricasDashboard();
-        
+
         res.json({
             success: true,
             data: metricas
@@ -877,9 +932,9 @@ async function actualizarSubproyecto(req, res) {
     try {
         const { id_subproyecto } = req.params;
         const datos = req.body;
-        
+
         console.log('📝 actualizarSubproyecto - id_subproyecto:', id_subproyecto, 'datos:', datos);
-        
+
         // Validar que id_subproyecto es un número
         const idSubproyectoNum = parseInt(id_subproyecto);
         if (isNaN(idSubproyectoNum)) {
@@ -888,16 +943,16 @@ async function actualizarSubproyecto(req, res) {
                 error: 'ID de subproyecto inválido'
             });
         }
-        
+
         const resultado = await SubproyectosModel.actualizar(idSubproyectoNum, datos);
-        
+
         if (!resultado) {
             return res.status(404).json({
                 success: false,
                 error: 'Subproyecto no encontrado'
             });
         }
-        
+
         res.json({
             success: true,
             data: resultado
@@ -917,10 +972,10 @@ async function actualizarSubproyecto(req, res) {
 async function proyectosInternos(req, res) {
     try {
         const producto = req.query.producto || null;
-        
+
         // Obtener productos con equipos
         const productosEquipos = await ProductosEquiposModel.obtenerTodos();
-        
+
         res.render('pages/proyectos-internos', {
             title: 'Proyectos Internos',
             productosEquipos: productosEquipos,
@@ -951,14 +1006,14 @@ async function obtenerProyectosInternos(req, res) {
             orden: req.query.orden || 'nombre_proyecto',
             direccion: req.query.direccion || 'asc'
         };
-        
+
         // Usar ProyectosExternosModel con filtro de categoría
         const proyectos = await ProyectosExternosModel.obtenerTodos(filtros);
-        
+
         // Obtener epics secundarios para detectar si tiene subproyectos (igual que en obtenerProyectos)
         const ids_proyectos = proyectos.map(p => p.id_proyecto);
         const epicsSecundarios = await EpicsProyectoModel.obtenerEpicsSecundariosPorProyectos(ids_proyectos);
-        
+
         // Marcar si tiene subproyectos (carga lazy)
         const proyectosConInfoSubproyectos = proyectos.map(proyecto => {
             const epicsDelProyecto = epicsSecundarios[proyecto.id_proyecto] || [];
@@ -971,14 +1026,14 @@ async function obtenerProyectosInternos(req, res) {
                 }
             });
             const tieneSubproyectos = Object.keys(proyectosSecundariosUnicos).length > 0;
-            
+
             return {
                 ...proyecto,
                 tiene_subproyectos: tieneSubproyectos,
                 subproyectos: [] // No cargar todavía, se cargarán bajo demanda
             };
         });
-        
+
         res.json({
             success: true,
             data: proyectosConInfoSubproyectos
@@ -999,7 +1054,7 @@ async function actualizarProyectoInterno(req, res) {
     try {
         const { id_proyecto } = req.params;
         const datos = req.body;
-        
+
         const idProyectoNum = parseInt(id_proyecto);
         if (isNaN(idProyectoNum)) {
             return res.status(400).json({
@@ -1007,17 +1062,17 @@ async function actualizarProyectoInterno(req, res) {
                 error: 'ID de proyecto inválido'
             });
         }
-        
+
         // Usar ProyectosExternosModel (misma tabla que proyectos)
         const resultado = await ProyectosExternosModel.actualizar(idProyectoNum, datos);
-        
+
         if (!resultado) {
             return res.status(404).json({
                 success: false,
                 error: 'Proyecto interno no encontrado'
             });
         }
-        
+
         res.json({
             success: true,
             data: resultado
@@ -1038,28 +1093,28 @@ async function actualizarProyectoInterno(req, res) {
 async function obtenerSugerenciasProyectosInternos(req, res) {
     try {
         const query = req.query.q || '';
-        
+
         if (!query || query.length < 2) {
             return res.json({
                 success: true,
                 sugerencias: []
             });
         }
-        
+
         const filtros = {
             categoria: 'Proyectos Internos', // Filtro específico para proyectos internos
             busqueda: query
         };
-        
+
         // Usar ProyectosExternosModel con filtro de categoría
         const proyectos = await ProyectosExternosModel.obtenerTodos(filtros);
-        
+
         const sugerencias = proyectos.slice(0, 10).map(proyecto => ({
             nombre_proyecto: proyecto.nombre_proyecto,
             cliente: proyecto.cliente,
             producto: proyecto.producto
         }));
-        
+
         res.json({
             success: true,
             sugerencias: sugerencias

@@ -36,7 +36,7 @@ function extraerCustomField(customFields, fieldKey) {
  */
 function mapearProyecto(proyecto) {
     const customFields = proyecto.custom_fields || [];
-    
+
     // Extraer custom fields según especificación
     const producto = extraerCustomField(customFields, 19) || extraerCustomField(customFields, 'Producto');
     const cliente = extraerCustomField(customFields, 20) || extraerCustomField(customFields, 'Cliente');
@@ -46,7 +46,7 @@ function mapearProyecto(proyecto) {
     const equipo = extraerCustomField(customFields, 75) || extraerCustomField(customFields, 'Equipo');
     const reventa = extraerCustomField(customFields, 93) || extraerCustomField(customFields, 'Es Reventa');
     const proyectoSponsor = extraerCustomField(customFields, 94) || extraerCustomField(customFields, 'Proyecto Sponsor');
-    
+
     // Normalizar reventa
     let reventaNormalizada = null;
     if (reventa !== null && reventa !== undefined && reventa !== '') {
@@ -59,7 +59,7 @@ function mapearProyecto(proyecto) {
             reventaNormalizada = reventaStr;
         }
     }
-    
+
     return {
         id_proyecto: proyecto.id,
         nombre_proyecto: proyecto.name || 'Sin nombre',
@@ -94,7 +94,7 @@ async function normalizarProductoParaRedmine(producto) {
     } catch (error) {
         console.warn('⚠️ No se pudo obtener producto_redmine desde BD, usando mapeo por defecto:', error.message);
     }
-    
+
     // Mapeo por defecto (fallback)
     const mapeo = {
         'Order Management': 'Order Management',
@@ -115,15 +115,15 @@ async function normalizarProductoParaRedmine(producto) {
  */
 async function obtenerIdProyectoPorCodigo(codigoProyecto) {
     if (!codigoProyecto) return null;
-    
+
     validarCredenciales();
-    
+
     try {
         const baseUrl = REDMINE_URL.replace(/\/+$/, '');
         const url = `${baseUrl}/projects/${codigoProyecto}.json?key=${REDMINE_TOKEN}`;
         const urlLog = url.replace(/key=[^&]+/, 'key=***');
         console.log(`🔍 Consultando proyecto por código en Redmine: ${urlLog}`);
-        
+
         const response = await fetch(url, {
             method: 'GET',
             headers: {
@@ -132,12 +132,12 @@ async function obtenerIdProyectoPorCodigo(codigoProyecto) {
                 'User-Agent': 'Seguimiento-NodeJS/1.0'
             }
         });
-        
+
         if (!response.ok) {
             console.warn(`⚠️ No se pudo obtener el proyecto con código "${codigoProyecto}": ${response.status}`);
             return null;
         }
-        
+
         const data = await response.json();
         return data.project?.id || null;
     } catch (error) {
@@ -153,15 +153,15 @@ async function obtenerIdProyectoPorCodigo(codigoProyecto) {
  */
 async function obtenerProyectoPorCodigo(codigoProyecto) {
     if (!codigoProyecto) return null;
-    
+
     validarCredenciales();
-    
+
     try {
         const baseUrl = REDMINE_URL.replace(/\/+$/, '');
         const url = `${baseUrl}/projects/${codigoProyecto}.json?key=${REDMINE_TOKEN}&include=parent`;
         const urlLog = url.replace(/key=[^&]+/, 'key=***');
         console.log(`🔍 Consultando proyecto completo por código en Redmine: ${urlLog}`);
-        
+
         const response = await fetch(url, {
             method: 'GET',
             headers: {
@@ -170,12 +170,12 @@ async function obtenerProyectoPorCodigo(codigoProyecto) {
                 'User-Agent': 'Seguimiento-NodeJS/1.0'
             }
         });
-        
+
         if (!response.ok) {
             console.warn(`⚠️ No se pudo obtener el proyecto con código "${codigoProyecto}": ${response.status}`);
             return null;
         }
-        
+
         const data = await response.json();
         return data.project || null;
     } catch (error) {
@@ -197,16 +197,16 @@ async function obtenerProyectoPorCodigo(codigoProyecto) {
  */
 async function obtenerProyectos(options = {}) {
     validarCredenciales();
-    
+
     const limit = Math.min(options.limit || 100, 100);
     const offset = options.offset || 0;
-    
+
     const params = new URLSearchParams({
         limit: limit.toString(),
         offset: offset.toString(),
         key: REDMINE_TOKEN
     });
-    
+
     // Agregar filtros por custom fields si se especifican
     if (options.producto) {
         const productoNormalizado = await normalizarProductoParaRedmine(options.producto);
@@ -218,16 +218,16 @@ async function obtenerProyectos(options = {}) {
     if (options.categoria) {
         params.set('cf_29', options.categoria);
     }
-    
+
     // Filtrar por línea de servicio (cf_28): "Si" o "Hereda"
     const lineaServicio = options.linea_servicio || 'Si';
     params.set('cf_28', lineaServicio);
-    
+
     const baseUrl = REDMINE_URL.replace(/\/+$/, '');
     const url = `${baseUrl}/projects.json?${params.toString()}`;
     const urlLog = url.replace(/key=[^&]+/, 'key=***');
     console.log(`🔍 Consultando proyectos de Redmine: ${urlLog}`);
-    
+
     try {
         const response = await fetch(url, {
             method: 'GET',
@@ -237,17 +237,17 @@ async function obtenerProyectos(options = {}) {
                 'User-Agent': 'Seguimiento-NodeJS/1.0'
             }
         });
-        
+
         if (!response.ok) {
             const errorText = await response.text();
             console.error('❌ Error HTTP en proyectos:', response.status);
             console.error('📄 Respuesta:', errorText.substring(0, 500));
             throw new Error(`Error HTTP ${response.status}: ${response.statusText}`);
         }
-        
+
         const data = await response.json();
         let proyectos = data.projects || [];
-        
+
         // Filtrar por proyecto padre si se especifica
         if (options.codigo_proyecto_padre) {
             const parentId = await obtenerIdProyectoPorCodigo(options.codigo_proyecto_padre);
@@ -272,10 +272,10 @@ async function obtenerProyectos(options = {}) {
                 console.warn(`   ⚠️ No se encontró el proyecto padre con código "${options.codigo_proyecto_padre}", no se aplicará el filtro`);
             }
         }
-        
+
         // Actualizar total_count si se filtró
         const totalCount = proyectos.length;
-        
+
         return {
             projects: proyectos,
             total_count: totalCount,
@@ -304,14 +304,14 @@ async function obtenerProyectosMapeados(options = {}) {
     const proyectos = [];
     let offset = 0;
     let hasMore = true;
-    
+
     const lineaServicio = options.linea_servicio || 'Si';
     const categoria = options.categoria || 'Sin categoría';
-    
+
     while (hasMore && proyectos.length < tope) {
         const restantes = tope - proyectos.length;
         const limitActual = Math.min(restantes, 100);
-        
+
         const data = await obtenerProyectos({
             producto: options.producto,
             equipo: options.equipo,
@@ -321,27 +321,27 @@ async function obtenerProyectosMapeados(options = {}) {
             limit: limitActual,
             offset
         });
-        
+
         const items = data.projects || [];
         proyectos.push(...items);
-        
+
         const totalCount = data.total_count || items.length;
         hasMore = totalCount > (offset + limitActual);
         offset += limitActual;
-        
+
         if (!hasMore) {
             break;
         }
-        
+
         // Pausa de 200ms entre requests para no saturar el servidor
         if (hasMore && proyectos.length < tope) {
             await new Promise(resolve => setTimeout(resolve, 200));
         }
     }
-    
+
     const proyectosLimitados = proyectos.slice(0, tope);
     console.log(`   📊 Categoría: ${categoria} | Proyectos obtenidos: ${proyectosLimitados.length}`);
-    
+
     return proyectosLimitados.map(mapearProyecto);
 }
 
@@ -353,16 +353,16 @@ async function obtenerProyectosMapeados(options = {}) {
  */
 function filtrarProyectosPorTipo(proyectos, tipo) {
     if (!Array.isArray(proyectos)) return [];
-    
+
     switch (tipo) {
         case 'mantenimiento':
             // Mantenimiento: categoría = "Mantenimiento"
             return proyectos.filter(p => p.categoria === 'Mantenimiento');
-        
+
         case 'proyectos':
             // Proyectos: categoría != "Mantenimiento"
             return proyectos.filter(p => p.categoria !== 'Mantenimiento' && p.categoria !== null && p.categoria !== '');
-        
+
         default:
             return proyectos;
     }
@@ -375,14 +375,14 @@ function filtrarProyectosPorTipo(proyectos, tipo) {
  */
 async function obtenerEpics(projectId) {
     validarCredenciales();
-    
+
     console.log(`🔍 Consultando epics de Redmine para proyecto ${projectId}...`);
-    
+
     const epics = [];
     let offset = 0;
     const limit = 100;
     let hasMore = true;
-    
+
     while (hasMore) {
         const url = new URL(`${REDMINE_URL}/issues.json`);
         url.searchParams.set('project_id', projectId.toString());
@@ -390,38 +390,38 @@ async function obtenerEpics(projectId) {
         url.searchParams.set('limit', limit.toString());
         url.searchParams.set('offset', offset.toString());
         url.searchParams.set('status_id', '*'); // Todos los estados
-        
+
         const urlLog = url.toString().replace(/key=[^&]+/, 'key=***');
         console.log(`   📥 Obteniendo epics (offset: ${offset}, limit: ${limit}): ${urlLog}`);
-        
+
         const response = await fetch(url.toString(), {
             headers: {
                 'X-Redmine-API-Key': REDMINE_TOKEN
             }
         });
-        
+
         if (!response.ok) {
             throw new Error(`Error al obtener epics: ${response.status} ${response.statusText}`);
         }
-        
+
         const data = await response.json();
         const items = data.issues || [];
         epics.push(...items);
-        
+
         const totalCount = data.total_count || items.length;
         hasMore = totalCount > (offset + limit);
         offset += limit;
-        
+
         if (!hasMore) {
             break;
         }
-        
+
         // Pausa entre requests
         if (hasMore) {
             await new Promise(resolve => setTimeout(resolve, 200));
         }
     }
-    
+
     console.log(`✅ Epics obtenidos para proyecto ${projectId}: ${epics.length}`);
     return epics;
 }
@@ -433,17 +433,25 @@ async function obtenerEpics(projectId) {
  */
 function mapearEpic(epic) {
     const customFields = epic.custom_fields || [];
-    
+
     const cf_23 = extraerCustomField(customFields, 23) || extraerCustomField(customFields, 'id_services');
     const cf_21 = extraerCustomField(customFields, 21) || extraerCustomField(customFields, 'fecha planificada inicio');
     const cf_22 = extraerCustomField(customFields, 22) || extraerCustomField(customFields, 'fecha planificada fin');
     const cf_15 = extraerCustomField(customFields, 15) || extraerCustomField(customFields, 'fecha real finalización');
-    
-    // Convertir fechas
-    const fecha21 = cf_21 ? new Date(cf_21) : null;
-    const fecha22 = cf_22 ? new Date(cf_22) : null;
-    const fecha15 = cf_15 ? new Date(cf_15) : null;
-    
+
+    // Convertir fechas (asegurarse de que el formato sea YYYY-MM-DD o similar válido)
+    const isValidDate = (d) => d instanceof Date && !isNaN(d.getTime());
+
+    // Función auxiliar para parsear fecha string a YYYY-MM-DD
+    const parseDate = (dateStr) => {
+        if (!dateStr) return null;
+        const date = new Date(dateStr);
+        if (isValidDate(date)) {
+            return date.toISOString().split('T')[0];
+        }
+        return null;
+    };
+
     return {
         epic_id: epic.id,
         subject: epic.subject || null,
@@ -453,9 +461,9 @@ function mapearEpic(epic) {
         proyecto_padre: epic.project?.id || null,
         nombre_proyecto_padre: epic.project?.name || null,
         cf_23: cf_23 || null,
-        cf_21: fecha21 && !isNaN(fecha21.getTime()) ? fecha21.toISOString().split('T')[0] : null,
-        cf_22: fecha22 && !isNaN(fecha22.getTime()) ? fecha22.toISOString().split('T')[0] : null,
-        cf_15: fecha15 && !isNaN(fecha15.getTime()) ? fecha15.toISOString().split('T')[0] : null
+        cf_21: parseDate(cf_21),
+        cf_22: parseDate(cf_22),
+        cf_15: parseDate(cf_15)
     };
 }
 

@@ -1,191 +1,251 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Seguimiento de Proyectos | Seguimiento</title>
-    
+
     <!-- CSS -->
     <link rel="stylesheet" href="/css/main.css?v=<%= Date.now() %>">
-    
+
     <!-- Favicon -->
     <link rel="icon" type="image/x-icon" href="/images/logo.ico">
 </head>
+
 <body>
     <!-- Header General -->
     <header class="top-header">
         <div style="display: flex; align-items: center; gap: 12px;">
             <a href="/" style="display: flex; align-items: center; text-decoration: none;">
-                <img src="/images/Mercap-logo-horizontal-1920x1080.png" alt="Logo Mercap" style="height: 70px; width: auto; display: block;" onerror="this.style.display='none';" />
+                <img src="/images/Mercap-logo-horizontal-1920x1080.png" alt="Logo Mercap"
+                    style="height: 70px; width: auto; display: block;" onerror="this.style.display='none';" />
             </a>
         </div>
     </header>
-    
+
     <div class="app-container">
         <%- include('../partials/sidebar', { productosEquipos, productoActual, equipoActual, tipoActual, isAdmin }) %>
-        
-        <div class="main-content">
-            <div class="content-area">
-                <div class="seguimiento-wrapper">
-                <% if (productoActual) { %>
-                <div class="seguimiento-container">
-                <!-- Título -->
-                <div class="seguimiento-header">
-                    <h1 style="font-size: 32px; font-weight: 500; color: rgba(245, 112, 41, 1); margin: 0; font-family: 'Google Sans', 'Roboto', sans-serif;">
-                        Seguimiento<% if (equipoNombre) { %> - <%= equipoNombre %><% } %>
-                    </h1>
-                </div>
-                <!-- Tabs -->
-                <div class="tabs seguimiento-tabs">
-                    <div style="display: flex;">
-                        <% if (typeof tieneMantenimiento !== 'undefined' && tieneMantenimiento) { %>
-                        <a 
-                            href="/?producto=<%= encodeURIComponent(productoActual || '') %>&equipo=<%= encodeURIComponent(equipoActual || '') %>&tipo=mantenimiento" 
-                            class="tab <%= tipoActual === 'mantenimiento' ? 'active' : '' %>"
-                        >
-                            Mantenimiento
-                        </a>
-                        <% } %>
-                        <a 
-                            href="/?producto=<%= encodeURIComponent(productoActual || '') %>&equipo=<%= encodeURIComponent(equipoActual || '') %>&tipo=proyectos" 
-                            class="tab <%= tipoActual !== 'mantenimiento' ? 'active' : '' %>"
-                        >
-                            Proyectos
-                        </a>
-                    </div>
-                </div>
-                <!-- Filtros y buscador para proyectos -->
-                <% if (tipoActual !== 'mantenimiento') { %>
-                <div id="filtrosProyectos" class="seguimiento-filtros">
-                <div class="seguimiento-filtros-inner">
-                    <!-- Filtro Cliente -->
-                    <button class="filter-btn" onclick="toggleFilterClientes(this)" title="Filtrar por Cliente">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" style="width: 18px; height: 18px;">
-                            <path d="M10 18h4v-2h-4v2zM3 6v2h18V6H3zm3 7h12v-2H6v2z"/>
-                        </svg>
-                        <span style="margin-left: 6px; font-size: 13px;">Cliente</span>
-                    </button>
-                    <div class="filter-dropdown" id="filterClientes" style="display: none;"></div>
-                    
-                    <!-- Filtro Categoria -->
-                    <button class="filter-btn" onclick="toggleFilterCategorias(this)" title="Filtrar por Categoría">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" style="width: 18px; height: 18px;">
-                            <path d="M10 18h4v-2h-4v2zM3 6v2h18V6H3zm3 7h12v-2H6v2z"/>
-                        </svg>
-                        <span style="margin-left: 6px; font-size: 13px;">Categoría</span>
-                    </button>
-                    <div class="filter-dropdown" id="filterCategorias" style="display: none;"></div>
-                    
-                    <!-- Filtro Estado -->
-                    <button class="filter-btn" onclick="toggleFilterEstados(this)" title="Filtrar por Estado">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" style="width: 18px; height: 18px;">
-                            <path d="M10 18h4v-2h-4v2zM3 6v2h18V6H3zm3 7h12v-2H6v2z"/>
-                        </svg>
-                        <span style="margin-left: 6px; font-size: 13px;">Estado</span>
-                    </button>
-                    <div class="filter-dropdown" id="filterEstados" style="display: none;">
-                        <div style="padding: 8px 16px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
-                            <button onclick="seleccionarTodosEstados()" style="background: none; border: none; color: var(--primary-color); font-size: 13px; font-weight: 500; cursor: pointer; padding: 4px 8px;">Todos</button>
-                            <button onclick="deseleccionarTodosEstados()" style="background: none; border: none; color: var(--text-secondary); font-size: 13px; cursor: pointer; padding: 4px 8px;">Borrar todos</button>
-                        </div>
-                        <label style="display: flex; align-items: center; padding: 10px 16px; cursor: pointer; transition: background 0.2s;" onmouseover="this.style.background='#f1f3f4'" onmouseout="this.style.background='white'">
-                            <input type="checkbox" class="filter-checkbox-estado" value="sin comenzar" style="margin-right: 8px; cursor: pointer;" onchange="aplicarFiltrosProyectos()" />
-                            <span style="font-size: 13px;">Sin comenzar</span>
-                        </label>
-                        <label style="display: flex; align-items: center; padding: 10px 16px; cursor: pointer; transition: background 0.2s;" onmouseover="this.style.background='#f1f3f4'" onmouseout="this.style.background='white'">
-                            <input type="checkbox" class="filter-checkbox-estado" value="en curso" style="margin-right: 8px; cursor: pointer;" onchange="aplicarFiltrosProyectos()" />
-                            <span style="font-size: 13px;">En curso</span>
-                        </label>
-                        <label style="display: flex; align-items: center; padding: 10px 16px; cursor: pointer; transition: background 0.2s;" onmouseover="this.style.background='#f1f3f4'" onmouseout="this.style.background='white'">
-                            <input type="checkbox" class="filter-checkbox-estado" value="Testing" style="margin-right: 8px; cursor: pointer;" onchange="aplicarFiltrosProyectos()" />
-                            <span style="font-size: 13px;">Testing</span>
-                        </label>
-                        <label style="display: flex; align-items: center; padding: 10px 16px; cursor: pointer; transition: background 0.2s;" onmouseover="this.style.background='#f1f3f4'" onmouseout="this.style.background='white'">
-                            <input type="checkbox" class="filter-checkbox-estado" value="Entregado" style="margin-right: 8px; cursor: pointer;" onchange="aplicarFiltrosProyectos()" />
-                            <span style="font-size: 13px;">Entregado</span>
-                        </label>
-                        <label style="display: flex; align-items: center; padding: 10px 16px; cursor: pointer; transition: background 0.2s;" onmouseover="this.style.background='#f1f3f4'" onmouseout="this.style.background='white'">
-                            <input type="checkbox" class="filter-checkbox-estado" value="Rework" style="margin-right: 8px; cursor: pointer;" onchange="aplicarFiltrosProyectos()" />
-                            <span style="font-size: 13px;">Rework</span>
-                        </label>
-                        <label style="display: flex; align-items: center; padding: 10px 16px; cursor: pointer; transition: background 0.2s;" onmouseover="this.style.background='#f1f3f4'" onmouseout="this.style.background='white'">
-                            <input type="checkbox" class="filter-checkbox-estado" value="Bloqueado" style="margin-right: 8px; cursor: pointer;" onchange="aplicarFiltrosProyectos()" />
-                            <span style="font-size: 13px;">Bloqueado</span>
-                        </label>
-                    </div>
-                    
-                    <!-- Buscador y botón Sincronizar -->
-                    <div class="seguimiento-buscador-wrapper">
-                        <div class="seguimiento-buscador">
-                            <form onsubmit="buscar(event)" class="google-search-box">
-                                <div class="google-search-box-container" id="searchBoxContainer">
-                                    <svg style="width: 20px; height: 20px; color: #9aa0a6; margin-right: 12px; flex-shrink: 0;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-                                        <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
-                                    </svg>
-                                    <textarea 
-                                        id="searchInput" 
-                                        class="google-search-input"
-                                        rows="1"
-                                        placeholder="Buscar proyectos..."
-                                        autocomplete="off"
-                                        autocapitalize="off"
-                                        autocorrect="off"
-                                        spellcheck="false"
-                                        style="flex: 1; border: none; outline: none; font-size: 16px; font-family: 'Google Sans', 'Roboto', sans-serif; resize: none; overflow: hidden; padding: 0; margin: 0; background: transparent; line-height: 44px; max-height: 44px;"
-                                        oninput="this.style.height='auto'; this.style.height=Math.min(this.scrollHeight, 44)+'px'; buscarSugerencias(this.value); actualizarBotonLimpiar(this.value);"
-                                        onkeydown="if(event.key === 'Enter') { event.preventDefault(); buscar(event); }"
-                                    ></textarea>
-                                    <button 
-                                        id="btnLimpiarBusqueda" 
-                                        onclick="limpiarBusqueda()" 
-                                        style="display: none; background: none; border: none; cursor: pointer; padding: 8px; margin-left: 8px; color: #5f6368; transition: color 0.2s; align-items: center; justify-content: center;"
-                                        onmouseover="this.style.color='#202124'"
-                                        onmouseout="this.style.color='#5f6368'"
-                                        title="Limpiar búsqueda"
-                                    >
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                                            <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
-                                        </svg>
-                                    </button>
-                                </div>
-                                <!-- Sugerencias -->
-                                <div id="searchSuggestions" class="google-search-suggestions"></div>
-                            </form>
-                        </div>
-                        <% if (tipoActual !== 'mantenimiento') { %>
-                        <button onclick="sincronizar()" id="btnSincronizar" style="display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 50%; border: 1px solid #dfe1e5; background: white; cursor: pointer; transition: all 0.2s; margin-left: 8px; flex-shrink: 0;" onmouseover="this.style.background='#f1f3f4'" onmouseout="this.style.background='white'" title="Sincronizar proyectos">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" style="color: #5f6368;">
-                                <path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/>
-                            </svg>
-                        </button>
-                        <% } %>
-                    </div>
-                </div>
-                    
-                <!-- Checkbox "Incluir cerrados" -->
-                <div class="seguimiento-filtros-acciones">
-                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; user-select: none;">
-                        <input type="checkbox" id="incluirCerrados" style="cursor: pointer;" onchange="aplicarFiltrosProyectos()" />
-                        <span style="font-size: 13px; color: var(--text-secondary);">Incluir cerrados</span>
-                        <span id="contadorProyectos" style="font-size: 13px; color: var(--text-secondary); font-weight: 500; margin-left: 4px;">Total proyectos: 0</span>
-                    </label>
-                </div>
-                </div>
-                <% } %>
-                
-                <!-- Chips de filtros aplicados -->
-                <div id="filtrosAplicados" style="display: none; padding: 12px 16px; margin-bottom: 16px; flex-wrap: wrap; gap: 8px; align-items: center;"></div>
-                <% } %>
 
-                <div id="contenido" class="table-container">
-                    <div class="empty-state">
-                        <div class="spinner"></div>
-                        <div class="empty-state-text">Cargando datos...</div>
+            <div class="main-content">
+                <div class="content-area">
+                    <div class="seguimiento-wrapper">
+                        <% if (productoActual) { %>
+                            <div class="seguimiento-container">
+                                <!-- Título -->
+                                <div class="seguimiento-header">
+                                    <h1
+                                        style="font-size: 32px; font-weight: 500; color: rgba(245, 112, 41, 1); margin: 0; font-family: 'Google Sans', 'Roboto', sans-serif;">
+                                        Seguimiento<% if (equipoNombre) { %> - <%= equipoNombre %>
+                                                <% } %>
+                                    </h1>
+                                </div>
+                                <!-- Tabs -->
+                                <div class="tabs seguimiento-tabs">
+                                    <div style="display: flex;">
+                                        <% if (typeof tieneMantenimiento !=='undefined' && tieneMantenimiento) { %>
+                                            <a href="/?producto=<%= encodeURIComponent(productoActual || '') %>&equipo=<%= encodeURIComponent(equipoActual || '') %>&tipo=mantenimiento"
+                                                class="tab <%= tipoActual === 'mantenimiento' ? 'active' : '' %>">
+                                                Mantenimiento
+                                            </a>
+                                            <% } %>
+                                                <a href="/?producto=<%= encodeURIComponent(productoActual || '') %>&equipo=<%= encodeURIComponent(equipoActual || '') %>&tipo=proyectos"
+                                                    class="tab <%= tipoActual !== 'mantenimiento' ? 'active' : '' %>">
+                                                    Proyectos
+                                                </a>
+                                    </div>
+                                </div>
+                                <!-- Filtros y buscador para proyectos -->
+                                <% if (tipoActual !=='mantenimiento' ) { %>
+                                    <div id="filtrosProyectos" class="seguimiento-filtros">
+                                        <div class="seguimiento-filtros-inner">
+                                            <!-- Filtro Cliente -->
+                                            <button class="filter-btn" onclick="toggleFilterClientes(this)"
+                                                title="Filtrar por Cliente">
+                                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+                                                    fill="currentColor" style="width: 18px; height: 18px;">
+                                                    <path d="M10 18h4v-2h-4v2zM3 6v2h18V6H3zm3 7h12v-2H6v2z" />
+                                                </svg>
+                                                <span style="margin-left: 6px; font-size: 13px;">Cliente</span>
+                                            </button>
+                                            <div class="filter-dropdown" id="filterClientes" style="display: none;">
+                                            </div>
+
+                                            <!-- Filtro Categoria -->
+                                            <button class="filter-btn" onclick="toggleFilterCategorias(this)"
+                                                title="Filtrar por Categoría">
+                                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+                                                    fill="currentColor" style="width: 18px; height: 18px;">
+                                                    <path d="M10 18h4v-2h-4v2zM3 6v2h18V6H3zm3 7h12v-2H6v2z" />
+                                                </svg>
+                                                <span style="margin-left: 6px; font-size: 13px;">Categoría</span>
+                                            </button>
+                                            <div class="filter-dropdown" id="filterCategorias" style="display: none;">
+                                            </div>
+
+                                            <!-- Filtro Estado -->
+                                            <button class="filter-btn" onclick="toggleFilterEstados(this)"
+                                                title="Filtrar por Estado">
+                                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+                                                    fill="currentColor" style="width: 18px; height: 18px;">
+                                                    <path d="M10 18h4v-2h-4v2zM3 6v2h18V6H3zm3 7h12v-2H6v2z" />
+                                                </svg>
+                                                <span style="margin-left: 6px; font-size: 13px;">Estado</span>
+                                            </button>
+                                            <div class="filter-dropdown" id="filterEstados" style="display: none;">
+                                                <div
+                                                    style="padding: 8px 16px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
+                                                    <button onclick="seleccionarTodosEstados()"
+                                                        style="background: none; border: none; color: var(--primary-color); font-size: 13px; font-weight: 500; cursor: pointer; padding: 4px 8px;">Todos</button>
+                                                    <button onclick="deseleccionarTodosEstados()"
+                                                        style="background: none; border: none; color: var(--text-secondary); font-size: 13px; cursor: pointer; padding: 4px 8px;">Borrar
+                                                        todos</button>
+                                                </div>
+                                                <label
+                                                    style="display: flex; align-items: center; padding: 10px 16px; cursor: pointer; transition: background 0.2s;"
+                                                    onmouseover="this.style.background='#f1f3f4'"
+                                                    onmouseout="this.style.background='white'">
+                                                    <input type="checkbox" class="filter-checkbox-estado"
+                                                        value="sin comenzar" style="margin-right: 8px; cursor: pointer;"
+                                                        onchange="aplicarFiltrosProyectos()" />
+                                                    <span style="font-size: 13px;">Sin comenzar</span>
+                                                </label>
+                                                <label
+                                                    style="display: flex; align-items: center; padding: 10px 16px; cursor: pointer; transition: background 0.2s;"
+                                                    onmouseover="this.style.background='#f1f3f4'"
+                                                    onmouseout="this.style.background='white'">
+                                                    <input type="checkbox" class="filter-checkbox-estado"
+                                                        value="en curso" style="margin-right: 8px; cursor: pointer;"
+                                                        onchange="aplicarFiltrosProyectos()" />
+                                                    <span style="font-size: 13px;">En curso</span>
+                                                </label>
+                                                <label
+                                                    style="display: flex; align-items: center; padding: 10px 16px; cursor: pointer; transition: background 0.2s;"
+                                                    onmouseover="this.style.background='#f1f3f4'"
+                                                    onmouseout="this.style.background='white'">
+                                                    <input type="checkbox" class="filter-checkbox-estado"
+                                                        value="Testing" style="margin-right: 8px; cursor: pointer;"
+                                                        onchange="aplicarFiltrosProyectos()" />
+                                                    <span style="font-size: 13px;">Testing</span>
+                                                </label>
+                                                <label
+                                                    style="display: flex; align-items: center; padding: 10px 16px; cursor: pointer; transition: background 0.2s;"
+                                                    onmouseover="this.style.background='#f1f3f4'"
+                                                    onmouseout="this.style.background='white'">
+                                                    <input type="checkbox" class="filter-checkbox-estado"
+                                                        value="Entregado" style="margin-right: 8px; cursor: pointer;"
+                                                        onchange="aplicarFiltrosProyectos()" />
+                                                    <span style="font-size: 13px;">Entregado</span>
+                                                </label>
+                                                <label
+                                                    style="display: flex; align-items: center; padding: 10px 16px; cursor: pointer; transition: background 0.2s;"
+                                                    onmouseover="this.style.background='#f1f3f4'"
+                                                    onmouseout="this.style.background='white'">
+                                                    <input type="checkbox" class="filter-checkbox-estado" value="Rework"
+                                                        style="margin-right: 8px; cursor: pointer;"
+                                                        onchange="aplicarFiltrosProyectos()" />
+                                                    <span style="font-size: 13px;">Rework</span>
+                                                </label>
+                                                <label
+                                                    style="display: flex; align-items: center; padding: 10px 16px; cursor: pointer; transition: background 0.2s;"
+                                                    onmouseover="this.style.background='#f1f3f4'"
+                                                    onmouseout="this.style.background='white'">
+                                                    <input type="checkbox" class="filter-checkbox-estado"
+                                                        value="Bloqueado" style="margin-right: 8px; cursor: pointer;"
+                                                        onchange="aplicarFiltrosProyectos()" />
+                                                    <span style="font-size: 13px;">Bloqueado</span>
+                                                </label>
+                                            </div>
+
+                                            <!-- Buscador y botón Sincronizar -->
+                                            <div class="seguimiento-buscador-wrapper">
+                                                <div class="seguimiento-buscador">
+                                                    <form onsubmit="buscar(event)" class="google-search-box">
+                                                        <div class="google-search-box-container"
+                                                            id="searchBoxContainer">
+                                                            <svg style="width: 20px; height: 20px; color: #9aa0a6; margin-right: 12px; flex-shrink: 0;"
+                                                                xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+                                                                fill="currentColor">
+                                                                <path
+                                                                    d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z" />
+                                                            </svg>
+                                                            <textarea id="searchInput" class="google-search-input"
+                                                                rows="1" placeholder="Buscar proyectos..."
+                                                                autocomplete="off" autocapitalize="off"
+                                                                autocorrect="off" spellcheck="false"
+                                                                style="flex: 1; border: none; outline: none; font-size: 16px; font-family: 'Google Sans', 'Roboto', sans-serif; resize: none; overflow: hidden; padding: 0; margin: 0; background: transparent; line-height: 44px; max-height: 44px;"
+                                                                oninput="this.style.height='auto'; this.style.height=Math.min(this.scrollHeight, 44)+'px'; buscarSugerencias(this.value); actualizarBotonLimpiar(this.value);"
+                                                                onkeydown="if(event.key === 'Enter') { event.preventDefault(); buscar(event); }"></textarea>
+                                                            <button id="btnLimpiarBusqueda" onclick="limpiarBusqueda()"
+                                                                style="display: none; background: none; border: none; cursor: pointer; padding: 8px; margin-left: 8px; color: #5f6368; transition: color 0.2s; align-items: center; justify-content: center;"
+                                                                onmouseover="this.style.color='#202124'"
+                                                                onmouseout="this.style.color='#5f6368'"
+                                                                title="Limpiar búsqueda">
+                                                                <svg xmlns="http://www.w3.org/2000/svg" width="20"
+                                                                    height="20" viewBox="0 0 24 24" fill="currentColor">
+                                                                    <path
+                                                                        d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" />
+                                                                </svg>
+                                                            </button>
+                                                        </div>
+                                                        <!-- Sugerencias -->
+                                                        <div id="searchSuggestions" class="google-search-suggestions">
+                                                        </div>
+                                                    </form>
+                                                </div>
+                                                <% if (tipoActual !=='mantenimiento' ) { %>
+                                                    <button onclick="sincronizar()" id="btnSincronizar"
+                                                        style="display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 50%; border: 1px solid #dfe1e5; background: white; cursor: pointer; transition: all 0.2s; margin-left: 8px; flex-shrink: 0;"
+                                                        onmouseover="this.style.background='#f1f3f4'"
+                                                        onmouseout="this.style.background='white'"
+                                                        title="Sincronizar proyectos">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"
+                                                            viewBox="0 0 24 24" fill="currentColor"
+                                                            style="color: #5f6368;">
+                                                            <path
+                                                                d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z" />
+                                                        </svg>
+                                                    </button>
+                                                    <% } %>
+                                            </div>
+                                        </div>
+
+                                        <!-- Checkbox "Incluir cerrados" -->
+                                        <div class="seguimiento-filtros-acciones">
+                                            <label
+                                                style="display: flex; align-items: center; gap: 8px; cursor: pointer; user-select: none;">
+                                                <input type="checkbox" id="incluirCerrados" style="cursor: pointer;"
+                                                    onchange="aplicarFiltrosProyectos()" />
+                                                <span style="font-size: 13px; color: var(--text-secondary);">Incluir
+                                                    cerrados</span>
+                                                <span id="contadorProyectos"
+                                                    style="font-size: 13px; color: var(--text-secondary); font-weight: 500; margin-left: 4px;">Total
+                                                    proyectos: 0</span>
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <% } %>
+
+                                        <!-- Chips de filtros aplicados -->
+                                        <div id="filtrosAplicados"
+                                            style="display: none; padding: 12px 16px; margin-bottom: 16px; flex-wrap: wrap; gap: 8px; align-items: center;">
+                                        </div>
+                                        <% } %>
+
+                                            <div id="contenido" class="table-container">
+                                                <div class="empty-state">
+                                                    <div class="spinner"></div>
+                                                    <div class="empty-state-text">Cargando datos...</div>
+                                                </div>
+                                            </div>
+                            </div>
+
+                            <!-- Contenedor para Gantt de Equipo -->
+                            <div id="team-gantt-container" class="gantt-container"
+                                style="display:none; margin-top: 40px; margin-bottom: 40px;"></div>
                     </div>
-                </div>
                 </div>
             </div>
-        </div>
     </div>
 
     <!-- Variables globales para JavaScript -->
@@ -195,8 +255,8 @@
         const equipoActual = '<%= equipoActual || '' %>';
         const tipoActual = '<%= tipoActual || 'mantenimiento' %>';
         const categoriaActual = '<%= categoriaActual || '' %>';
-        const productosEquiposData = <%- JSON.stringify(productosEquipos) %>;
-        
+        const productosEquiposData = <%- JSON.stringify(productosEquipos || []) %>;
+
         // Variables de estado global
         let busquedaActual = '';
         let filtrosClientes = [];
@@ -205,7 +265,7 @@
         let datosTablaActual = [];
         let datosOriginales = [];
     </script>
-    
+
     <!-- Scripts modulares -->
     <script src="/js/dropdowns.js?v=<%= Date.now() %>"></script>
     <script src="/js/api-handlers.js?v=<%= Date.now() %>"></script>
@@ -214,8 +274,9 @@
     <script src="/js/table-renderer.js?v=<%= Date.now() %>"></script>
     <script src="/js/sync.js?v=<%= Date.now() %>"></script>
     <script src="/js/date-picker.js?v=<%= Date.now() %>"></script>
+    <script src="/js/gantt-renderer.js?v=<%= Date.now() %>"></script>
     <script src="/js/modal.js?v=<%= Date.now() %>"></script>
-    
+
     <!-- Inicialización -->
     <script>
         // Cargar datos al iniciar
@@ -230,25 +291,34 @@
             }
         });
     </script>
-    
+
     <!-- Modal de Detalle del Proyecto -->
-    <div id="modalDetalle" class="modal-overlay" style="display: none;" onclick="if(event.target === this) cerrarModalDetalle()">
+    <div id="modalDetalle" class="modal-overlay" style="display: none;"
+        onclick="if(event.target === this) cerrarModalDetalle()">
         <div class="modal-content" onclick="event.stopPropagation()">
             <div class="modal-header">
-                <button id="btnVolverModal" class="button button-inverted" onclick="volverProyectoAnterior(); return false;" style="display: none; margin-right: 12px;">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
+                <button id="btnVolverModal" class="button button-inverted"
+                    onclick="volverProyectoAnterior(); return false;" style="display: none; margin-right: 12px;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+                        fill="currentColor">
+                        <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z" />
+                    </svg>
                     <span>Volver</span>
                 </button>
-                <h2 id="modalTitulo" style="margin: 0; font-size: 20px; font-weight: 500; flex: 1;">Detalle del Proyecto</h2>
-                <button class="modal-close" onclick="cerrarModalDetalle()" style="background: none; border: none; font-size: 24px; cursor: pointer; color: var(--text-secondary); padding: 0; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border-radius: 50%; transition: background 0.2s;" onmouseover="this.style.background='#f1f3f4'" onmouseout="this.style.background='none'">×</button>
+                <h2 id="modalTitulo" style="margin: 0; font-size: 20px; font-weight: 500; flex: 1;">Detalle del Proyecto
+                </h2>
+                <button class="modal-close" onclick="cerrarModalDetalle()"
+                    style="background: none; border: none; font-size: 24px; cursor: pointer; color: var(--text-secondary); padding: 0; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border-radius: 50%; transition: background 0.2s;"
+                    onmouseover="this.style.background='#f1f3f4'" onmouseout="this.style.background='none'">×</button>
             </div>
             <div class="modal-body" id="modalBody">
                 <!-- Contenido dinámico -->
             </div>
         </div>
     </div>
-    
+
     <!-- JavaScript principal -->
     <script src="/js/main.js"></script>
 </body>
+
 </html>
