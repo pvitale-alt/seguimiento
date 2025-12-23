@@ -6,19 +6,22 @@
         </svg>
     </div>
     <nav class="sidebar-nav">
-        <% 
-            // Orden personalizado de productos
-            const ordenProductos = ['Abbaco', 'Portfolio', 'Portfolio Cloud', 'Pepper', 'Unitrade', 'Trading Room', 'Order Management', 'OMS'];
-            const productosOrdenados = [...productosEquipos].sort((a, b) => {
-                const indexA = ordenProductos.indexOf(a.producto);
-                const indexB = ordenProductos.indexOf(b.producto);
-                // Si no está en la lista, ponerlo al final
-                const posA = indexA === -1 ? 999 : indexA;
-                const posB = indexB === -1 ? 999 : indexB;
-                return posA - posB;
-            });
-        %>
-        <% productosOrdenados.forEach(item => { 
+        <!-- Sección Seguimiento -->
+        <div class="sidebar-section">
+            <div class="sidebar-section-label">Seguimiento</div>
+            <% 
+                // Orden personalizado de productos
+                const ordenProductos = ['Abbaco', 'Portfolio', 'Portfolio Cloud', 'Pepper', 'Unitrade', 'Trading Room', 'Order Management', 'OMS'];
+                const productosOrdenados = [...productosEquipos].sort((a, b) => {
+                    const indexA = ordenProductos.indexOf(a.producto);
+                    const indexB = ordenProductos.indexOf(b.producto);
+                    // Si no está en la lista, ponerlo al final
+                    const posA = indexA === -1 ? 999 : indexA;
+                    const posB = indexB === -1 ? 999 : indexB;
+                    return posA - posB;
+                });
+            %>
+            <% productosOrdenados.forEach(item => { 
             const producto = item.producto;
             const equipos = item.equipos || [];
             const productoNormalizado = producto === 'OMS' ? 'Order Management' : producto;
@@ -51,6 +54,15 @@
                 </div>
             </div>
         <% }); %>
+        </div>
+        
+        <!-- Línea separadora -->
+        <div class="sidebar-divider"></div>
+        
+        <!-- Item Sync -->
+        <a href="/sync" class="nav-item <%= activeMenu === 'sync' ? 'active' : '' %>" data-tooltip="Sync - Equipos">
+            <span>Sync - Equipos</span>
+        </a>
         
         <% if (typeof isAdmin !== 'undefined' && isAdmin) { %>
         <a href="/admin" class="nav-item <%= activeMenu === 'admin' ? 'active' : '' %>" data-tooltip="Administración">
@@ -141,6 +153,37 @@
 </script>
 
 <style>
+    .sidebar-section {
+        margin-bottom: 8px;
+    }
+    
+    .sidebar-section-label {
+        padding: 8px 16px;
+        font-size: 11px;
+        font-weight: 600;
+        color: #5f6368;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        font-family: 'Google Sans', 'Roboto', sans-serif;
+    }
+    
+    .sidebar.contraido .sidebar-section-label {
+        opacity: 0;
+        width: 0;
+        overflow: hidden;
+        padding: 0;
+    }
+    
+    .sidebar-divider {
+        height: 1px;
+        background: var(--border-color);
+        margin: 8px 16px;
+    }
+    
+    .sidebar.contraido .sidebar-divider {
+        margin: 8px 8px;
+    }
+    
     .producto-section {
         margin-bottom: 0;
     }

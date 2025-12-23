@@ -30,6 +30,7 @@ const indexRoutes = require('./routes/indexRoutes');
 const apiRoutes = require('./routes/apiRoutes');
 const authRoutes = require('./routes/authRoutes');
 const adminRoutes = require('./routes/adminRoutes');
+const syncRoutes = require('./routes/syncRoutes');
 
 // Rutas públicas
 app.use('/login', authRoutes);
@@ -37,6 +38,7 @@ app.use('/login', authRoutes);
 // Rutas protegidas
 app.use('/', requireAuth, indexRoutes);
 app.use('/api', requireAuth, apiRoutes);
+app.use('/api/sync', requireAuth, syncRoutes);
 app.use('/admin', requireAuth, adminRoutes); // requireAdmin se aplica en las rutas individuales
 
 // Manejo de errores 404

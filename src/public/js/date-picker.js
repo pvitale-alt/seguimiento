@@ -365,6 +365,23 @@ function seleccionarFecha(año, mes, dia) {
                 setTimeout(() => actualizarAccionableIndividual(parseInt(idAccionable)), 100);
             }
         }
+        // Si el input es de un pedido, actualizar la fecha y el texto visible
+        if (input.id.startsWith('fechaPedido_')) {
+            const idPedido = input.id.replace('fechaPedido_', '');
+            // Convertir DD-MM-YYYY a DD/MM/YYYY para mostrar
+            const fechaMostrar = fechaFormateada.replace(/-/g, '/');
+            // Actualizar el texto visible en la celda
+            const celda = input.closest('.modern-table-cell');
+            if (celda) {
+                const spanTexto = celda.querySelector('span');
+                if (spanTexto) {
+                    spanTexto.textContent = fechaMostrar;
+                }
+            }
+            if (typeof actualizarFechaPedido === 'function') {
+                setTimeout(() => actualizarFechaPedido(parseInt(idPedido), fechaFormateada), 100);
+            }
+        }
     }
     
     const popupId = `datePicker${datePickerState.inputId.charAt(0).toUpperCase() + datePickerState.inputId.slice(1)}`;

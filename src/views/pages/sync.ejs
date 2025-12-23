@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sync - Pedidos entre Equipos | Seguimiento</title>
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="/css/main.css?v=<%= Date.now() %>">
+    <link rel="stylesheet" href="/css/sync.css?v=<%= Date.now() %>">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="/images/logo.ico">
+</head>
+
+<body>
+    <!-- Header General -->
+    <header class="top-header">
+        <div style="display: flex; align-items: center; gap: 12px;">
+            <a href="/" style="display: flex; align-items: center; text-decoration: none;">
+                <img src="/images/Mercap-logo-horizontal-1920x1080.png" alt="Logo Mercap"
+                    style="height: 70px; width: auto; display: block;" onerror="this.style.display='none';" />
+            </a>
+        </div>
+    </header>
+
+    <div class="app-container">
+        <%- include('../partials/sidebar', { productosEquipos, productoActual: null, equipoActual: null, tipoActual: null, isAdmin }) %>
+
+        <div class="main-content">
+            <div class="content-area">
+                <div class="seguimiento-wrapper">
+                    <div class="seguimiento-container">
+                        <!-- Título -->
+                        <div class="seguimiento-header">
+                            <h1
+                                style="font-size: 32px; font-weight: 500; color: rgba(245, 112, 41, 1); margin: 0; font-family: 'Google Sans', 'Roboto', sans-serif;">
+                                Sync - Equipos
+                            </h1>
+                        </div>
+
+                        <!-- Línea separadora -->
+                        <div style="height: 1px; background: var(--border-color); margin: 16px 0;"></div>
+
+                        <!-- Botón Nuevo Pedido -->
+                        <div style="margin-bottom: 16px;">
+                            <button class="button" onclick="abrirModalPedido()" style="display: flex; align-items: center; gap: 8px;">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
+                                </svg>
+                                <span>Nuevo Pedido</span>
+                            </button>
+                        </div>
+
+                        <!-- Filtros -->
+                        <div class="seguimiento-filtros">
+                            <div class="seguimiento-filtros-inner">
+                                <!-- Filtro Equipo Solicitante -->
+                                <button class="filter-btn" onclick="toggleFilterEquipoSolicitante(this)"
+                                    title="Filtrar por Equipo Solicitante">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+                                        fill="currentColor" style="width: 18px; height: 18px;">
+                                        <path d="M10 18h4v-2h-4v2zM3 6v2h18V6H3zm3 7h12v-2H6v2z" />
+                                    </svg>
+                                    <span style="margin-left: 6px; font-size: 13px;">Equipo Solicitante</span>
+                                </button>
+                                <div class="filter-dropdown" id="filterEquipoSolicitante" style="display: none;">
+                                </div>
+
+                                <!-- Filtro Equipo Responsable -->
+                                <button class="filter-btn" onclick="toggleFilterEquipoResponsable(this)"
+                                    title="Filtrar por Equipo Responsable">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+                                        fill="currentColor" style="width: 18px; height: 18px;">
+                                        <path d="M10 18h4v-2h-4v2zM3 6v2h18V6H3zm3 7h12v-2H6v2z" />
+                                    </svg>
+                                    <span style="margin-left: 6px; font-size: 13px;">Equipo Responsable</span>
+                                </button>
+                                <div class="filter-dropdown" id="filterEquipoResponsable" style="display: none;">
+                                </div>
+
+                                <!-- Filtro Estado -->
+                                <button class="filter-btn" onclick="toggleFilterEstados(this)"
+                                    title="Filtrar por Estado">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+                                        fill="currentColor" style="width: 18px; height: 18px;">
+                                        <path d="M10 18h4v-2h-4v2zM3 6v2h18V6H3zm3 7h12v-2H6v2z" />
+                                    </svg>
+                                    <span style="margin-left: 6px; font-size: 13px;">Estado</span>
+                                </button>
+                                <div class="filter-dropdown" id="filterEstados" style="display: none;">
+                                    <label style="display: flex; align-items: center; padding: 10px 16px; cursor: pointer; transition: background 0.2s;"
+                                        onmouseover="this.style.background='#f1f3f4'" onmouseout="this.style.background='white'">
+                                        <input type="checkbox" class="filter-checkbox" value="Pendiente" style="margin-right: 8px; cursor: pointer;" onchange="aplicarFiltrosSync()" />
+                                        <span style="font-size: 13px;">Pendiente</span>
+                                    </label>
+                                    <label style="display: flex; align-items: center; padding: 10px 16px; cursor: pointer; transition: background 0.2s;"
+                                        onmouseover="this.style.background='#f1f3f4'" onmouseout="this.style.background='white'">
+                                        <input type="checkbox" class="filter-checkbox" value="En curso" style="margin-right: 8px; cursor: pointer;" onchange="aplicarFiltrosSync()" />
+                                        <span style="font-size: 13px;">En curso</span>
+                                    </label>
+                                    <label style="display: flex; align-items: center; padding: 10px 16px; cursor: pointer; transition: background 0.2s;"
+                                        onmouseover="this.style.background='#f1f3f4'" onmouseout="this.style.background='white'">
+                                        <input type="checkbox" class="filter-checkbox" value="Bloqueado" style="margin-right: 8px; cursor: pointer;" onchange="aplicarFiltrosSync()" />
+                                        <span style="font-size: 13px;">Bloqueado</span>
+                                    </label>
+                                    <label style="display: flex; align-items: center; padding: 10px 16px; cursor: pointer; transition: background 0.2s;"
+                                        onmouseover="this.style.background='#f1f3f4'" onmouseout="this.style.background='white'">
+                                        <input type="checkbox" class="filter-checkbox" value="Realizado" style="margin-right: 8px; cursor: pointer;" onchange="aplicarFiltrosSync()" />
+                                        <span style="font-size: 13px;">Realizado</span>
+                                    </label>
+                                </div>
+
+                            </div>
+
+                            <!-- Contador y acciones -->
+                            <div class="seguimiento-filtros-acciones">
+                                <label
+                                    style="display: flex; align-items: center; gap: 8px; cursor: pointer; user-select: none;">
+                                    <input type="checkbox" id="incluirRealizados" style="cursor: pointer;"
+                                        onchange="aplicarFiltrosSync()" />
+                                    <span style="font-size: 13px; color: var(--text-secondary);">Incluir
+                                        realizados</span>
+                                    <span id="contadorPedidos"
+                                        style="font-size: 13px; color: var(--text-secondary); font-weight: 500; margin-left: 4px;">Total
+                                        pedidos: 0</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Chips de filtros aplicados -->
+                        <div id="filtrosAplicadosSync"
+                            style="display: none; padding: 12px 16px; margin-bottom: 16px; flex-wrap: wrap; gap: 8px; align-items: center;">
+                        </div>
+
+                        <!-- Tabla de pedidos -->
+                        <div id="contenidoSync" class="table-container">
+                            <div class="empty-state">
+                                <div class="spinner"></div>
+                                <div class="empty-state-text">Cargando pedidos...</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Variables globales para JavaScript -->
+    <script>
+        // Variables de estado global
+        let pedidosActuales = [];
+        let pedidosOriginales = [];
+        let equiposDisponibles = [];
+        let filtrosAplicados = {
+            equipo_solicitante: null,
+            equipo_responsable: null,
+            estados: [],
+            fecha_desde: null,
+            fecha_hasta: null
+        };
+        let ordenActual = {
+            columna: 'created_at',
+            direccion: 'DESC'
+        };
+    </script>
+
+    <!-- Scripts modulares -->
+    <script src="/js/dropdowns.js?v=<%= Date.now() %>"></script>
+    <script src="/js/table-renderer.js?v=<%= Date.now() %>"></script>
+    <script src="/js/date-picker.js?v=<%= Date.now() %>"></script>
+    <script src="/js/sync.js?v=<%= Date.now() %>"></script>
+    <script src="/js/sync-modal.js?v=<%= Date.now() %>"></script>
+
+    <!-- Inicialización -->
+    <script>
+        // Cargar datos al iniciar
+        document.addEventListener('DOMContentLoaded', () => {
+            cargarEquipos();
+            cargarPedidos();
+        });
+    </script>
+
+    <!-- Modal de Pedido -->
+    <div id="modalPedido" class="modal-overlay" style="display: none;"
+        onclick="if(event.target === this) cerrarModalPedido()">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <h2 id="modalPedidoTitulo" style="margin: 0; font-size: 20px; font-weight: 500; flex: 1;">Nuevo Pedido</h2>
+                <button class="modal-close" onclick="cerrarModalPedido()"
+                    style="background: none; border: none; font-size: 24px; cursor: pointer; color: var(--text-secondary); padding: 0; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border-radius: 50%; transition: background 0.2s;"
+                    onmouseover="this.style.background='#f1f3f4'" onmouseout="this.style.background='none'">×</button>
+            </div>
+            <div class="modal-body" id="modalPedidoBody">
+                <!-- Contenido dinámico del formulario -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Confirmación Eliminar -->
+    <div id="modalConfirmarEliminar" class="modal-overlay" style="display: none;"
+        onclick="if(event.target === this) cerrarModalConfirmarEliminar()">
+        <div class="modal-content" onclick="event.stopPropagation()" style="max-width: 400px;">
+            <div class="modal-header">
+                <h2 style="margin: 0; font-size: 20px; font-weight: 500; flex: 1;">Confirmar eliminación</h2>
+                <button class="modal-close" onclick="cerrarModalConfirmarEliminar()"
+                    style="background: none; border: none; font-size: 24px; cursor: pointer; color: var(--text-secondary); padding: 0; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border-radius: 50%; transition: background 0.2s;"
+                    onmouseover="this.style.background='#f1f3f4'" onmouseout="this.style.background='none'">×</button>
+            </div>
+            <div class="modal-body" style="padding: 24px;">
+                <p style="margin: 0 0 24px 0; font-size: 14px; color: var(--text-primary); line-height: 1.5;">
+                    ¿Está seguro de que desea eliminar este pedido? Esta acción no se puede deshacer.
+                </p>
+                <div style="display: flex; gap: 12px; justify-content: flex-end;">
+                    <button class="button button-secondary" onclick="cerrarModalConfirmarEliminar()" style="min-width: 100px;">
+                        Cancelar
+                    </button>
+                    <button class="button" onclick="confirmarEliminarPedido()" style="min-width: 100px; background: #d93025; color: white;" onmouseover="this.style.background='#c5221f'" onmouseout="this.style.background='#d93025'">
+                        Eliminar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript principal -->
+    <script src="/js/main.js"></script>
+</body>
+
+</html>
+

@@ -1,0 +1,193 @@
+/**
+ * Sync CSS - Estilos para la sección Sync
+ * Seguimiento de Proyectos
+ */
+
+/* Badges de estado */
+.estado-badge {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 16px;
+    font-size: 12px;
+    font-weight: 500;
+    font-family: 'Google Sans', 'Roboto', sans-serif;
+}
+
+.estado-pendiente {
+    background: #f1f3f4;
+    color: #5f6368;
+}
+
+.estado-en-curso {
+    background: #e8f0fe;
+    color: #1a73e8;
+}
+
+.estado-bloqueado {
+    background: #fce8e6;
+    color: #d93025;
+}
+
+.estado-realizado {
+    background: #e6f4ea;
+    color: #1e8e3e;
+}
+
+/* Estilos para la tabla de pedidos */
+.modern-table-wrapper {
+    background: white;
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+    overflow: visible;
+    display: inline-block;
+    width: auto;
+    max-width: 100%;
+    padding: 0;
+    margin: 0;
+    border: 1px solid var(--border-color);
+}
+
+.modern-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+    font-family: 'Google Sans', 'Roboto', sans-serif;
+}
+
+.modern-table thead {
+    background: #f8f9fa;
+    border-bottom: 2px solid var(--border-color);
+}
+
+.modern-table th {
+    padding: 12px 16px;
+    text-align: left;
+    font-weight: 500;
+    color: var(--text-primary);
+    white-space: nowrap;
+    border-right: 1px solid var(--border-color);
+}
+
+.modern-table th:last-child {
+    border-right: none;
+}
+
+.modern-table td {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border-color);
+    color: var(--text-primary);
+    border-right: 1px solid var(--border-color);
+}
+
+.modern-table td:last-child {
+    border-right: none;
+}
+
+.modern-table tbody tr:hover {
+    background: var(--hover-bg);
+}
+
+.modern-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+/* Estilos para el modal de pedidos */
+#modalPedido .modal-content {
+    max-width: 600px;
+    width: 90%;
+}
+
+#modalPedido .modal-body {
+    padding: 24px;
+}
+
+#modalPedido .input {
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    font-size: 14px;
+    font-family: 'Google Sans', 'Roboto', sans-serif;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+#modalPedido .input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(26, 115, 232, 0.1);
+}
+
+#modalPedido textarea.input {
+    resize: vertical;
+    min-height: 80px;
+}
+
+#modalPedido select.input {
+    cursor: pointer;
+}
+
+/* Estilos para chips de filtros */
+.filter-chip {
+    display: inline-flex;
+    align-items: center;
+    background: #e8f0fe;
+    color: var(--primary-color);
+    padding: 6px 12px;
+    border-radius: 16px;
+    font-size: 13px;
+    font-weight: 500;
+    gap: 8px;
+    margin-right: 4px;
+    margin-bottom: 4px;
+}
+
+.filter-chip button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    color: var(--primary-color);
+    transition: opacity 0.2s;
+}
+
+.filter-chip button:hover {
+    opacity: 0.7;
+}
+
+/* Ajustes para el contenedor de la tabla - sin scroll horizontal */
+#contenidoSync {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: visible; /* Sin scroll horizontal - la tabla se adapta */
+    box-sizing: border-box;
+    min-width: 0; /* Permitir que se comprima */
+}
+
+/* Estilos para botones de acción en la tabla */
+.modern-table td .button {
+    padding: 6px 12px;
+    font-size: 12px;
+    min-width: auto;
+}
+
+.modern-table td .button svg {
+    width: 14px;
+    height: 14px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .modern-table-wrapper {
+        width: 100%;
+    }
+    
+    .modern-table {
+        font-size: 12px;
+    }
+    
+    .modern-table th,
+    .modern-table td {
+        padding: 8px 12px;
+    }
+}
+
