@@ -366,7 +366,7 @@
 .modern-table.sync .modern-table-row {
     /* Columnas fijas: Solicitante, Responsable, Estado, Fecha, Acciones */
     /* Columna flexible: Descripción (3ra columna) y Comentarios (6ta columna) */
-    grid-template-columns: 140px 140px 1fr 100px 150px 1fr 70px;
+    grid-template-columns: 140px 140px 1fr 100px 150px 250px 70px;
     padding-left: 12px;
     padding-right: 12px;
     gap: 0 8px;
