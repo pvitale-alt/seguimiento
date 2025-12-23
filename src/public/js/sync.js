@@ -162,9 +162,12 @@ function renderizarTablaPedidos(pedidos) {
             formatearFechaParaInput(pedido.fecha_planificada_entrega) : '';
         const fechaMostrar = pedido.fecha_planificada_entrega ? 
             formatearFechaParaMostrar(pedido.fecha_planificada_entrega) : '-';
-        html += '<div class="modern-table-cell item-text" style="display: flex; justify-content: center; align-items: center; position: relative; gap: 8px;">';
-        html += '<span style="font-size: 13px; font-family: \'Google Sans\', \'Roboto\', sans-serif; color: var(--text-primary);">' + fechaMostrar + '</span>';
-        html += '<button type="button" class="date-picker-icon-btn" onclick="abrirDatePicker(\'' + fechaInputId + '\')" title="Seleccionar fecha" style="background: none; border: none; cursor: pointer; padding: 4px; display: flex; align-items: center; justify-content: center; transition: all 0.2s; color: var(--text-secondary); border-radius: 4px;" onmouseover="this.style.background=\'var(--hover-bg)\'; this.style.color=\'var(--primary-color)\'" onmouseout="this.style.background=\'none\'; this.style.color=\'var(--text-secondary)\'">';
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/c387d317-3dcc-4598-b290-b71e313e8754',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'sync.js:165',message:'Rendering fecha cell',data:{pedidoId:pedido.id,fechaMostrar},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+        // #endregion
+        html += '<div class="modern-table-cell item-text" style="display: flex; justify-content: center; align-items: center; position: relative; gap: 0 !important;">';
+        html += '<span style="font-size: 13px; font-family: \'Google Sans\', \'Roboto\', sans-serif; color: var(--text-primary); margin-right: 0 !important; padding-right: 0 !important;">' + fechaMostrar + '</span>';
+        html += '<button type="button" class="date-picker-icon-btn" onclick="abrirDatePicker(\'' + fechaInputId + '\')" title="Seleccionar fecha" style="position: relative !important; right: auto !important; top: auto !important; transform: none !important; background: none !important; border: none !important; cursor: pointer; padding: 2px !important; margin: 0 !important; margin-left: 4px !important; display: flex; align-items: center; justify-content: center; transition: all 0.2s; color: var(--text-secondary); border-radius: 4px;" onmouseover="this.style.background=\'var(--hover-bg)\'; this.style.color=\'var(--primary-color)\'" onmouseout="this.style.background=\'none\'; this.style.color=\'var(--text-secondary)\'">';
         html += '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor">';
         html += '<path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7z"/>';
         html += '</svg>';
