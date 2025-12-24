@@ -61,62 +61,14 @@
 .modern-table-wrapper.proyectos-wrapper {
     display: block;
     width: 100%;
-    overflow-x: auto;
-    /* Permitir scroll horizontal para drag scroll - la scrollbar está oculta con CSS */
+    overflow-x: hidden;
+    /* Ocultar scrollbar horizontal - usa el fijo inferior */
     overflow-y: hidden;
     box-sizing: border-box;
     min-width: 0;
     background: white;
     margin: 0;
     padding: 0;
-    cursor: grab;
-    /* Cursor por defecto de Windows (grab) */
-    user-select: none;
-    /* Prevenir selección de texto al arrastrar */
-    /* Ocultar scrollbar pero mantener funcionalidad de scroll */
-    scrollbar-width: none; /* Firefox */
-    -ms-overflow-style: none; /* IE y Edge */
-}
-
-.modern-table-wrapper.proyectos-wrapper::-webkit-scrollbar {
-    display: none; /* Chrome, Safari, Opera */
-}
-
-.modern-table-wrapper.proyectos-wrapper:active,
-.modern-table-wrapper.proyectos-wrapper.grabbing {
-    cursor: grabbing;
-    /* Cursor por defecto de Windows (grabbing) */
-}
-
-/* Asegurar que las filas y celdas hereden el cursor del wrapper */
-.modern-table-wrapper.proyectos-wrapper .modern-table,
-.modern-table-wrapper.proyectos-wrapper .modern-table-header,
-.modern-table-wrapper.proyectos-wrapper .modern-table-row,
-.modern-table-wrapper.proyectos-wrapper .modern-table-cell {
-    cursor: inherit;
-    /* Heredar el cursor del wrapper (grab/grabbing) */
-}
-
-/* Asegurar que el cursor se mantenga cuando se agrega la clase grabbing */
-.modern-table-wrapper.proyectos-wrapper.grabbing .modern-table,
-.modern-table-wrapper.proyectos-wrapper.grabbing .modern-table-header,
-.modern-table-wrapper.proyectos-wrapper.grabbing .modern-table-row,
-.modern-table-wrapper.proyectos-wrapper.grabbing .modern-table-cell {
-    cursor: inherit;
-    /* Heredar el cursor grabbing del wrapper */
-}
-
-/* Excepciones: elementos interactivos deben mantener su cursor */
-.modern-table-wrapper.proyectos-wrapper .modern-table-cell button,
-.modern-table-wrapper.proyectos-wrapper .modern-table-cell a,
-.modern-table-wrapper.proyectos-wrapper .modern-table-cell input,
-.modern-table-wrapper.proyectos-wrapper .modern-table-cell textarea,
-.modern-table-wrapper.proyectos-wrapper .modern-table-cell select,
-.modern-table-wrapper.proyectos-wrapper .modern-table-cell .modern-select,
-.modern-table-wrapper.proyectos-wrapper .modern-table-cell .win-textarea,
-.modern-table-wrapper.proyectos-wrapper .modern-table-cell .win-cell {
-    cursor: pointer;
-    /* Elementos interactivos mantienen cursor pointer */
 }
 
 /* Scrollbar fija en la parte inferior - SIN fondo, más grande */

@@ -454,8 +454,6 @@ function renderizarTablaProyectos(datos, contenido) {
     setTimeout(() => {
         configurarScrollbarFija();
         ajustarScrollHorizontal();
-        // Inicializar drag scroll para la tabla de proyectos
-        inicializarDragScrollProyectos();
         // Ajustar altura de todos los textareas WIN
         document.querySelectorAll('.win-textarea').forEach(textarea => {
             ajustarAlturaTextarea(textarea);
@@ -919,57 +917,6 @@ async function guardarWinMantenimiento(idProyecto, nuevoWin) {
         alert('Error al guardar el WIN');
         textarea.focus();
     }
-}
-
-// Función para inicializar drag scroll en la tabla de proyectos (similar al Gantt)
-function inicializarDragScrollProyectos() {
-    const tableWrapper = document.querySelector('.modern-table-wrapper.proyectos-wrapper');
-    if (!tableWrapper) return;
-
-    let isDown = false;
-    let startX;
-    let scrollLeft;
-
-    // Establecer cursor inicial (usar clase para mejor control)
-    tableWrapper.style.cursor = '';
-    tableWrapper.classList.remove('grabbing');
-
-    tableWrapper.addEventListener('mousedown', (e) => {
-        // No activar drag si se hace click en elementos interactivos
-        if (e.target.closest('button, a, input, textarea, select, .modern-select, .win-textarea, .win-cell')) {
-            return;
-        }
-        isDown = true;
-        tableWrapper.classList.add('grabbing');
-        // No establecer cursor inline, usar la clase CSS
-        startX = e.pageX - tableWrapper.getBoundingClientRect().left;
-        scrollLeft = tableWrapper.scrollLeft;
-        e.preventDefault();
-    });
-
-    tableWrapper.addEventListener('mouseleave', () => {
-        isDown = false;
-        tableWrapper.classList.remove('grabbing');
-    });
-
-    tableWrapper.addEventListener('mouseup', () => {
-        isDown = false;
-        tableWrapper.classList.remove('grabbing');
-    });
-
-    tableWrapper.addEventListener('mousemove', (e) => {
-        if (!isDown) return;
-        e.preventDefault();
-        const x = e.pageX - tableWrapper.getBoundingClientRect().left;
-        const walk = (x - startX) * 1.5; // Factor de velocidad (1.5x)
-        tableWrapper.scrollLeft = scrollLeft - walk;
-        
-        // Sincronizar con la scrollbar fija si existe
-        const fixedScrollbar = document.getElementById('fixed-scrollbar');
-        if (fixedScrollbar) {
-            fixedScrollbar.scrollLeft = tableWrapper.scrollLeft;
-        }
-    });
 }
 
 // Ajustar scroll cuando se redimensiona la ventana
