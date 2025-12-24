@@ -173,7 +173,11 @@ function renderizarTablaMantenimiento(datos, contenido) {
         tablaHTML += '<div class="modern-table-cell">' + crearDropdownIconos(item.id_proyecto, 'demanda', item.demanda || '', 'demanda', '') + '</div>';
         tablaHTML += '<div class="modern-table-cell">' + crearDropdownIconos(item.id_proyecto, 'estabilidad', item.estabilidad || '', 'estabilidad', '') + '</div>';
         tablaHTML += '<div class="modern-table-cell">' + crearDropdownCaras(item.id_proyecto, 'satisfaccion', item.satisfaccion || '', '') + '</div>';
-        tablaHTML += '<div class="modern-table-cell"><textarea class="modern-input win-textarea" rows="1" onchange="actualizarMantenimiento(' + item.id_proyecto + ', \'win\', this.value); ajustarAlturaTextarea(this);">' + (item.win || '') + '</textarea></div>';
+        // Campo WIN con funcionalidad de expandir/colapsar similar a descripción en sync
+        const winValue = item.win || '';
+        const winId = 'win-' + item.id_proyecto;
+        const winClase = 'win-colapsada'; // Siempre colapsada por defecto
+        tablaHTML += '<div class="modern-table-cell item-text win-cell ' + winClase + '" id="' + winId + '" onclick="habilitarEdicionWin(' + item.id_proyecto + ')" style="cursor: pointer; user-select: none;" title="Click para expandir">' + winValue + '</div>';
         tablaHTML += '</div>';
     });
 
@@ -450,6 +454,8 @@ function renderizarTablaProyectos(datos, contenido) {
     setTimeout(() => {
         configurarScrollbarFija();
         ajustarScrollHorizontal();
+        // Inicializar drag scroll para la tabla de proyectos
+        inicializarDragScrollProyectos();
         // Ajustar altura de todos los textareas WIN
         document.querySelectorAll('.win-textarea').forEach(textarea => {
             ajustarAlturaTextarea(textarea);
@@ -532,7 +538,7 @@ function configurarScrollbarFija() {
     fixedScrollbar.addEventListener('scroll', fixedScrollHandler);
     tableWrapper.addEventListener('scroll', tableScrollHandler);
 
-    // Mostrar/ocultar la scrollbar fija según si la tabla está visible en el viewport
+    // Función para actualizar la posición y visibilidad de la scrollbar fija
     function actualizarVisibilidadScrollbar() {
         if (!scrollWrapper || !tableWrapper) {
             fixedScrollbar.style.display = 'block';
@@ -541,6 +547,12 @@ function configurarScrollbarFija() {
 
         const tableWrapperRect = tableWrapper.getBoundingClientRect();
         const viewportHeight = window.innerHeight;
+
+        // Actualizar la posición de la scrollbar fija para que coincida con la tabla
+        // incluso cuando se hace scroll vertical
+        fixedScrollbar.style.left = tableWrapperRect.left + 'px';
+        fixedScrollbar.style.width = tableWrapperRect.width + 'px';
+        fixedScrollbar.style.right = 'auto';
 
         // Mostrar la scrollbar fija si la parte inferior de la tabla NO está visible en el viewport
         // (es decir, si el usuario tiene que hacer scroll para ver la scrollbar de la tabla)
@@ -551,14 +563,17 @@ function configurarScrollbarFija() {
         }
     }
 
-    // Actualizar visibilidad al hacer scroll
+    // Actualizar visibilidad y posición al hacer scroll
     if (scrollWrapper) {
         scrollWrapperHandler = actualizarVisibilidadScrollbar;
         scrollWrapper.addEventListener('scroll', scrollWrapperHandler);
     }
 
-    // Actualizar visibilidad al hacer scroll en la ventana
+    // Actualizar visibilidad y posición al hacer scroll en la ventana
     window.addEventListener('scroll', actualizarVisibilidadScrollbar);
+    
+    // Actualizar posición al redimensionar la ventana
+    window.addEventListener('resize', actualizarVisibilidadScrollbar);
 
     // Actualizar visibilidad inicial
     actualizarVisibilidadScrollbar();
@@ -815,6 +830,146 @@ function ajustarAlturaTextarea(textarea) {
             textarea.style.height = '20px';
         }
     }
+}
+
+// Habilitar edición de WIN en mantenimiento (similar a descripción en sync)
+function habilitarEdicionWin(idProyecto) {
+    const winElement = document.getElementById('win-' + idProyecto);
+    if (!winElement) return;
+    
+    // Si ya está en modo edición, no hacer nada
+    if (winElement.querySelector('textarea')) return;
+    
+    // Si está colapsada, expandir y habilitar edición
+    if (winElement.classList.contains('win-colapsada')) {
+        winElement.classList.remove('win-colapsada');
+        winElement.classList.add('win-expandida');
+    }
+    
+    // Habilitar edición (tanto si estaba colapsada como expandida)
+    const textoActual = winElement.textContent.trim();
+    const winOriginal = textoActual;
+    
+    // Crear textarea para edición
+    const textarea = document.createElement('textarea');
+    textarea.className = 'modern-input win-textarea win-edit-input';
+    textarea.value = textoActual;
+    textarea.rows = 1;
+    textarea.style.cssText = 'width: 100%; box-sizing: border-box; padding: 0; border: none; background: transparent; resize: none; overflow-y: auto; min-height: 20px; height: auto; font-size: 14px; font-family: \'Google Sans\', \'Roboto\', sans-serif; color: var(--text-primary); line-height: 1.5;';
+    textarea.style.border = '1px solid var(--primary-color)';
+    textarea.style.borderRadius = '4px';
+    textarea.style.padding = '4px 8px';
+    textarea.style.background = 'white';
+    textarea.style.boxShadow = '0 0 0 2px rgba(26, 115, 232, 0.1)';
+    
+    // Guardar al perder el foco
+    textarea.addEventListener('blur', function() {
+        guardarWinMantenimiento(idProyecto, textarea.value.trim());
+    });
+    
+    // Guardar al presionar Enter (sin Shift)
+    textarea.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            textarea.blur();
+        }
+        // Esc para cancelar
+        if (e.key === 'Escape') {
+            textarea.value = winOriginal;
+            textarea.blur();
+        }
+    });
+    
+    // Reemplazar contenido del div con el textarea
+    winElement.innerHTML = '';
+    winElement.appendChild(textarea);
+    winElement.classList.remove('win-colapsada', 'win-expandida');
+    
+    // Ajustar altura del textarea
+    ajustarAlturaTextarea(textarea);
+    
+    // Enfocar el textarea sin seleccionar todo el texto
+    setTimeout(() => {
+        textarea.focus();
+        // Mover el cursor al final del texto sin seleccionar
+        textarea.setSelectionRange(textarea.value.length, textarea.value.length);
+    }, 10);
+}
+
+// Guardar WIN del mantenimiento
+async function guardarWinMantenimiento(idProyecto, nuevoWin) {
+    const winElement = document.getElementById('win-' + idProyecto);
+    if (!winElement) return;
+    
+    const textarea = winElement.querySelector('textarea');
+    if (!textarea) return;
+    
+    try {
+        // Usar la función existente actualizarMantenimiento
+        await actualizarMantenimiento(idProyecto, 'win', nuevoWin);
+        
+        // Restaurar el div con el nuevo texto
+        const textoFinal = nuevoWin || '';
+        winElement.innerHTML = textoFinal;
+        winElement.classList.add('win-colapsada');
+        winElement.classList.remove('win-expandida');
+        winElement.setAttribute('title', 'Click para editar');
+    } catch (error) {
+        console.error('Error al guardar WIN:', error);
+        alert('Error al guardar el WIN');
+        textarea.focus();
+    }
+}
+
+// Función para inicializar drag scroll en la tabla de proyectos (similar al Gantt)
+function inicializarDragScrollProyectos() {
+    const tableWrapper = document.querySelector('.modern-table-wrapper.proyectos-wrapper');
+    if (!tableWrapper) return;
+
+    let isDown = false;
+    let startX;
+    let scrollLeft;
+
+    // Establecer cursor inicial (usar clase para mejor control)
+    tableWrapper.style.cursor = '';
+    tableWrapper.classList.remove('grabbing');
+
+    tableWrapper.addEventListener('mousedown', (e) => {
+        // No activar drag si se hace click en elementos interactivos
+        if (e.target.closest('button, a, input, textarea, select, .modern-select, .win-textarea, .win-cell')) {
+            return;
+        }
+        isDown = true;
+        tableWrapper.classList.add('grabbing');
+        // No establecer cursor inline, usar la clase CSS
+        startX = e.pageX - tableWrapper.getBoundingClientRect().left;
+        scrollLeft = tableWrapper.scrollLeft;
+        e.preventDefault();
+    });
+
+    tableWrapper.addEventListener('mouseleave', () => {
+        isDown = false;
+        tableWrapper.classList.remove('grabbing');
+    });
+
+    tableWrapper.addEventListener('mouseup', () => {
+        isDown = false;
+        tableWrapper.classList.remove('grabbing');
+    });
+
+    tableWrapper.addEventListener('mousemove', (e) => {
+        if (!isDown) return;
+        e.preventDefault();
+        const x = e.pageX - tableWrapper.getBoundingClientRect().left;
+        const walk = (x - startX) * 1.5; // Factor de velocidad (1.5x)
+        tableWrapper.scrollLeft = scrollLeft - walk;
+        
+        // Sincronizar con la scrollbar fija si existe
+        const fixedScrollbar = document.getElementById('fixed-scrollbar');
+        if (fixedScrollbar) {
+            fixedScrollbar.scrollLeft = tableWrapper.scrollLeft;
+        }
+    });
 }
 
 // Ajustar scroll cuando se redimensiona la ventana

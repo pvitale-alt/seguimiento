@@ -262,15 +262,17 @@
 /* El ajuste del margen se maneja con JavaScript para mejor compatibilidad */
 
 .content-area {
-    padding: 0;
-    /* Sin padding para evitar desplazamiento */
+    padding: 0 0 0 24px;
+    /* Padding izquierdo de 24px para alejar el contenido del panel izquierdo */
     min-width: 0;
     /* Permitir que se reduzca para proyectos responsive */
-    overflow-x: visible;
-    /* Permitir ver el borde derecho de la tabla */
+    overflow-x: hidden;
+    /* Ocultar scroll horizontal - la tabla maneja su propio scroll si es necesario */
     overflow-y: visible;
     /* Permitir scroll (el scroll lo maneja main-content) */
     width: 100%;
+    max-width: 100%;
+    /* Limitar el ancho al contenedor */
     box-sizing: border-box;
     height: auto;
     /* Altura automática en lugar de flex: 1 */
@@ -282,6 +284,8 @@
 .seguimiento-wrapper {
     display: block;
     width: 100%;
+    max-width: 100%;
+    /* Aprovechar todo el ancho disponible */
     position: relative;
     /* Posición relativa para mantener flujo normal */
     min-width: 0;

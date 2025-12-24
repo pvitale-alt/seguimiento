@@ -61,14 +61,62 @@
 .modern-table-wrapper.proyectos-wrapper {
     display: block;
     width: 100%;
-    overflow-x: hidden;
-    /* Ocultar scrollbar horizontal - usa el fijo inferior */
+    overflow-x: auto;
+    /* Permitir scroll horizontal para drag scroll - la scrollbar está oculta con CSS */
     overflow-y: hidden;
     box-sizing: border-box;
     min-width: 0;
     background: white;
     margin: 0;
     padding: 0;
+    cursor: grab;
+    /* Cursor por defecto de Windows (grab) */
+    user-select: none;
+    /* Prevenir selección de texto al arrastrar */
+    /* Ocultar scrollbar pero mantener funcionalidad de scroll */
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE y Edge */
+}
+
+.modern-table-wrapper.proyectos-wrapper::-webkit-scrollbar {
+    display: none; /* Chrome, Safari, Opera */
+}
+
+.modern-table-wrapper.proyectos-wrapper:active,
+.modern-table-wrapper.proyectos-wrapper.grabbing {
+    cursor: grabbing;
+    /* Cursor por defecto de Windows (grabbing) */
+}
+
+/* Asegurar que las filas y celdas hereden el cursor del wrapper */
+.modern-table-wrapper.proyectos-wrapper .modern-table,
+.modern-table-wrapper.proyectos-wrapper .modern-table-header,
+.modern-table-wrapper.proyectos-wrapper .modern-table-row,
+.modern-table-wrapper.proyectos-wrapper .modern-table-cell {
+    cursor: inherit;
+    /* Heredar el cursor del wrapper (grab/grabbing) */
+}
+
+/* Asegurar que el cursor se mantenga cuando se agrega la clase grabbing */
+.modern-table-wrapper.proyectos-wrapper.grabbing .modern-table,
+.modern-table-wrapper.proyectos-wrapper.grabbing .modern-table-header,
+.modern-table-wrapper.proyectos-wrapper.grabbing .modern-table-row,
+.modern-table-wrapper.proyectos-wrapper.grabbing .modern-table-cell {
+    cursor: inherit;
+    /* Heredar el cursor grabbing del wrapper */
+}
+
+/* Excepciones: elementos interactivos deben mantener su cursor */
+.modern-table-wrapper.proyectos-wrapper .modern-table-cell button,
+.modern-table-wrapper.proyectos-wrapper .modern-table-cell a,
+.modern-table-wrapper.proyectos-wrapper .modern-table-cell input,
+.modern-table-wrapper.proyectos-wrapper .modern-table-cell textarea,
+.modern-table-wrapper.proyectos-wrapper .modern-table-cell select,
+.modern-table-wrapper.proyectos-wrapper .modern-table-cell .modern-select,
+.modern-table-wrapper.proyectos-wrapper .modern-table-cell .win-textarea,
+.modern-table-wrapper.proyectos-wrapper .modern-table-cell .win-cell {
+    cursor: pointer;
+    /* Elementos interactivos mantienen cursor pointer */
 }
 
 /* Scrollbar fija en la parte inferior - SIN fondo, más grande */
@@ -90,6 +138,9 @@
     overflow-y: hidden;
     display: none;
     /* Oculto por defecto, se muestra con JS cuando es necesario */
+    /* Mantener la posición fija incluso al hacer scroll vertical */
+    will-change: transform;
+    /* Optimizar el rendimiento */
 }
 
 .fixed-scrollbar-content {
@@ -175,15 +226,22 @@
     scrollbar-color: transparent transparent;
 }
 
-/* Centrar la tabla de mantenimiento en la página */
+/* Alinear la tabla de mantenimiento a la izquierda con las tabs - Responsive */
 .modern-table-wrapper.mantenimiento-wrapper {
     display: block;
-    margin-left: auto;
-    margin-right: auto;
-    width: 1250px;
-    /* Ancho fijo para evitar expansión excesiva */
-    max-width: 1250px;
+    margin-left: 0;
+    margin-right: 0;
+    width: 100%;
+    /* Ancho completo para aprovechar todo el espacio disponible */
+    max-width: 100%;
     box-sizing: border-box;
+    overflow-x: auto;
+    /* Permitir scroll horizontal solo cuando sea necesario */
+    overflow-y: visible;
+    min-width: 0;
+    /* Permitir que se reduzca */
+    position: relative;
+    /* Para controlar el overflow */
 }
 
 /* Para proyectos, tabla que se expande al viewport pero con ancho mínimo para scroll */
@@ -205,11 +263,16 @@
     min-width: max-content;
 }
 
-/* Para mantenimiento, limitar el ancho */
+/* Para mantenimiento, ancho responsive con mínimo basado en columnas fijas */
 .modern-table.mantenimiento {
-    min-width: 1250px;
-    width: 1250px;
-    max-width: 1250px;
+    min-width: 730px;
+    /* Mínimo: 320+90+70+70+70+70+200(WIN mínimo)+padding+gaps ≈ 730px */
+    width: 100%;
+    max-width: 100%;
+    /* Ocupar todo el ancho disponible del contenedor */
+    box-sizing: border-box;
+    overflow: hidden;
+    /* Ocultar overflow para que no se salga del contenedor */
 }
 
 /* Para proyectos, ancho mínimo fijo para consistencia */
@@ -322,21 +385,67 @@
     text-align: center;
 }
 
-/* Mantenimiento: 7 columnas - WIN con ancho muy amplio al final */
+/* Mantenimiento: 7 columnas - WIN responsive (se adapta al tamaño de pantalla) */
 .modern-table.mantenimiento .modern-table-header,
 .modern-table.mantenimiento .modern-table-row {
-    grid-template-columns: 320px 90px 70px 70px 70px 70px 520px;
-    /* última columna = WIN mucho más ancha */
+    grid-template-columns: 320px 90px 70px 70px 70px 70px minmax(200px, 1fr);
+    /* última columna = WIN responsive: mínimo 200px, se expande con el espacio disponible */
+    /* El 1fr permite que WIN ocupe todo el espacio restante dentro del contenedor */
+    /* IMPORTANTE: El cálculo de 1fr se basa en el espacio disponible del contenedor, no en el contenido */
     padding-left: 12px;
     padding-right: 12px;
     gap: 0 8px;
     /* row-gap: 0, column-gap: 8px - unificado con proyectos */
     width: 100%;
-    max-width: 1250px;
-    /* Ancho máximo fijo basado en las columnas (320+90+70+70+70+70+520+padding+gaps) */
-    min-width: 1250px;
-    /* Ancho mínimo igual al máximo para mantener tamaño fijo */
+    max-width: 100%;
+    /* Ancho máximo al 100% del contenedor - no exceder el viewport */
+    min-width: 730px;
+    /* Ancho mínimo basado en columnas fijas + WIN mínimo (320+90+70+70+70+70+200+padding+gaps) */
     box-sizing: border-box;
+    /* Asegurar que las celdas se adapten al ancho disponible */
+    overflow: hidden;
+    /* Ocultar overflow para que no se salga */
+    /* Forzar que el grid respete el ancho del contenedor */
+    grid-auto-columns: min-content;
+}
+
+/* Asegurar que la columna WIN (última columna) se expanda correctamente dentro del contenedor */
+.modern-table.mantenimiento .modern-table-header > .modern-table-cell:last-child,
+.modern-table.mantenimiento .modern-table-row > .modern-table-cell:last-child {
+    min-width: 0;
+    /* Permitir que se reduzca si es necesario */
+    max-width: 100%;
+    /* Limitar al ancho de la columna del grid - no exceder */
+    width: 100%;
+    /* Ocupar todo el espacio disponible en la columna del grid (controlado por 1fr) */
+    box-sizing: border-box;
+    overflow: hidden;
+    /* Ocultar contenido que exceda el ancho disponible */
+    /* Forzar que el ancho se calcule basándose en el grid, no en el contenido */
+    word-break: break-word;
+    /* Permitir que las palabras se corten si es necesario */
+    overflow-wrap: break-word;
+    /* Permitir que las palabras largas se corten */
+}
+
+/* Asegurar que el campo WIN se expanda correctamente - responsive independiente del contenido */
+.modern-table.mantenimiento .modern-table-row .modern-table-cell.win-cell {
+    min-width: 0;
+    /* Permitir que se reduzca si es necesario */
+    max-width: 100%;
+    /* Limitar al ancho de la columna del grid - no exceder */
+    width: 100%;
+    /* Ocupar todo el espacio disponible en la columna del grid (controlado por 1fr) */
+    box-sizing: border-box;
+    /* Asegurar que padding y border se incluyan en el cálculo */
+    overflow: hidden;
+    /* Ocultar contenido que exceda el ancho disponible */
+    /* Forzar que el ancho se calcule basándose en el grid, no en el contenido */
+    word-break: break-word;
+    /* Permitir que las palabras se corten si es necesario */
+    overflow-wrap: break-word;
+    /* Permitir que las palabras largas se corten */
+    /* El ancho es controlado por el grid con 1fr, NO por el contenido del texto */
 }
 
 /* Sync: 7 columnas - ajustadas para pedidos */
@@ -532,6 +641,80 @@
 }
 
 .modern-table.sync .modern-table-row .modern-table-cell.descripcion-cell:hover {
+    background: rgba(0, 0, 0, 0.02);
+    border-radius: 4px;
+}
+
+/* Estilos para WIN en mantenimiento - siempre limitada a 2 líneas por defecto */
+.modern-table.mantenimiento .modern-table-row .modern-table-cell.win-cell {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.5;
+    max-height: 3em; /* 2 líneas * 1.5 line-height */
+    transition: max-height 0.3s ease;
+    word-wrap: break-word;
+    white-space: normal;
+    /* Asegurar que siempre respete el límite de 2 líneas */
+    min-height: 1.5em;
+    min-width: 0;
+    /* Permitir que se reduzca si es necesario */
+    max-width: 100%;
+    /* Limitar al ancho de la columna del grid - no exceder el contenedor */
+    width: 100%;
+    /* Ocupar todo el espacio disponible en la columna del grid (controlado por 1fr) */
+    box-sizing: border-box;
+    /* El ancho es controlado por el grid con 1fr, no por el contenido del texto */
+}
+
+/* Cuando está en modo edición, permitir que el textarea ocupe todo el espacio */
+.modern-table.mantenimiento .modern-table-row .modern-table-cell.win-cell:has(.win-edit-input) {
+    display: block;
+    max-height: none;
+    -webkit-line-clamp: unset;
+    overflow: visible;
+}
+
+.modern-table.mantenimiento .modern-table-row .modern-table-cell.win-cell .win-edit-input {
+    width: 100%;
+    min-height: 40px;
+    max-height: 200px;
+    resize: vertical;
+}
+
+.modern-table.mantenimiento .modern-table-row .modern-table-cell.win-cell.win-colapsada {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.5;
+    max-height: 3em; /* 2 líneas * 1.5 line-height */
+    transition: max-height 0.3s ease;
+}
+
+.modern-table.mantenimiento .modern-table-row .modern-table-cell.win-cell.win-expandida {
+    display: block;
+    overflow: visible;
+    max-height: none;
+    white-space: normal;
+    word-wrap: break-word;
+    word-break: break-word;
+    transition: max-height 0.3s ease;
+    -webkit-line-clamp: unset;
+    min-width: 0;
+    /* Permitir que se reduzca si es necesario */
+    max-width: 100%;
+    /* Limitar al ancho de la columna del grid - no exceder el contenedor */
+    width: 100%;
+    /* Ocupar todo el espacio disponible en la columna del grid (controlado por 1fr) */
+    box-sizing: border-box;
+    /* El ancho es controlado por el grid con 1fr, no por el contenido del texto */
+}
+
+.modern-table.mantenimiento .modern-table-row .modern-table-cell.win-cell:hover {
     background: rgba(0, 0, 0, 0.02);
     border-radius: 4px;
 }
@@ -862,6 +1045,15 @@
     /* Display block para mantener flujo normal */
 }
 
+/* Para mantenimiento, hacer el table-container responsive y aprovechar todo el ancho */
+#contenido.table-container {
+    min-width: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow-x: visible !important;
+    box-sizing: border-box !important;
+}
+
 /* Override para sync - hacer responsive */
 #contenidoSync.table-container {
     min-width: 0 !important;
@@ -956,4 +1148,34 @@
 .win-info-icon:hover {
     position: relative;
     z-index: 99999;
+}
+
+/* Media queries para hacer la tabla de mantenimiento más responsive */
+@media (max-width: 1200px) {
+    /* En pantallas medianas, reducir el ancho mínimo y hacer columnas más flexibles */
+    .modern-table.mantenimiento {
+        min-width: 600px;
+    }
+    
+    .modern-table.mantenimiento .modern-table-header,
+    .modern-table.mantenimiento .modern-table-row {
+        grid-template-columns: 250px 80px 60px 60px 60px 60px minmax(150px, 1fr);
+        min-width: 600px;
+    }
+}
+
+@media (max-width: 768px) {
+    /* En pantallas pequeñas, hacer columnas aún más compactas */
+    .modern-table.mantenimiento {
+        min-width: 500px;
+    }
+    
+    .modern-table.mantenimiento .modern-table-header,
+    .modern-table.mantenimiento .modern-table-row {
+        grid-template-columns: 200px 70px 50px 50px 50px 50px minmax(100px, 1fr);
+        min-width: 500px;
+        padding-left: 8px;
+        padding-right: 8px;
+        gap: 0 4px;
+    }
 }
