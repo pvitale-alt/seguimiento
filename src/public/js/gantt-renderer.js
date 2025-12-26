@@ -865,26 +865,18 @@ function inicializarDragScrollGantt(element) {
     let startX = 0;
     let startScrollLeft = 0;
     
-    // URLs de los cursores personalizados
-    const cursorGrabUrl = 'url("/images/cursor-grab.png") 12 12, url("/images/cursor-grab.svg") 12 12, -webkit-grab, grab';
-    const cursorGrabbingUrl = 'url("/images/cursor-grabbing.png") 12 12, url("/images/cursor-grabbing.svg") 12 12, -webkit-grabbing, grabbing';
+    // URLs de los cursores personalizados - usar solo fallbacks en JavaScript ya que el CSS maneja las imágenes
+    // El CSS ya tiene las URLs de las imágenes con !important, así que solo necesitamos los fallbacks aquí
+    const cursorGrabUrl = '-webkit-grab';
+    const cursorGrabbingUrl = '-webkit-grabbing';
     
     // Función para forzar actualización del cursor en Chrome usando imágenes personalizadas
     // Chrome necesita un "refresh" agresivo para renderizar cursores personalizados correctamente
     const forceCursorUpdate = (cursorUrl) => {
-        // Método más agresivo: remover completamente el cursor, forzar reflow, luego aplicar
-        element.style.cursor = 'auto';
-        // Forzar reflow inmediato
+        // Aplicar el cursor directamente
+        element.style.cursor = cursorUrl;
+        // Forzar reflow para asegurar que el navegador procese el cambio
         void element.offsetHeight;
-        
-        // Usar doble requestAnimationFrame para asegurar que Chrome procese el cambio
-        requestAnimationFrame(() => {
-            requestAnimationFrame(() => {
-                element.style.cursor = cursorUrl;
-                // Forzar otro reflow después de aplicar el cursor
-                void element.offsetHeight;
-            });
-        });
     };
     
     // Función para establecer cursor grab (manito abierta)
@@ -899,15 +891,9 @@ function inicializarDragScrollGantt(element) {
         forceCursorUpdate(cursorGrabbingUrl);
     };
     
-    // Inicializar cursor después de que el elemento esté completamente renderizado
-    // Usar múltiples delays para asegurar que Chrome lo procese
-    setTimeout(() => {
-        setCursorGrab();
-        // Segundo intento después de un pequeño delay adicional
-        setTimeout(() => {
-            setCursorGrab();
-        }, 50);
-    }, 100);
+    // NO inicializar cursor mediante JavaScript - confiar completamente en el CSS
+    // El CSS ya tiene las reglas correctas con !important para #team-gantt-container .gantt-timeline
+    // El problema era que JavaScript estaba interfiriendo con el CSS
     
     // Mousedown: iniciar arrastre
     const handleMouseDown = (e) => {

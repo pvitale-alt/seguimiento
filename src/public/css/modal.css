@@ -271,6 +271,47 @@
     overflow: hidden;
 }
 
+/* Aplicar cursor pointer solo a los elementos del header y controles */
+#team-gantt-container .gantt-header,
+#team-gantt-container .gantt-title,
+#team-gantt-container .gantt-controls,
+#team-gantt-container .gantt-zoom-btn,
+#team-gantt-container .gantt-toggle-btn {
+    cursor: pointer !important;
+}
+
+/* El timeline debe tener cursor grab (mano abierta) para arrastrar */
+#team-gantt-container .gantt-timeline {
+    cursor: url('/images/cursor-grab.png') 12 12, url('/images/cursor-grab.svg') 12 12, -webkit-grab, grab !important;
+}
+
+#team-gantt-container .gantt-timeline.gantt-dragging {
+    cursor: url('/images/cursor-grabbing.png') 12 12, url('/images/cursor-grabbing.svg') 12 12, -webkit-grabbing, grabbing !important;
+}
+
+/* Hover del timeline mantiene cursor grab */
+#team-gantt-container .gantt-timeline:hover:not(.gantt-dragging) {
+    cursor: url('/images/cursor-grab.png') 12 12, url('/images/cursor-grab.svg') 12 12, -webkit-grab, grab !important;
+}
+
+/* Las barras del gantt mantienen cursor pointer (manito con dedo índice) - debe ir primero */
+#team-gantt-container .gantt-timeline .gantt-bar,
+#team-gantt-container .gantt-bar {
+    cursor: pointer !important;
+}
+
+/* Asegurar que las filas y celdas del timeline hereden el cursor grab */
+#team-gantt-container .gantt-timeline-rows,
+#team-gantt-container .gantt-timeline-row,
+#team-gantt-container .gantt-timeline-bg-cell {
+    cursor: url('/images/cursor-grab.png') 12 12, url('/images/cursor-grab.svg') 12 12, -webkit-grab, grab !important;
+}
+
+/* Asegurar que todos los elementos hijos del timeline hereden el cursor grab, excepto las barras */
+#team-gantt-container .gantt-timeline *:not(.gantt-bar) {
+    cursor: url('/images/cursor-grab.png') 12 12, url('/images/cursor-grab.svg') 12 12, -webkit-grab, grab !important;
+}
+
 .gantt-header {
     display: flex;
     align-items: center;
