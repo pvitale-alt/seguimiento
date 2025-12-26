@@ -507,14 +507,35 @@ async function actualizarFilaProyectoEnTabla(id_proyecto) {
             return;
         }
         
-        // Función auxiliar para formatear fecha corta (dd/mm)
+        // Función auxiliar para formatear fecha corta (dd/mm/aaaa)
+        // Usar la función global si existe, sino usar esta implementación
         function formatearFechaCorta(fecha) {
             if (!fecha) return '-';
-            const match = String(fecha).match(/^(\d{4})-(\d{2})-(\d{2})/);
-            if (match) {
-                return match[3] + '/' + match[2];
+            try {
+                let fechaStr = fecha;
+                if (typeof fecha === 'object' && fecha instanceof Date) {
+                    const day = String(fecha.getDate()).padStart(2, '0');
+                    const month = String(fecha.getMonth() + 1).padStart(2, '0');
+                    const year = fecha.getFullYear();
+                    return day + '/' + month + '/' + year;
+                }
+                if (typeof fecha === 'string') {
+                    // Formato YYYY-MM-DD
+                    const match = fecha.match(/^(\d{4})-(\d{2})-(\d{2})/);
+                    if (match) {
+                        return match[3] + '/' + match[2] + '/' + match[1];
+                    }
+                    // Formato DD/MM/YYYY
+                    const match2 = fecha.match(/^(\d{2})\/(\d{2})\/(\d{4})/);
+                    if (match2) {
+                        return fecha;
+                    }
+                }
+                return fecha;
+            } catch (e) {
+                console.error('Error al formatear fecha:', e);
+                return fecha;
             }
-            return fecha;
         }
         
         // Calcular fechas de inicio y fin desde epics o del proyecto
