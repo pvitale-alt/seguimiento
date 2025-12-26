@@ -58,17 +58,62 @@
 }
 
 /* Wrapper de tabla para proyectos - contiene la tabla real */
-.modern-table-wrapper.proyectos-wrapper {
+#contenido .modern-table-wrapper.proyectos-wrapper {
     display: block;
     width: 100%;
-    overflow-x: hidden;
-    /* Ocultar scrollbar horizontal - usa el fijo inferior */
+    overflow-x: auto;
+    /* Permitir scroll horizontal para drag scroll */
     overflow-y: hidden;
     box-sizing: border-box;
     min-width: 0;
     background: white;
     margin: 0;
     padding: 0;
+    /* Cursor grab para desplazamiento horizontal */
+    cursor: url('/images/cursor-grab.png') 12 12, url('/images/cursor-grab.svg') 12 12, -webkit-grab, grab !important;
+    user-select: none;
+}
+
+#contenido .modern-table-wrapper.proyectos-wrapper.proyectos-dragging {
+    cursor: url('/images/cursor-grabbing.png') 12 12, url('/images/cursor-grabbing.svg') 12 12, -webkit-grabbing, grabbing !important;
+}
+
+/* Hover del wrapper mantiene cursor grab */
+#contenido .modern-table-wrapper.proyectos-wrapper:hover:not(.proyectos-dragging) {
+    cursor: url('/images/cursor-grab.png') 12 12, url('/images/cursor-grab.svg') 12 12, -webkit-grab, grab !important;
+}
+
+/* Las celdas NO editables (Cliente, Categoría, Fechas) mantienen cursor grab por defecto */
+/* Aplicar cursor grab a todas las celdas primero */
+#contenido .modern-table-wrapper.proyectos-wrapper .modern-table-cell {
+    cursor: url('/images/cursor-grab.png') 12 12, url('/images/cursor-grab.svg') 12 12, -webkit-grab, grab !important;
+}
+
+/* Los elementos editables dentro de las celdas mantienen cursor pointer (manito con dedo índice) */
+#contenido .modern-table-wrapper.proyectos-wrapper .modern-table-cell .win-textarea,
+#contenido .modern-table-wrapper.proyectos-wrapper .modern-table-cell .modern-select,
+#contenido .modern-table-wrapper.proyectos-wrapper .modern-table-cell .modern-input,
+#contenido .modern-table-wrapper.proyectos-wrapper .modern-table-cell .progress-slider,
+#contenido .modern-table-wrapper.proyectos-wrapper .modern-table-cell .progress-bar-container,
+#contenido .modern-table-wrapper.proyectos-wrapper .modern-table-cell a[onclick],
+#contenido .modern-table-wrapper.proyectos-wrapper .modern-table-cell a[href*="javascript"] {
+    cursor: pointer !important;
+}
+
+/* Asegurar que la tabla y el header hereden el cursor grab */
+#contenido .modern-table-wrapper.proyectos-wrapper .modern-table.proyectos,
+#contenido .modern-table-wrapper.proyectos-wrapper .modern-table-header {
+    cursor: url('/images/cursor-grab.png') 12 12, url('/images/cursor-grab.svg') 12 12, -webkit-grab, grab !important;
+}
+
+/* Asegurar que las filas hereden el cursor grab (no pointer) */
+#contenido .modern-table-wrapper.proyectos-wrapper .modern-table-row {
+    cursor: url('/images/cursor-grab.png') 12 12, url('/images/cursor-grab.svg') 12 12, -webkit-grab, grab !important;
+}
+
+/* Asegurar que todos los elementos hijos del wrapper hereden el cursor grab, excepto las celdas */
+#contenido .modern-table-wrapper.proyectos-wrapper *:not(.modern-table-cell) {
+    cursor: url('/images/cursor-grab.png') 12 12, url('/images/cursor-grab.svg') 12 12, -webkit-grab, grab !important;
 }
 
 /* Scrollbar fija en la parte inferior - SIN fondo, más grande */
@@ -172,10 +217,12 @@
 }
 
 /* Firefox scrollbar - solo horizontal - OCULTO */
-.modern-table-wrapper.proyectos-wrapper {
+#contenido .modern-table-wrapper.proyectos-wrapper {
     scrollbar-width: none;
     /* Ocultar scrollbar en Firefox */
     scrollbar-color: transparent transparent;
+    /* Mantener cursor grab incluso con scrollbar oculta */
+    cursor: url('/images/cursor-grab.png') 12 12, url('/images/cursor-grab.svg') 12 12, -webkit-grab, grab !important;
 }
 
 /* Alinear la tabla de mantenimiento a la izquierda con las tabs - Responsive */
@@ -239,6 +286,8 @@
     padding: 12px 16px;
     background: rgba(230, 235, 239, 1);
     font-size: 15px;
+    /* Heredar cursor grab del wrapper padre, excepto en las celdas */
+    cursor: inherit;
     font-weight: 600;
     color: var(--text-secondary);
     border-bottom: none;

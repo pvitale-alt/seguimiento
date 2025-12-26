@@ -454,6 +454,62 @@ function renderizarTablaProyectos(datos, contenido) {
     setTimeout(() => {
         configurarScrollbarFija();
         ajustarScrollHorizontal();
+        // Inicializar drag scroll para la tabla de proyectos
+        inicializarDragScrollTabla();
+        // #region agent log
+        // Verificar estilos aplicados al wrapper de la tabla
+        setTimeout(() => {
+            const tableWrapper = document.querySelector('.modern-table-wrapper.proyectos-wrapper');
+            if (tableWrapper) {
+                const computedStyle = window.getComputedStyle(tableWrapper);
+                const cursorValue = computedStyle.cursor;
+                const isInContenido = tableWrapper.closest('#contenido') !== null;
+                
+                fetch('http://127.0.0.1:7242/ingest/189ba8e2-2400-4df2-81c2-090fea5089e3', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        location: 'table-renderer.js:454',
+                        message: 'Table wrapper styles after render',
+                        data: {
+                            wrapperClasses: Array.from(tableWrapper.classList),
+                            computedCursor: cursorValue,
+                            inlineCursor: tableWrapper.style.cursor,
+                            isInContenido: isInContenido,
+                            parentElement: tableWrapper.parentElement ? tableWrapper.parentElement.className : null
+                        },
+                        timestamp: Date.now(),
+                        sessionId: 'debug-session',
+                        runId: 'run1',
+                        hypothesisId: 'A'
+                    })
+                }).catch(() => {});
+                
+                // Verificar estilos de elementos hijos
+                const table = tableWrapper.querySelector('.modern-table.proyectos');
+                if (table) {
+                    const tableComputed = window.getComputedStyle(table);
+                    fetch('http://127.0.0.1:7242/ingest/189ba8e2-2400-4df2-81c2-090fea5089e3', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            location: 'table-renderer.js:454',
+                            message: 'Table element styles',
+                            data: {
+                                tableClasses: Array.from(table.classList),
+                                computedCursor: tableComputed.cursor,
+                                inlineCursor: table.style.cursor
+                            },
+                            timestamp: Date.now(),
+                            sessionId: 'debug-session',
+                            runId: 'run1',
+                            hypothesisId: 'B'
+                        })
+                    }).catch(() => {});
+                }
+            }
+        }, 200);
+        // #endregion
         // Ajustar altura de todos los textareas WIN
         document.querySelectorAll('.win-textarea').forEach(textarea => {
             ajustarAlturaTextarea(textarea);
@@ -929,6 +985,131 @@ if (typeof window !== 'undefined') {
             ajustarScrollHorizontal();
         }, 250);
     });
+}
+
+/**
+ * Inicializa el drag scroll para la tabla de proyectos (similar al gantt)
+ * Permite arrastrar horizontalmente la tabla con el cursor grab
+ */
+function inicializarDragScrollTabla() {
+    const tableWrapper = document.querySelector('.modern-table-wrapper.proyectos-wrapper');
+    if (!tableWrapper) return;
+    
+    let isDragging = false;
+    let startX = 0;
+    let startScrollLeft = 0;
+    
+    // URLs de los cursores personalizados - usar solo fallbacks en JavaScript ya que el CSS maneja las imágenes
+    const cursorGrabUrl = '-webkit-grab';
+    const cursorGrabbingUrl = '-webkit-grabbing';
+    
+    // Función para forzar actualización del cursor
+    const forceCursorUpdate = (cursorUrl) => {
+        tableWrapper.style.cursor = cursorUrl;
+        void tableWrapper.offsetHeight;
+    };
+    
+    // Función para establecer cursor grab (manito abierta)
+    const setCursorGrab = () => {
+        tableWrapper.classList.remove('proyectos-dragging');
+        forceCursorUpdate(cursorGrabUrl);
+    };
+    
+    // Función para establecer cursor grabbing (manito cerrada)
+    const setCursorGrabbing = () => {
+        tableWrapper.classList.add('proyectos-dragging');
+        forceCursorUpdate(cursorGrabbingUrl);
+    };
+    
+    // Mousedown: iniciar arrastre
+    const handleMouseDown = (e) => {
+        // No arrastrar si se hace click en elementos editables dentro de las celdas
+        // Pero SÍ permitir arrastrar si se hace click en celdas no editables (Cliente, Categoría, Fechas)
+        if (e.target.closest('.win-textarea') || 
+            e.target.closest('.modern-select') || 
+            e.target.closest('.modern-input') ||
+            e.target.closest('.progress-slider') ||
+            e.target.closest('a[onclick]') ||
+            e.target.closest('a[href*="javascript"]')) {
+            return;
+        }
+        
+        isDragging = true;
+        startX = e.clientX;
+        startScrollLeft = tableWrapper.scrollLeft;
+        
+        setCursorGrabbing();
+        
+        // Prevenir selección de texto
+        e.preventDefault();
+        
+        // Agregar clase al body para prevenir selección global
+        document.body.style.userSelect = 'none';
+        document.body.style.cursor = cursorGrabbingUrl;
+    };
+    
+    // Mousemove: arrastrar o actualizar cursor
+    const handleMouseMove = (e) => {
+        if (isDragging) {
+            // Modo arrastre: desplazar el scroll
+            e.preventDefault();
+            const deltaX = e.clientX - startX;
+            const scrollAmount = deltaX * 1.5; // Factor de velocidad
+            tableWrapper.scrollLeft = startScrollLeft - scrollAmount;
+        } else {
+            // Modo normal: forzar actualización del cursor solo si no está sobre elementos editables
+            // Permitir cursor grab en celdas no editables
+            if (!e.target.closest('.win-textarea') && 
+                !e.target.closest('.modern-select') && 
+                !e.target.closest('.modern-input') &&
+                !e.target.closest('.progress-slider') &&
+                !e.target.closest('a[onclick]') &&
+                !e.target.closest('a[href*="javascript"]')) {
+                tableWrapper.style.cursor = cursorGrabUrl;
+            }
+        }
+    };
+    
+    // Mouseup: finalizar arrastre
+    const handleMouseUp = () => {
+        if (!isDragging) return;
+        
+        isDragging = false;
+        setCursorGrab();
+        
+        // Restaurar selección de texto
+        document.body.style.userSelect = '';
+        document.body.style.cursor = '';
+    };
+    
+    // Mouseleave: cancelar arrastre si el mouse sale del elemento
+    const handleMouseLeave = () => {
+        if (isDragging) {
+            isDragging = false;
+            setCursorGrab();
+            document.body.style.userSelect = '';
+            document.body.style.cursor = '';
+        }
+    };
+    
+    // Mouseenter: forzar actualización del cursor cuando el mouse entra
+    const handleMouseEnter = () => {
+        if (!isDragging) {
+            tableWrapper.style.cursor = cursorGrabUrl;
+            setTimeout(() => {
+                if (!isDragging) {
+                    setCursorGrab();
+                }
+            }, 10);
+        }
+    };
+    
+    // Agregar event listeners
+    tableWrapper.addEventListener('mousedown', handleMouseDown);
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+    tableWrapper.addEventListener('mouseleave', handleMouseLeave);
+    tableWrapper.addEventListener('mouseenter', handleMouseEnter);
 }
 
 
