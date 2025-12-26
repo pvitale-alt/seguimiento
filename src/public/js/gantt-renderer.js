@@ -856,7 +856,7 @@ function renderizarGanttVacio() {
 
 /**
  * Nueva implementación de drag scroll para Gantt
- * Implementada desde cero para solucionar problemas de cursor en Chrome
+ * Usa cursores personalizados (imágenes) para máxima consistencia en Chrome
  */
 function inicializarDragScrollGantt(element) {
     if (!element) return;
@@ -865,20 +865,49 @@ function inicializarDragScrollGantt(element) {
     let startX = 0;
     let startScrollLeft = 0;
     
-    // Función para establecer cursor grab
+    // URLs de los cursores personalizados
+    const cursorGrabUrl = 'url("/images/cursor-grab.png") 12 12, url("/images/cursor-grab.svg") 12 12, -webkit-grab, grab';
+    const cursorGrabbingUrl = 'url("/images/cursor-grabbing.png") 12 12, url("/images/cursor-grabbing.svg") 12 12, -webkit-grabbing, grabbing';
+    
+    // Función para forzar actualización del cursor en Chrome usando imágenes personalizadas
+    // Chrome necesita un "refresh" agresivo para renderizar cursores personalizados correctamente
+    const forceCursorUpdate = (cursorUrl) => {
+        // Método más agresivo: remover completamente el cursor, forzar reflow, luego aplicar
+        element.style.cursor = 'auto';
+        // Forzar reflow inmediato
+        void element.offsetHeight;
+        
+        // Usar doble requestAnimationFrame para asegurar que Chrome procese el cambio
+        requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+                element.style.cursor = cursorUrl;
+                // Forzar otro reflow después de aplicar el cursor
+                void element.offsetHeight;
+            });
+        });
+    };
+    
+    // Función para establecer cursor grab (manito abierta)
     const setCursorGrab = () => {
-        element.style.cursor = 'grab';
         element.classList.remove('gantt-dragging');
+        forceCursorUpdate(cursorGrabUrl);
     };
     
-    // Función para establecer cursor grabbing
+    // Función para establecer cursor grabbing (manito cerrada)
     const setCursorGrabbing = () => {
-        element.style.cursor = 'grabbing';
         element.classList.add('gantt-dragging');
+        forceCursorUpdate(cursorGrabbingUrl);
     };
     
-    // Inicializar cursor
-    setCursorGrab();
+    // Inicializar cursor después de que el elemento esté completamente renderizado
+    // Usar múltiples delays para asegurar que Chrome lo procese
+    setTimeout(() => {
+        setCursorGrab();
+        // Segundo intento después de un pequeño delay adicional
+        setTimeout(() => {
+            setCursorGrab();
+        }, 50);
+    }, 100);
     
     // Mousedown: iniciar arrastre
     const handleMouseDown = (e) => {
@@ -898,18 +927,25 @@ function inicializarDragScrollGantt(element) {
         
         // Agregar clase al body para prevenir selección global
         document.body.style.userSelect = 'none';
-        document.body.style.cursor = 'grabbing';
+        document.body.style.cursor = cursorGrabbingUrl;
     };
     
-    // Mousemove: arrastrar
+    // Mousemove: arrastrar o actualizar cursor
     const handleMouseMove = (e) => {
-        if (!isDragging) return;
-        
-        e.preventDefault();
-        
-        const deltaX = e.clientX - startX;
-        const scrollAmount = deltaX * 1.5; // Factor de velocidad
-        element.scrollLeft = startScrollLeft - scrollAmount;
+        if (isDragging) {
+            // Modo arrastre: desplazar el scroll
+            e.preventDefault();
+            const deltaX = e.clientX - startX;
+            const scrollAmount = deltaX * 1.5; // Factor de velocidad
+            element.scrollLeft = startScrollLeft - scrollAmount;
+        } else {
+            // Modo normal: forzar actualización del cursor en cada movimiento
+            // Esto es crítico para Chrome - necesita este "refresh" constante
+            if (!e.target.closest('.gantt-bar')) {
+                // Aplicar inmediatamente sin requestAnimationFrame para mejor responsividad
+                element.style.cursor = cursorGrabUrl;
+            }
+        }
     };
     
     // Mouseup: finalizar arrastre
@@ -934,14 +970,26 @@ function inicializarDragScrollGantt(element) {
         }
     };
     
+    // Mouseenter: forzar actualización del cursor cuando el mouse entra
+    // Esto es crítico para Chrome - fuerza el renderizado del cursor al entrar
+    const handleMouseEnter = () => {
+        if (!isDragging) {
+            // Aplicar inmediatamente y también con delay para asegurar que Chrome lo procese
+            element.style.cursor = cursorGrabUrl;
+            setTimeout(() => {
+                if (!isDragging) {
+                    setCursorGrab();
+                }
+            }, 10);
+        }
+    };
+    
     // Agregar event listeners
     element.addEventListener('mousedown', handleMouseDown);
     document.addEventListener('mousemove', handleMouseMove);
     document.addEventListener('mouseup', handleMouseUp);
     element.addEventListener('mouseleave', handleMouseLeave);
-    
-    // Limpiar listeners cuando el elemento se elimine (opcional, para evitar memory leaks)
-    // Esto se puede mejorar con AbortController si es necesario
+    element.addEventListener('mouseenter', handleMouseEnter);
 }
 
 function truncarNombreGantt(nombre) {

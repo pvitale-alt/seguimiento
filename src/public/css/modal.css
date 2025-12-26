@@ -423,10 +423,27 @@
     overflow-y: hidden;
     position: relative;
     user-select: none;
+    /* Cursor personalizado con fallbacks para máxima compatibilidad */
+    cursor: url('/images/cursor-grab.png') 12 12, url('/images/cursor-grab.svg') 12 12, -webkit-grab, grab !important;
 }
 
 .gantt-timeline.gantt-dragging {
-    cursor: grabbing !important;
+    cursor: url('/images/cursor-grabbing.png') 12 12, url('/images/cursor-grabbing.svg') 12 12, -webkit-grabbing, grabbing !important;
+}
+
+/* Forzar actualización del cursor en Chrome usando hover */
+.gantt-timeline:hover:not(.gantt-dragging) {
+    cursor: url('/images/cursor-grab.png') 12 12, url('/images/cursor-grab.svg') 12 12, -webkit-grab, grab !important;
+}
+
+/* Asegurar que los elementos hijos hereden el cursor correctamente */
+.gantt-timeline * {
+    cursor: inherit;
+}
+
+/* Excepción: las barras del Gantt deben tener cursor pointer */
+.gantt-timeline .gantt-bar {
+    cursor: pointer !important;
 }
 
 /* Animación de spinner para carga */
