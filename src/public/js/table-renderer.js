@@ -341,7 +341,8 @@ function renderizarTablaProyectos(datos, contenido) {
         }
 
         tablaHTML += '<div class="modern-table-cell item-text">' + abreviarCliente(item.cliente || '-') + '</div>';
-        tablaHTML += '<div class="modern-table-cell item-text" style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0;"><a href="javascript:void(0);" onclick="abrirModalDetalle(' + item.id_proyecto + '); event.stopPropagation();" data-item="' + itemDataJson + '" style="color: var(--primary-color); text-decoration: none; cursor: pointer; display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%;">' + nombreProyecto + '</a></div>';
+        // Celda del proyecto - editable (clickeable para abrir modal)
+        tablaHTML += '<div class="modern-table-cell item-text editable-cell" style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0;"><a href="javascript:void(0);" onclick="abrirModalDetalle(' + item.id_proyecto + '); event.stopPropagation();" data-item="' + itemDataJson + '" style="color: var(--primary-color); text-decoration: none; cursor: pointer; display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%;">' + nombreProyecto + '</a></div>';
         tablaHTML += '<div class="modern-table-cell item-text">' + abreviarCategoria(item.categoria) + '</div>';
 
         const estadoValue = item.estado || '';
@@ -359,7 +360,8 @@ function renderizarTablaProyectos(datos, contenido) {
         } else if (estadoValue === 'Bloqueado') {
             estadoClass = 'estado-bloqueado';
         }
-        tablaHTML += '<div class="modern-table-cell" style="text-align: center; justify-content: center;">' + crearDropdownEstado(item.id_proyecto, estadoValue, estadoClass) + '</div>';
+        // Celda de estado - editable (tiene dropdown)
+        tablaHTML += '<div class="modern-table-cell editable-cell" style="text-align: center; justify-content: center;">' + crearDropdownEstado(item.id_proyecto, estadoValue, estadoClass) + '</div>';
 
         const avanceValue = parseInt(item.avance) || 0;
         let avanceGradient = 'linear-gradient(90deg, #66bb6a 0%, #34a853 100%)';
@@ -372,12 +374,14 @@ function renderizarTablaProyectos(datos, contenido) {
         } else {
             avanceGradient = 'linear-gradient(90deg, #4caf50 0%, #34a853 50%, #1e8e3e 100%)';
         }
-        tablaHTML += '<div class="modern-table-cell"><div class="progress-bar-container" data-id="' + item.id_proyecto + '"><div class="progress-bar" style="width: ' + avanceValue + '%; background: ' + avanceGradient + ';"></div><input type="range" min="0" max="100" step="5" value="' + avanceValue + '" class="progress-slider" oninput="actualizarBarraProgreso(this);" onchange="actualizarProyecto(' + item.id_proyecto + ', \'avance\', this.value);" /></div></div>';
+        // Celda de avance - editable (tiene slider)
+        tablaHTML += '<div class="modern-table-cell editable-cell"><div class="progress-bar-container" data-id="' + item.id_proyecto + '"><div class="progress-bar" style="width: ' + avanceValue + '%; background: ' + avanceGradient + ';"></div><input type="range" min="0" max="100" step="5" value="' + avanceValue + '" class="progress-slider" oninput="actualizarBarraProgreso(this);" onchange="actualizarProyecto(' + item.id_proyecto + ', \'avance\', this.value);" /></div></div>';
 
-        tablaHTML += '<div class="modern-table-cell">' + crearDropdownOverall(item.id_proyecto, 'overall', item.overall || '', '') + '</div>';
-        tablaHTML += '<div class="modern-table-cell">' + crearDropdownOverall(item.id_proyecto, 'alcance', item.alcance || '', '') + '</div>';
-        tablaHTML += '<div class="modern-table-cell">' + crearDropdownOverall(item.id_proyecto, 'costo', item.costo || '', '') + '</div>';
-        tablaHTML += '<div class="modern-table-cell">' + crearDropdownOverall(item.id_proyecto, 'plazos', item.plazos || '', '') + '</div>';
+        // Celdas de Overall, Alcance, Costo, Plazos - editables (tienen dropdowns)
+        tablaHTML += '<div class="modern-table-cell editable-cell">' + crearDropdownOverall(item.id_proyecto, 'overall', item.overall || '', '') + '</div>';
+        tablaHTML += '<div class="modern-table-cell editable-cell">' + crearDropdownOverall(item.id_proyecto, 'alcance', item.alcance || '', '') + '</div>';
+        tablaHTML += '<div class="modern-table-cell editable-cell">' + crearDropdownOverall(item.id_proyecto, 'costo', item.costo || '', '') + '</div>';
+        tablaHTML += '<div class="modern-table-cell editable-cell">' + crearDropdownOverall(item.id_proyecto, 'plazos', item.plazos || '', '') + '</div>';
         // Columna Accionables - mostrar "Ver" si tiene accionables
         if (item.tiene_accionables) {
             tablaHTML += '<div class="modern-table-cell" style="text-align: center; justify-content: center;"><a href="javascript:void(0);" onclick="abrirModalDetalle(' + item.id_proyecto + ', true); event.stopPropagation();" style="color: var(--primary-color); text-decoration: none; cursor: pointer; font-size: 13px; font-weight: 500;">Ver</a></div>';
@@ -641,14 +645,18 @@ function crearFilaSubproyectoHTML(id_proyecto, subproyecto) {
     filaHTML += '<div class="modern-table-row proyecto-secundario-' + id_proyecto + ' subproyecto-row subproyectos-ocultos" data-id-proyecto="' + id_proyecto + '" data-id-subproyecto="' + subproyecto.id_proyecto + '" style="display: none;">';
     filaHTML += '<div class="modern-table-cell" style="width: 30px;"></div>';
     filaHTML += '<div class="modern-table-cell item-text"></div>';
-    filaHTML += '<div class="modern-table-cell item-text" style="padding-left: 16px; font-style: italic; color: var(--text-secondary); font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0;"><a href="javascript:void(0);" onclick="abrirModalDetalle(' + subproyecto.id_proyecto + '); event.stopPropagation();" data-item="' + subproyectoDataJson + '" style="color: var(--primary-color); text-decoration: none; cursor: pointer; display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%;">' + nombreSubproyecto + '</a></div>';
+    // Celda del subproyecto - editable (clickeable para abrir modal)
+    filaHTML += '<div class="modern-table-cell item-text editable-cell" style="padding-left: 16px; font-style: italic; color: var(--text-secondary); font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0;"><a href="javascript:void(0);" onclick="abrirModalDetalle(' + subproyecto.id_proyecto + '); event.stopPropagation();" data-item="' + subproyectoDataJson + '" style="color: var(--primary-color); text-decoration: none; cursor: pointer; display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%;">' + nombreSubproyecto + '</a></div>';
     filaHTML += '<div class="modern-table-cell item-text" style="font-size: 12px; color: var(--text-secondary);">' + abreviarCategoria(subproyecto.categoria) + '</div>';
-    filaHTML += '<div class="modern-table-cell" style="text-align: center; justify-content: center;">' + crearDropdownEstado(subproyecto.id_proyecto, estadoSubproyecto, 'subproyecto ' + estadoClassSub) + '</div>';
-    filaHTML += '<div class="modern-table-cell"><div class="progress-bar-container" data-id="' + subproyecto.id_proyecto + '"><div class="progress-bar" style="width: ' + avanceSubproyecto + '%; background: ' + avanceGradientSub + ';"></div><input type="range" min="0" max="100" step="5" value="' + avanceSubproyecto + '" class="progress-slider" oninput="actualizarBarraProgreso(this);" onchange="actualizarProyecto(' + subproyecto.id_proyecto + ', \'avance\', this.value);" /></div></div>';
-    filaHTML += '<div class="modern-table-cell">' + crearDropdownOverall(subproyecto.id_proyecto, 'overall', subproyecto.overall || '', 'subproyecto') + '</div>';
-    filaHTML += '<div class="modern-table-cell">' + crearDropdownOverall(subproyecto.id_proyecto, 'alcance', subproyecto.alcance || '', 'subproyecto') + '</div>';
-    filaHTML += '<div class="modern-table-cell">' + crearDropdownOverall(subproyecto.id_proyecto, 'costo', subproyecto.costo || '', 'subproyecto') + '</div>';
-    filaHTML += '<div class="modern-table-cell">' + crearDropdownOverall(subproyecto.id_proyecto, 'plazos', subproyecto.plazos || '', 'subproyecto') + '</div>';
+    // Celda de estado del subproyecto - editable (tiene dropdown)
+    filaHTML += '<div class="modern-table-cell editable-cell" style="text-align: center; justify-content: center;">' + crearDropdownEstado(subproyecto.id_proyecto, estadoSubproyecto, 'subproyecto ' + estadoClassSub) + '</div>';
+    // Celda de avance del subproyecto - editable (tiene slider)
+    filaHTML += '<div class="modern-table-cell editable-cell"><div class="progress-bar-container" data-id="' + subproyecto.id_proyecto + '"><div class="progress-bar" style="width: ' + avanceSubproyecto + '%; background: ' + avanceGradientSub + ';"></div><input type="range" min="0" max="100" step="5" value="' + avanceSubproyecto + '" class="progress-slider" oninput="actualizarBarraProgreso(this);" onchange="actualizarProyecto(' + subproyecto.id_proyecto + ', \'avance\', this.value);" /></div></div>';
+    // Celdas de Overall, Alcance, Costo, Plazos del subproyecto - editables (tienen dropdowns)
+    filaHTML += '<div class="modern-table-cell editable-cell">' + crearDropdownOverall(subproyecto.id_proyecto, 'overall', subproyecto.overall || '', 'subproyecto') + '</div>';
+    filaHTML += '<div class="modern-table-cell editable-cell">' + crearDropdownOverall(subproyecto.id_proyecto, 'alcance', subproyecto.alcance || '', 'subproyecto') + '</div>';
+    filaHTML += '<div class="modern-table-cell editable-cell">' + crearDropdownOverall(subproyecto.id_proyecto, 'costo', subproyecto.costo || '', 'subproyecto') + '</div>';
+    filaHTML += '<div class="modern-table-cell editable-cell">' + crearDropdownOverall(subproyecto.id_proyecto, 'plazos', subproyecto.plazos || '', 'subproyecto') + '</div>';
     // Columna Accionables para subproyectos - mostrar "Ver" si tiene accionables
     if (subproyecto.tiene_accionables) {
         filaHTML += '<div class="modern-table-cell" style="text-align: center; justify-content: center;"><a href="javascript:void(0);" onclick="abrirModalDetalle(' + subproyecto.id_proyecto + ', true); event.stopPropagation();" style="color: var(--primary-color); text-decoration: none; cursor: pointer; font-size: 13px; font-weight: 500;">Ver</a></div>';
@@ -1005,6 +1013,12 @@ function inicializarDragScrollTabla() {
             tableWrapper.scrollLeft = startScrollLeft - scrollAmount;
         } else {
             // Modo normal: forzar actualización del cursor solo si no está sobre elementos editables
+            // NO cambiar el cursor si está sobre una celda editable (debe mantener pointer)
+            const targetCell = e.target.closest('.modern-table-cell');
+            if (targetCell && (targetCell.classList.contains('editable-cell') || targetCell.classList.contains('win-cell'))) {
+                // No hacer nada - dejar que el CSS maneje el cursor pointer
+                return;
+            }
             // Permitir cursor grab en celdas no editables
             if (!e.target.closest('.win-textarea') && 
                 !e.target.closest('.modern-select') && 

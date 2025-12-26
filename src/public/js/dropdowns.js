@@ -22,7 +22,7 @@ function crearDropdownOverall(idProyecto, campo, valorActual, clasesAdicionales)
     
     let html = '<div style="position: relative; display: inline-block;">';
     html += '<button class="modern-select overall-select ' + valorActualClass + ' ' + clasesAdicionales + '" onclick="toggleCustomDropdown(\'' + dropdownId + '\', this)" style="text-align: center; border: none; background: ' + bgColor + '; padding: 4px 6px; border-radius: 12px; cursor: pointer; font-size: 16px; min-width: 36px; height: 28px; white-space: nowrap;">' + textoMostrado + '</button>';
-    html += '<div id="' + dropdownId + '" class="custom-dropdown" style="display: none; position: absolute; top: 100%; left: 0; background: white; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.15); z-index: 10000; margin-top: 4px; overflow: hidden; min-width: 60px;">';
+    html += '<div id="' + dropdownId + '" class="custom-dropdown" style="display: none; position: absolute; top: 100%; left: 0; background: white; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.15); z-index: 20001; margin-top: 4px; overflow: hidden; min-width: 60px;">';
     opciones.forEach(opcion => {
         const isSelected = opcion.valor === valorActual;
         const onclickFunc = esSubproyecto ? 'seleccionarDropdownOptionSubproyecto' : 'seleccionarDropdownOption';
@@ -56,7 +56,7 @@ function crearDropdownIconos(idProyecto, campo, valorActual, tipo, clasesAdicion
     
     let html = '<div style="position: relative; display: inline-block;">';
     html += '<button class="modern-select icon-select ' + valorActualClass + ' ' + clasesAdicionales + '" onclick="toggleCustomDropdown(\'' + dropdownId + '\', this)" style="text-align: left; border: none; background: #f8f9fa; padding: 6px 10px; border-radius: 16px; cursor: pointer; font-size: 20px; min-width: 50px; white-space: nowrap;">' + textoMostrado + '</button>';
-    html += '<div id="' + dropdownId + '" class="custom-dropdown" style="display: none; position: absolute; top: 100%; left: 0; background: white; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.15); z-index: 10000; margin-top: 4px; overflow: hidden; min-width: 60px;">';
+    html += '<div id="' + dropdownId + '" class="custom-dropdown" style="display: none; position: absolute; top: 100%; left: 0; background: white; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.15); z-index: 20001; margin-top: 4px; overflow: hidden; min-width: 60px;">';
     opciones.forEach(opcion => {
         const isSelected = opcion.valor === valorActual;
         html += '<div onclick="seleccionarDropdownOption(\'' + dropdownId + '\', \'' + campo + '\', ' + idProyecto + ', \'' + opcion.valor + '\', this)" style="padding: 8px 12px; cursor: pointer; transition: background 0.2s; text-align: center; font-size: 20px; background: ' + (isSelected ? '#e8f0fe' : 'white') + '; color: ' + (isSelected ? 'var(--primary-color)' : 'var(--text-primary)') + '; white-space: nowrap;" onmouseover="this.style.background=\'#f1f3f4\'" onmouseout="this.style.background=\'' + (isSelected ? '#e8f0fe' : 'white') + '\'">' + opcion.icono + '</div>';
@@ -81,7 +81,7 @@ function crearDropdownCaras(idProyecto, campo, valorActual, clasesAdicionales) {
     
     let html = '<div style="position: relative; display: inline-block;">';
     html += '<button class="modern-select face-select ' + valorActualClass + ' ' + clasesAdicionales + '" onclick="toggleCustomDropdown(\'' + dropdownId + '\', this)" style="text-align: left; border: none; background: ' + (valorActualClass === 'satisfaccion-calavera' ? '#000000' : '#f8f9fa') + '; padding: 6px 10px; border-radius: 16px; cursor: pointer; font-size: 20px; min-width: 50px; white-space: nowrap; color: ' + (valorActualClass === 'satisfaccion-calavera' ? '#ffffff' : 'var(--text-primary)') + ';">' + textoMostrado + '</button>';
-    html += '<div id="' + dropdownId + '" class="custom-dropdown" style="display: none; position: absolute; top: 100%; left: 0; background: white; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.15); z-index: 10000; margin-top: 4px; overflow: hidden; min-width: 60px;">';
+    html += '<div id="' + dropdownId + '" class="custom-dropdown" style="display: none; position: absolute; top: 100%; left: 0; background: white; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.15); z-index: 20001; margin-top: 4px; overflow: hidden; min-width: 60px;">';
     opciones.forEach(opcion => {
         const isSelected = opcion.valor === valorActual;
         html += '<div onclick="seleccionarDropdownOption(\'' + dropdownId + '\', \'' + campo + '\', ' + idProyecto + ', \'' + opcion.valor + '\', this)" style="padding: 8px 12px; cursor: pointer; transition: background 0.2s; text-align: center; font-size: 20px; background: ' + (isSelected ? '#e8f0fe' : 'white') + '; color: ' + (isSelected ? 'var(--primary-color)' : 'var(--text-primary)') + '; white-space: nowrap;" onmouseover="this.style.background=\'#f1f3f4\'" onmouseout="this.style.background=\'' + (isSelected ? '#e8f0fe' : 'white') + '\'">' + opcion.icono + '</div>';
@@ -125,7 +125,7 @@ function crearDropdownEstado(idProyecto, valorActual, clasesAdicionales) {
     
     let html = '<div style="position: relative; display: inline-block;">';
     html += '<button class="modern-select estado-select ' + estadoClass + ' ' + clasesAdicionales + '" onclick="toggleCustomDropdown(\'' + dropdownId + '\', this)" style="text-align: center; border: none; padding: 4px 8px; border-radius: 14px; cursor: pointer; font-size: 11px; font-weight: 500; font-family: \'Google Sans\', \'Roboto\', sans-serif; min-width: 80px; height: 28px; white-space: nowrap;">' + textoMostrado + '</button>';
-    html += '<div id="' + dropdownId + '" class="custom-dropdown" style="display: none; position: absolute; top: 100%; left: 0; background: white; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.15); z-index: 10000; margin-top: 4px; overflow: hidden; min-width: 120px;">';
+    html += '<div id="' + dropdownId + '" class="custom-dropdown" style="display: none; position: absolute; top: 100%; left: 0; background: white; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.15); z-index: 20001; margin-top: 4px; overflow: hidden; min-width: 120px;">';
     opciones.forEach(opcion => {
         const isSelected = opcion.valor === valorActual;
         const onclickFunc = esSubproyecto ? 'seleccionarDropdownEstadoSubproyecto' : 'seleccionarDropdownEstado';
@@ -158,7 +158,7 @@ function crearDropdownRiesgo(idProyecto, valorActual, clasesAdicionales) {
     
     let html = '<div style="position: relative; display: inline-block;">';
     html += '<button class="modern-select riesgo-select ' + riesgoClass + ' ' + clasesAdicionales + '" onclick="toggleCustomDropdown(\'' + dropdownId + '\', this)" style="text-align: center; border: none; background: #f8f9fa; padding: 4px 6px; border-radius: 12px; cursor: pointer; font-size: 16px; min-width: 36px; height: 28px; white-space: nowrap;">' + textoMostrado + '</button>';
-    html += '<div id="' + dropdownId + '" class="custom-dropdown" style="display: none; position: absolute; top: 100%; left: 0; background: white; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.15); z-index: 10000; margin-top: 4px; overflow: hidden; min-width: 60px;">';
+    html += '<div id="' + dropdownId + '" class="custom-dropdown" style="display: none; position: absolute; top: 100%; left: 0; background: white; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.15); z-index: 20001; margin-top: 4px; overflow: hidden; min-width: 60px;">';
     opciones.forEach(opcion => {
         const isSelected = opcion.valor === valorActual || (valorActual === 'okey' && opcion.valor === 'ok') || (valorActual === 'redflag' && opcion.valor === 'red flag');
         const onclickFunc = esSubproyecto ? 'seleccionarDropdownRiesgoSubproyecto' : 'seleccionarDropdownRiesgo';
@@ -191,7 +191,7 @@ function crearDropdownEstadoAccionable(id_accionable, valorActual) {
     
     let html = '<div style="position: relative; display: inline-block;">';
     html += '<button class="modern-select estado-select ' + estadoClass + '" onclick="toggleCustomDropdown(\'' + dropdownId + '\', this)" style="text-align: center; border: none; padding: 4px 8px; border-radius: 14px; cursor: pointer; font-size: 11px; font-weight: 500; font-family: \'Google Sans\', \'Roboto\', sans-serif; min-width: 80px; height: 28px; white-space: nowrap;">' + textoMostrado + '</button>';
-    html += '<div id="' + dropdownId + '" class="custom-dropdown" style="display: none; position: absolute; top: 100%; left: 0; background: white; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.15); z-index: 10000; margin-top: 4px; overflow: hidden; min-width: 120px;">';
+    html += '<div id="' + dropdownId + '" class="custom-dropdown" style="display: none; position: absolute; top: 100%; left: 0; background: white; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.15); z-index: 20001; margin-top: 4px; overflow: hidden; min-width: 120px;">';
     opciones.forEach(opcion => {
         const isSelected = opcion.valor === valorActual;
         html += '<div onclick="seleccionarDropdownEstadoAccionable(\'' + dropdownId + '\', ' + id_accionable + ', \'' + opcion.valor + '\', this)" style="padding: 8px 12px; cursor: pointer; transition: background 0.2s; text-align: center; font-size: 13px; background: ' + (isSelected ? '#e8f0fe' : 'white') + '; color: ' + (isSelected ? 'var(--primary-color)' : 'var(--text-primary)') + '; white-space: nowrap;" onmouseover="this.style.background=\'#f1f3f4\'" onmouseout="this.style.background=\'' + (isSelected ? '#e8f0fe' : 'white') + '\'">' + opcion.label + '</div>';
@@ -268,13 +268,22 @@ function toggleCustomDropdown(dropdownId, button) {
         dropdown.style.position = 'fixed';
         dropdown.style.left = rect.left + 'px';
         dropdown.style.width = rect.width + 'px';
-        dropdown.style.zIndex = '10000';
+        // Aumentar z-index para que esté por encima del Gantt y otros elementos
+        // El modal tiene z-index 2000, así que usamos 20001 para estar por encima
+        dropdown.style.zIndex = '20001';
         dropdown.style.visibility = 'visible';
         
         // Determinar si mostrar arriba o abajo
+        // Priorizar mostrar hacia arriba si hay poco espacio abajo y más espacio arriba
         let showAbove = false;
         if (!hasSpaceBelow && hasSpaceAbove) {
             showAbove = true;
+        } else if (hasSpaceBelow && hasSpaceAbove && spaceBelow < spaceAbove && spaceBelow < 200) {
+            // Si hay poco espacio abajo pero más arriba, mostrar arriba
+            showAbove = true;
+        }
+        
+        if (showAbove) {
             dropdown.style.top = (rect.top - dropdownHeight - 4) + 'px';
             dropdown.style.bottom = 'auto';
         } else {

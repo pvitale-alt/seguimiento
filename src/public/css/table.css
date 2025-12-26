@@ -89,7 +89,25 @@
     cursor: url('/images/cursor-grab.png') 12 12, url('/images/cursor-grab.svg') 12 12, -webkit-grab, grab !important;
 }
 
-/* Los elementos editables dentro de las celdas mantienen cursor pointer (manito con dedo índice) */
+/* Celdas editables: cursor pointer en toda la celda (manito con dedo índice) */
+/* Usar clase editable-cell para identificar celdas editables */
+/* Máxima especificidad para sobrescribir todos los estilos de filas y otros elementos */
+#contenido .modern-table-wrapper.proyectos-wrapper .modern-table.proyectos .modern-table-row .modern-table-cell.editable-cell,
+#contenido .modern-table-wrapper.proyectos-wrapper .modern-table.proyectos .modern-table-row .modern-table-cell.win-cell,
+#contenido .modern-table-wrapper.proyectos-wrapper .modern-table-row .modern-table-cell.editable-cell,
+#contenido .modern-table-wrapper.proyectos-wrapper .modern-table-row .modern-table-cell.win-cell,
+#contenido .modern-table-wrapper.proyectos-wrapper .modern-table-cell.editable-cell,
+#contenido .modern-table-wrapper.proyectos-wrapper .modern-table-cell.win-cell {
+    cursor: pointer !important;
+}
+
+/* Asegurar que el cursor pointer se aplique incluso cuando se hace hover sobre la celda editable */
+#contenido .modern-table-wrapper.proyectos-wrapper .modern-table-cell.editable-cell:hover,
+#contenido .modern-table-wrapper.proyectos-wrapper .modern-table-cell.win-cell:hover {
+    cursor: pointer !important;
+}
+
+/* Los elementos editables dentro de las celdas también mantienen cursor pointer */
 #contenido .modern-table-wrapper.proyectos-wrapper .modern-table-cell .win-textarea,
 #contenido .modern-table-wrapper.proyectos-wrapper .modern-table-cell .modern-select,
 #contenido .modern-table-wrapper.proyectos-wrapper .modern-table-cell .modern-input,
@@ -107,13 +125,27 @@
 }
 
 /* Asegurar que las filas hereden el cursor grab (no pointer) */
+/* Pero NO aplicar a las celdas editables que deben tener pointer */
 #contenido .modern-table-wrapper.proyectos-wrapper .modern-table-row {
     cursor: url('/images/cursor-grab.png') 12 12, url('/images/cursor-grab.svg') 12 12, -webkit-grab, grab !important;
 }
 
-/* Asegurar que todos los elementos hijos del wrapper hereden el cursor grab, excepto las celdas */
-#contenido .modern-table-wrapper.proyectos-wrapper *:not(.modern-table-cell) {
+/* Asegurar que las celdas editables dentro de las filas tengan pointer (mayor especificidad) */
+#contenido .modern-table-wrapper.proyectos-wrapper .modern-table-row .modern-table-cell.editable-cell,
+#contenido .modern-table-wrapper.proyectos-wrapper .modern-table-row .modern-table-cell.win-cell {
+    cursor: pointer !important;
+}
+
+/* Asegurar que todos los elementos hijos del wrapper hereden el cursor grab, excepto las celdas editables */
+/* Excluir explícitamente las celdas editables y sus hijos */
+#contenido .modern-table-wrapper.proyectos-wrapper *:not(.modern-table-cell):not(.editable-cell):not(.win-cell) {
     cursor: url('/images/cursor-grab.png') 12 12, url('/images/cursor-grab.svg') 12 12, -webkit-grab, grab !important;
+}
+
+/* Asegurar que los elementos dentro de celdas editables NO hereden el cursor grab */
+#contenido .modern-table-wrapper.proyectos-wrapper .modern-table-cell.editable-cell *,
+#contenido .modern-table-wrapper.proyectos-wrapper .modern-table-cell.win-cell * {
+    cursor: inherit !important;
 }
 
 /* Scrollbar fija en la parte inferior - SIN fondo, más grande */
