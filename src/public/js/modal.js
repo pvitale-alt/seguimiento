@@ -70,21 +70,63 @@ window.abrirModalDetalle = async function abrirModalDetalle(id_proyecto, mostrar
         const modalTitulo = document.getElementById('modalTitulo');
         const modalBody = document.getElementById('modalBody');
 
-        // Guardar el proyecto actual en el historial si existe uno abierto
-        // Solo agregar al historial si no estamos volviendo desde un subproyecto
+        // Guardar el proyecto actual en el historial solo si:
+        // 1. Hay un proyecto abierto actualmente
+        // 2. El proyecto actual es un proyecto padre (tiene subproyectos)
+        // 3. El proyecto nuevo es un subproyecto (tiene proyecto_padre)
         const proyectoActual = modalBody.getAttribute('data-proyecto-actual');
         if (proyectoActual && proyectoActual !== String(id_proyecto)) {
-            modalHistorial.push({
-                id: proyectoActual,
-                nombre: modalTitulo.textContent,
-                data: modalBody.getAttribute('data-proyecto-data') ? JSON.parse(modalBody.getAttribute('data-proyecto-data')) : null
-            });
+            const proyectoActualDataStr = modalBody.getAttribute('data-proyecto-data');
+            let proyectoActualData = null;
+            if (proyectoActualDataStr) {
+                try {
+                    proyectoActualData = JSON.parse(proyectoActualDataStr);
+                } catch (e) {
+                    console.error('Error al parsear datos del proyecto actual:', e);
+                }
+            }
+            
+            // Verificar si el proyecto nuevo es un subproyecto
+            const esSubproyectoNuevo = itemData.proyecto_padre != null && itemData.proyecto_padre !== undefined && itemData.proyecto_padre !== '';
+            
+            // Si el nuevo proyecto es un subproyecto, verificar si el proyecto actual es su padre
+            if (esSubproyectoNuevo) {
+                // Verificar si el proyecto actual es el padre del subproyecto nuevo
+                const proyectoPadreDelSubproyecto = String(itemData.proyecto_padre);
+                const esProyectoPadreActual = proyectoActual === proyectoPadreDelSubproyecto;
+                
+                // También verificar si tiene_subproyectos está en los datos
+                const tieneSubproyectos = proyectoActualData && (proyectoActualData.tiene_subproyectos || false);
+                
+                console.log('🔍 Verificando historial:', {
+                    proyectoActual: proyectoActual,
+                    proyectoPadreDelSubproyecto: proyectoPadreDelSubproyecto,
+                    esProyectoPadreActual: esProyectoPadreActual,
+                    tieneSubproyectos: tieneSubproyectos,
+                    esSubproyectoNuevo: esSubproyectoNuevo
+                });
+                
+                // Solo agregar al historial si el proyecto actual es el padre del subproyecto
+                if (esProyectoPadreActual) {
+                    modalHistorial.push({
+                        id: proyectoActual,
+                        nombre: modalTitulo.textContent,
+                        data: proyectoActualData
+                    });
+                    console.log('✅ Historial actualizado:', modalHistorial);
+                } else {
+                    // Si no cumple las condiciones, limpiar el historial
+                    modalHistorial = [];
+                    console.log('❌ Historial limpiado - no es el padre del subproyecto');
+                }
+            } else {
+                // Si el nuevo proyecto no es un subproyecto, limpiar el historial
+                modalHistorial = [];
+                console.log('❌ Historial limpiado - el nuevo proyecto no es un subproyecto');
+            }
         }
 
         modalTitulo.textContent = itemData.nombre_proyecto || 'Detalle del Proyecto';
-
-        // Actualizar botón "Volver" en el header (después de actualizar el historial)
-        actualizarBotonVolver();
 
         // Verificar si es proyecto padre
         // Primero verificar en itemData, si no está, verificar consultando la API
@@ -613,6 +655,9 @@ window.abrirModalDetalle = async function abrirModalDetalle(id_proyecto, mostrar
         modal.style.display = 'flex';
         document.body.style.overflow = 'hidden';
 
+        // Actualizar botón "Volver" después de guardar los datos en modalBody
+        actualizarBotonVolver();
+
         // Cargar accionables
         cargarAccionablesProyecto(id_proyecto);
 
@@ -879,11 +924,41 @@ function actualizarBotonVolver() {
         // Asegurar que tiene las clases correctas
         btnVolver.className = 'button button-inverted';
 
-        // Mostrar u ocultar según si hay historial
-        if (modalHistorial.length > 0) {
+        // Obtener datos del proyecto actual desde el modalBody
+        const modalBody = document.getElementById('modalBody');
+        let esSubproyecto = false;
+        
+        if (modalBody) {
+            const proyectoDataStr = modalBody.getAttribute('data-proyecto-data');
+            if (proyectoDataStr) {
+                try {
+                    const proyectoData = JSON.parse(proyectoDataStr);
+                    // Un subproyecto tiene proyecto_padre definido
+                    esSubproyecto = proyectoData.proyecto_padre != null && proyectoData.proyecto_padre !== undefined && proyectoData.proyecto_padre !== '';
+                    
+                    // Debug: verificar valores
+                    console.log('🔍 actualizarBotonVolver - Debug:', {
+                        tieneHistorial: modalHistorial.length > 0,
+                        historialLength: modalHistorial.length,
+                        esSubproyecto: esSubproyecto,
+                        proyecto_padre: proyectoData.proyecto_padre,
+                        proyectoData: proyectoData
+                    });
+                } catch (e) {
+                    console.error('Error al parsear datos del proyecto:', e);
+                }
+            }
+        }
+
+        // Mostrar el botón solo si:
+        // 1. Hay historial (se ingresó desde un proyecto padre)
+        // 2. Y el proyecto actual es un subproyecto (tiene proyecto_padre)
+        if (modalHistorial.length > 0 && esSubproyecto) {
             btnVolver.style.display = 'flex';
+            console.log('✅ Botón Volver mostrado');
         } else {
             btnVolver.style.display = 'none';
+            console.log('❌ Botón Volver oculto - Historial:', modalHistorial.length, 'EsSubproyecto:', esSubproyecto);
         }
     }
 }
