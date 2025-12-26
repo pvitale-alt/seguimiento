@@ -178,7 +178,8 @@
         // Cargar datos al iniciar
         document.addEventListener('DOMContentLoaded', async () => {
             await cargarEquipos();
-            cargarPedidos();
+            // Aplicar filtros iniciales (incluyendo el filtro de "Incluir realizados")
+            aplicarFiltrosSync();
         });
     </script>
 

@@ -86,7 +86,12 @@ async function mostrarDashboard() {
             return colores[producto] || { primary: '#1A73E8', secondary: '#E8F0FE', gradient: 'linear-gradient(135deg, #1A73E8 0%, #4285F4 100%)' };
         }
 
-        let dashboardHTML = '<div style="position: relative; z-index: 1; display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 24px;">';
+        // Grid responsive: se adapta al tamaño de pantalla
+        // - Pantallas pequeñas (< 640px): 1 columna
+        // - Pantallas medianas (640px - 1024px): 2 columnas
+        // - Pantallas grandes (> 1024px): 3 columnas fijas
+        // Usar solo la clase CSS, sin estilos inline que puedan interferir
+        let dashboardHTML = '<div class="dashboard-grid" style="position: relative; z-index: 1;">';
 
         productosOrdenados.forEach(function (item, index) {
             const producto = item.producto;
@@ -105,7 +110,8 @@ async function mostrarDashboard() {
                 : '/?producto=' + encodeURIComponent(producto);
 
             // Estilo tipo article card con detalle decorativo (sin click en la tarjeta completa)
-            dashboardHTML += '<div class="feed-article" style="position: relative; background: white; border-radius: 12px; padding: 24px; box-shadow: 0 1px 2px 0 rgba(60,64,67,.3), 0 1px 3px 1px rgba(60,64,67,.15); transition: all 0.2s; cursor: default; border: 1px solid transparent; overflow: hidden;" onmouseover="this.style.boxShadow=\'0 2px 6px 2px rgba(60,64,67,.15), 0 1px 2px 0 rgba(60,64,67,.3)\'; this.style.borderColor=\'#dadce0\';" onmouseout="this.style.boxShadow=\'0 1px 2px 0 rgba(60,64,67,.3), 0 1px 3px 1px rgba(60,64,67,.15)\'; this.style.borderColor=\'transparent\';">';
+            // El padding se maneja desde CSS con media queries
+            dashboardHTML += '<div class="feed-article dashboard-card" style="position: relative; background: white; border-radius: 12px; box-shadow: 0 1px 2px 0 rgba(60,64,67,.3), 0 1px 3px 1px rgba(60,64,67,.15); transition: all 0.2s; cursor: default; border: 1px solid transparent; overflow: hidden;" onmouseover="this.style.boxShadow=\'0 2px 6px 2px rgba(60,64,67,.15), 0 1px 2px 0 rgba(60,64,67,.3)\'; this.style.borderColor=\'#dadce0\';" onmouseout="this.style.boxShadow=\'0 1px 2px 0 rgba(60,64,67,.3), 0 1px 3px 1px rgba(60,64,67,.15)\'; this.style.borderColor=\'transparent\';">';
 
             // Detalle decorativo en esquina superior derecha
             dashboardHTML += '<div style="position: absolute; top: 0; right: 0; width: 40px; height: 40px; background: ' + colores.primary + '; opacity: 0.1; border-radius: 0 12px 0 40px;"></div>';

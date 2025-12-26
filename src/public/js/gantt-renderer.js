@@ -865,10 +865,10 @@ function inicializarDragScrollGantt(element) {
     let startX = 0;
     let startScrollLeft = 0;
     
-    // URLs de los cursores personalizados - usar solo fallbacks en JavaScript ya que el CSS maneja las imágenes
-    // El CSS ya tiene las URLs de las imágenes con !important, así que solo necesitamos los fallbacks aquí
-    const cursorGrabUrl = '-webkit-grab';
-    const cursorGrabbingUrl = '-webkit-grabbing';
+    // URLs de los cursores - usar estándar primero (funciona en Firefox y Chrome)
+    // El CSS ya maneja las imágenes personalizadas, aquí usamos los valores estándar
+    const cursorGrabUrl = 'grab';
+    const cursorGrabbingUrl = 'grabbing';
     
     // Función para forzar actualización del cursor en Chrome usando imágenes personalizadas
     // Chrome necesita un "refresh" agresivo para renderizar cursores personalizados correctamente

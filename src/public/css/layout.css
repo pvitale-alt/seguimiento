@@ -429,3 +429,76 @@ a.tab.active {
     color: var(--primary-color);
     border-bottom-color: var(--primary-color);
 }
+
+/* ================================
+   Dashboard Grid Responsive
+   ================================ */
+/* Estilos base del grid del dashboard */
+.dashboard-grid,
+#contenido .dashboard-grid,
+.content-area .dashboard-grid,
+.seguimiento-wrapper .dashboard-grid {
+    display: grid !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    position: relative !important;
+    z-index: 1 !important;
+}
+
+/* Estilos base de las tarjetas del dashboard */
+.dashboard-card,
+.feed-article.dashboard-card,
+#contenido .dashboard-card,
+.content-area .dashboard-card {
+    width: 100% !important;
+    min-width: 0 !important;
+    box-sizing: border-box !important;
+}
+
+/* Media queries para ajustar el grid según el tamaño de pantalla */
+@media (max-width: 640px) {
+    .dashboard-grid,
+    #contenido .dashboard-grid,
+    .content-area .dashboard-grid,
+    .seguimiento-wrapper .dashboard-grid {
+        grid-template-columns: 1fr !important;
+        gap: 16px !important;
+    }
+    
+    .dashboard-card,
+    .feed-article.dashboard-card {
+        padding: 16px !important;
+    }
+}
+
+@media (min-width: 641px) and (max-width: 1024px) {
+    .dashboard-grid,
+    #contenido .dashboard-grid,
+    .content-area .dashboard-grid,
+    .seguimiento-wrapper .dashboard-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 20px !important;
+    }
+    
+    .dashboard-card,
+    .feed-article.dashboard-card {
+        padding: 20px !important;
+    }
+}
+
+@media (min-width: 1025px) {
+    .dashboard-grid,
+    #contenido .dashboard-grid,
+    .content-area .dashboard-grid,
+    .seguimiento-wrapper .dashboard-grid {
+        grid-template-columns: repeat(3, 1fr) !important;
+        gap: 24px !important;
+    }
+    
+    .dashboard-card,
+    .feed-article.dashboard-card {
+        padding: 24px !important;
+    }
+}
