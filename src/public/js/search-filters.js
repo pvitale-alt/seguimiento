@@ -106,7 +106,7 @@ async function buscarSugerencias(query) {
             // Solo ocultar sugerencias si hay error
             suggestionsContainer.style.display = 'none';
         }
-    }, 500);
+    }, 250);
 }
 
 function actualizarBotonLimpiar(valor) {
