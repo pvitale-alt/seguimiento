@@ -102,12 +102,12 @@
 
 .suggestion-title {
     font-weight: 500;
-    color: var(--text-primary);
+    color: #3c4043; /* Gris oscuro */
 }
 
 .suggestion-subtitle {
     font-size: 12px;
-    color: var(--text-secondary);
+    color: #5f6368; /* Gris medio oscuro */
 }
 
 

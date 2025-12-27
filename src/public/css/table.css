@@ -822,7 +822,7 @@
 .modern-table.proyectos .modern-table-row {
     /* Proyecto usa minmax(300px, 1fr) - RESPONSIVE, consistente para TODAS las filas */
     /* WIN tiene ancho FIJO de 380px - NO responsive, SIN gap al final */
-    grid-template-columns: 30px 150px minmax(300px, 1fr) 90px 100px 80px 50px 50px 45px 45px 70px 100px 75px 75px 380px;
+    grid-template-columns: 30px 150px minmax(300px, 1fr) 105px 100px 80px 50px 50px 45px 45px 70px 100px 75px 75px 380px;
     padding-left: 12px;
     padding-right: 0;
     /* SIN padding derecho - WIN termina en el borde */
@@ -963,7 +963,7 @@
 /* IMPORTANTE: Mantener el mismo orden y anchos que el grid principal */
 .modern-table.proyectos .modern-table-row.subproyecto-row:not(.subproyectos-ocultos) {
     /* Mismo grid que las filas principales - Proyecto RESPONSIVE con minmax(300px, 1fr) */
-    grid-template-columns: 30px 150px minmax(300px, 1fr) 90px 100px 80px 50px 50px 45px 45px 70px 100px 75px 75px 380px;
+    grid-template-columns: 30px 150px minmax(300px, 1fr) 105px 100px 80px 50px 50px 45px 45px 70px 100px 75px 75px 380px;
     min-width: 1764px;
     /* Mismo ancho mínimo que las filas principales */
     width: 100%;

@@ -454,7 +454,13 @@ function buscar(event) {
     if (event) event.preventDefault();
     const searchInput = document.getElementById('searchInput');
     if (searchInput) {
-        busquedaActual = searchInput.value;
+        const valor = searchInput.value.trim();
+        busquedaActual = valor;
+        // Si el valor está vacío, limpiar la búsqueda
+        if (!valor) {
+            limpiarBusqueda();
+            return;
+        }
         cargarDatosProyectosInternos();
     }
 }
@@ -464,29 +470,70 @@ async function buscarSugerencias(query) {
     clearTimeout(timeoutSugerencias);
     
     const suggestionsContainer = document.getElementById('searchSuggestions');
-    if (!suggestionsContainer) return;
+    if (!suggestionsContainer) {
+        console.warn('Contenedor de sugerencias no encontrado');
+        return;
+    }
     
-    if (!query || query.length < 2) {
+    // Si el query está vacío, limpiar la búsqueda y ocultar sugerencias
+    if (!query || query.trim().length === 0) {
+        suggestionsContainer.style.display = 'none';
+        // Si había una búsqueda activa y ahora está vacío, limpiar la búsqueda
+        if (busquedaActual && busquedaActual.trim().length > 0) {
+            busquedaActual = '';
+            cargarDatosProyectosInternos();
+        }
+        return;
+    }
+    
+    // Si el query tiene menos de 2 caracteres, solo ocultar sugerencias
+    if (query.trim().length < 2) {
         suggestionsContainer.style.display = 'none';
         return;
     }
     
     timeoutSugerencias = setTimeout(async () => {
         try {
-            const endpoint = '/api/proyectos-internos/sugerencias?q=' + encodeURIComponent(query);
+            const queryTrimmed = query.trim();
+            // Validar que el query tenga al menos 2 caracteres después de trim
+            if (!queryTrimmed || queryTrimmed.length < 2) {
+                suggestionsContainer.style.display = 'none';
+                return;
+            }
+
+            // Construir endpoint con producto actual si está disponible
+            let endpoint = '/api/proyectos-internos/sugerencias?q=' + encodeURIComponent(queryTrimmed);
+            if (typeof productoActual !== 'undefined' && productoActual) {
+                endpoint += '&producto=' + encodeURIComponent(productoActual);
+            }
             const response = await fetch(endpoint);
+            
+            // Si hay un error HTTP, simplemente ocultar sugerencias sin mostrar error
+            if (!response.ok) {
+                suggestionsContainer.style.display = 'none';
+                return;
+            }
+            
             const data = await response.json();
             
             if (data.success && data.sugerencias && data.sugerencias.length > 0) {
-                const html = data.sugerencias.map(item => `
-                    <div class="google-suggestion-item" onclick="seleccionarSugerencia('${item.nombre_proyecto || item.nombre || ''}')">
-                        <div class="suggestion-icon">${(item.nombre_proyecto || item.nombre || '?').substring(0, 1).toUpperCase()}</div>
-                        <div class="suggestion-text">
-                            <div class="suggestion-title">${item.nombre_proyecto || item.nombre || 'Sin nombre'}</div>
-                            <div class="suggestion-subtitle">${item.cliente || item.producto || ''}</div>
+                // Escapar caracteres especiales para evitar problemas con comillas
+                const html = data.sugerencias.map(item => {
+                    const nombre = (item.nombre_proyecto || item.nombre || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+                    const nombreDisplay = (item.nombre_proyecto || item.nombre || 'Sin nombre').replace(/"/g, '&quot;');
+                    // Capitalizar primera letra del estado
+                    const estadoRaw = item.estado || 'Sin estado';
+                    const estadoCapitalizado = estadoRaw.charAt(0).toUpperCase() + estadoRaw.slice(1).toLowerCase();
+                    const estadoDisplay = estadoCapitalizado.replace(/"/g, '&quot;');
+                    return `
+                        <div class="google-suggestion-item" onclick="seleccionarSugerencia('${nombre}')">
+                            <div class="suggestion-text">
+                                <div class="suggestion-title">${nombreDisplay}</div>
+                                <div class="suggestion-subtitle">${estadoDisplay}</div>
+                            </div>
                         </div>
-                    </div>
-                `).join('');
+                    `;
+                }).join('');
                 
                 suggestionsContainer.innerHTML = html;
                 suggestionsContainer.style.display = 'block';
@@ -494,7 +541,8 @@ async function buscarSugerencias(query) {
                 suggestionsContainer.style.display = 'none';
             }
         } catch (error) {
-            console.error('Error al obtener sugerencias:', error);
+            // Silenciar errores de red para evitar spam en la consola
+            // Solo ocultar sugerencias si hay error
             suggestionsContainer.style.display = 'none';
         }
     }, 500);

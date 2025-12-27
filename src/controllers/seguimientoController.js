@@ -751,10 +751,29 @@ async function obtenerSugerenciasMantenimiento(req, res) {
  * Obtener sugerencias de búsqueda para proyectos
  */
 async function obtenerSugerenciasProyectos(req, res) {
+    // Usar un wrapper para capturar cualquier error, incluso errores de sintaxis
     try {
-        const query = req.query.q || '';
+        // Validar que req.query existe
+        if (!req.query) {
+            return res.json({
+                success: true,
+                sugerencias: []
+            });
+        }
 
+        const query = (req.query.q || '').trim();
+
+        // Validar query: debe tener al menos 2 caracteres y no ser solo caracteres especiales
         if (!query || query.length < 2) {
+            return res.json({
+                success: true,
+                sugerencias: []
+            });
+        }
+
+        // Validar que el query no sea solo caracteres especiales o espacios
+        const querySinEspacios = query.replace(/\s+/g, '');
+        if (querySinEspacios.length < 2) {
             return res.json({
                 success: true,
                 sugerencias: []
@@ -764,28 +783,43 @@ async function obtenerSugerenciasProyectos(req, res) {
         const filtros = {
             producto: req.query.producto || null,
             equipo: req.query.equipo || null,
-            busqueda: query
+            busqueda: query,
+            incluirCerrados: true // Incluir proyectos cerrados en las sugerencias
         };
 
-        const proyectos = await ProyectosExternosModel.obtenerTodos(filtros);
+        let proyectos = [];
+        try {
+            proyectos = await ProyectosExternosModel.obtenerTodos(filtros);
+        } catch (dbError) {
+            console.error('Error en la base de datos al obtener sugerencias:', dbError);
+            // Si hay error en la BD, devolver sugerencias vacías
+            return res.json({
+                success: true,
+                sugerencias: []
+            });
+        }
 
         // Limitar a 8 sugerencias
         const sugerencias = proyectos.slice(0, 8).map(item => ({
             id_proyecto: item.id_proyecto,
             nombre_proyecto: item.nombre_proyecto || 'Sin nombre',
             cliente: item.cliente || '',
-            producto: item.producto || ''
+            producto: item.producto || '',
+            estado: item.estado || ''
         }));
 
-        res.json({
+        return res.json({
             success: true,
             sugerencias
         });
     } catch (error) {
-        console.error('Error al obtener sugerencias de proyectos:', error);
-        res.status(500).json({
-            success: false,
-            error: 'Error al obtener sugerencias'
+        console.error('Error inesperado al obtener sugerencias de proyectos:', error);
+        console.error('Query recibido:', req.query?.q);
+        console.error('Stack:', error.stack);
+        // En caso de cualquier error, devolver sugerencias vacías
+        return res.json({
+            success: true,
+            sugerencias: []
         });
     }
 }
@@ -1092,9 +1126,19 @@ async function actualizarProyectoInterno(req, res) {
  */
 async function obtenerSugerenciasProyectosInternos(req, res) {
     try {
-        const query = req.query.q || '';
+        const query = (req.query.q || '').trim();
 
+        // Validar query: debe tener al menos 2 caracteres y no ser solo caracteres especiales
         if (!query || query.length < 2) {
+            return res.json({
+                success: true,
+                sugerencias: []
+            });
+        }
+
+        // Validar que el query no sea solo caracteres especiales o espacios
+        const querySinEspacios = query.replace(/\s+/g, '');
+        if (querySinEspacios.length < 2) {
             return res.json({
                 success: true,
                 sugerencias: []
@@ -1103,7 +1147,9 @@ async function obtenerSugerenciasProyectosInternos(req, res) {
 
         const filtros = {
             categoria: 'Proyectos Internos', // Filtro específico para proyectos internos
-            busqueda: query
+            producto: req.query.producto || null,
+            busqueda: query,
+            incluirCerrados: true // Incluir proyectos cerrados en las sugerencias
         };
 
         // Usar ProyectosExternosModel con filtro de categoría
@@ -1112,7 +1158,8 @@ async function obtenerSugerenciasProyectosInternos(req, res) {
         const sugerencias = proyectos.slice(0, 10).map(proyecto => ({
             nombre_proyecto: proyecto.nombre_proyecto,
             cliente: proyecto.cliente,
-            producto: proyecto.producto
+            producto: proyecto.producto,
+            estado: proyecto.estado || ''
         }));
 
         res.json({
@@ -1121,9 +1168,11 @@ async function obtenerSugerenciasProyectosInternos(req, res) {
         });
     } catch (error) {
         console.error('Error al obtener sugerencias de proyectos internos:', error);
-        res.status(500).json({
-            success: false,
-            error: 'Error al obtener sugerencias'
+        // En caso de error, devolver sugerencias vacías en lugar de error 500
+        // para evitar que se muestren errores en la consola del navegador
+        res.json({
+            success: true,
+            sugerencias: []
         });
     }
 }

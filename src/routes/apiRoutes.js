@@ -7,17 +7,19 @@ const { requireAuthJWT, requireAdmin } = require('../middleware/authJWT');
 
 // Rutas para obtener datos
 router.get('/mantenimiento', seguimientoController.obtenerMantenimiento);
-router.get('/proyectos/:id_proyecto', seguimientoController.obtenerProyectoPorId); // Debe ir antes de /proyectos para que Express lo capture correctamente
 router.get('/proyectos', seguimientoController.obtenerProyectos);
 router.get('/proyectos-internos', seguimientoController.obtenerProyectosInternos);
 router.get('/epics/:id_proyecto', seguimientoController.obtenerEpics);
 // Endpoint de subproyectos eliminado - ahora se obtienen directamente en obtenerProyectos
 router.get('/dashboard/metricas', seguimientoController.obtenerMetricasDashboard);
 
-// Rutas para sugerencias de búsqueda
+// Rutas para sugerencias de búsqueda (DEBEN ir ANTES de las rutas con parámetros dinámicos)
 router.get('/mantenimiento/sugerencias', seguimientoController.obtenerSugerenciasMantenimiento);
 router.get('/proyectos/sugerencias', seguimientoController.obtenerSugerenciasProyectos);
 router.get('/proyectos-internos/sugerencias', seguimientoController.obtenerSugerenciasProyectosInternos);
+
+// Rutas con parámetros dinámicos (DEBEN ir DESPUÉS de las rutas específicas)
+router.get('/proyectos/:id_proyecto', seguimientoController.obtenerProyectoPorId);
 
 // Rutas para actualizar datos editables
 router.put('/mantenimiento/:id_proyecto', seguimientoController.actualizarMantenimiento);

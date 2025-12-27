@@ -3,12 +3,21 @@
  * Seguimiento de Proyectos
  */
 
+// Nota: busquedaActual se declara en las vistas (index.ejs y proyectos-internos.ejs)
+// No declararla aquí para evitar conflictos
+
 // Búsqueda
 function buscar(event) {
     if (event) event.preventDefault();
     const searchInput = document.getElementById('searchInput');
     if (searchInput) {
-        busquedaActual = searchInput.value;
+        const valor = searchInput.value.trim();
+        busquedaActual = valor;
+        // Si el valor está vacío, limpiar la búsqueda
+        if (!valor) {
+            limpiarBusqueda();
+            return;
+        }
         cargarDatos();
     }
 }
@@ -19,29 +28,73 @@ async function buscarSugerencias(query) {
     clearTimeout(timeoutSugerencias);
 
     const suggestionsContainer = document.getElementById('searchSuggestions');
-    if (!suggestionsContainer) return;
+    if (!suggestionsContainer) {
+        console.warn('Contenedor de sugerencias no encontrado');
+        return;
+    }
 
-    if (!query || query.length < 2) {
+    // Si el query está vacío, limpiar la búsqueda y ocultar sugerencias
+    if (!query || query.trim().length === 0) {
+        suggestionsContainer.style.display = 'none';
+        // Si había una búsqueda activa y ahora está vacío, limpiar la búsqueda
+        if (busquedaActual && busquedaActual.trim().length > 0) {
+            busquedaActual = '';
+            cargarDatos();
+        }
+        return;
+    }
+
+    // Si el query tiene menos de 2 caracteres, solo ocultar sugerencias
+    if (query.trim().length < 2) {
         suggestionsContainer.style.display = 'none';
         return;
     }
 
     timeoutSugerencias = setTimeout(async () => {
         try {
-            const endpoint = '/api/proyectos/sugerencias?q=' + encodeURIComponent(query);
+            const queryTrimmed = query.trim();
+            // Validar que el query tenga al menos 2 caracteres después de trim
+            if (!queryTrimmed || queryTrimmed.length < 2) {
+                suggestionsContainer.style.display = 'none';
+                return;
+            }
+
+            // Construir endpoint con producto y equipo actual si están disponibles
+            let endpoint = '/api/proyectos/sugerencias?q=' + encodeURIComponent(queryTrimmed);
+            if (typeof productoActual !== 'undefined' && productoActual) {
+                endpoint += '&producto=' + encodeURIComponent(productoActual);
+            }
+            if (typeof equipoActual !== 'undefined' && equipoActual) {
+                endpoint += '&equipo=' + encodeURIComponent(equipoActual);
+            }
             const response = await fetch(endpoint);
+            
+            // Si hay un error HTTP, simplemente ocultar sugerencias sin mostrar error
+            if (!response.ok) {
+                suggestionsContainer.style.display = 'none';
+                return;
+            }
+            
             const data = await response.json();
 
             if (data.success && data.sugerencias && data.sugerencias.length > 0) {
-                const html = data.sugerencias.map(item => `
-                    <div class="google-suggestion-item" onclick="seleccionarSugerencia('${item.nombre_proyecto || item.nombre || ''}')">
-                        <div class="suggestion-icon">${(item.nombre_proyecto || item.nombre || '?').substring(0, 1).toUpperCase()}</div>
-                        <div class="suggestion-text">
-                            <div class="suggestion-title">${item.nombre_proyecto || item.nombre || 'Sin nombre'}</div>
-                            <div class="suggestion-subtitle">${item.cliente || item.producto || ''}</div>
+                // Escapar caracteres especiales para evitar problemas con comillas
+                const html = data.sugerencias.map(item => {
+                    const nombre = (item.nombre_proyecto || item.nombre || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+                    const nombreDisplay = (item.nombre_proyecto || item.nombre || 'Sin nombre').replace(/"/g, '&quot;');
+                    // Capitalizar primera letra del estado
+                    const estadoRaw = item.estado || 'Sin estado';
+                    const estadoCapitalizado = estadoRaw.charAt(0).toUpperCase() + estadoRaw.slice(1).toLowerCase();
+                    const estadoDisplay = estadoCapitalizado.replace(/"/g, '&quot;');
+                    return `
+                        <div class="google-suggestion-item" onclick="seleccionarSugerencia('${nombre}')">
+                            <div class="suggestion-text">
+                                <div class="suggestion-title">${nombreDisplay}</div>
+                                <div class="suggestion-subtitle">${estadoDisplay}</div>
+                            </div>
                         </div>
-                    </div>
-                `).join('');
+                    `;
+                }).join('');
 
                 suggestionsContainer.innerHTML = html;
                 suggestionsContainer.style.display = 'block';
@@ -49,7 +102,8 @@ async function buscarSugerencias(query) {
                 suggestionsContainer.style.display = 'none';
             }
         } catch (error) {
-            console.error('Error al obtener sugerencias:', error);
+            // Silenciar errores de red para evitar spam en la consola
+            // Solo ocultar sugerencias si hay error
             suggestionsContainer.style.display = 'none';
         }
     }, 500);
@@ -74,16 +128,31 @@ function limpiarBusqueda() {
         if (suggestionsContainer) {
             suggestionsContainer.style.display = 'none';
         }
-        window.location.reload();
+        // Recargar datos en lugar de recargar toda la página
+        // Detectar si estamos en proyectos internos o proyectos normales
+        if (typeof cargarDatosProyectosInternos === 'function' && window.location.pathname.includes('proyectos-internos')) {
+            cargarDatosProyectosInternos();
+        } else if (typeof cargarDatos === 'function') {
+            cargarDatos();
+        } else {
+            window.location.reload();
+        }
     }
 }
 
 function seleccionarSugerencia(texto) {
     const searchInput = document.getElementById('searchInput');
     if (searchInput) {
+        // El texto ya viene escapado desde el onclick, JavaScript lo decodifica automáticamente
         searchInput.value = texto;
+        searchInput.style.height = 'auto';
+        searchInput.style.height = Math.min(searchInput.scrollHeight, 44) + 'px';
         busquedaActual = texto;
-        document.getElementById('searchSuggestions').style.display = 'none';
+        actualizarBotonLimpiar(texto);
+        const suggestionsContainer = document.getElementById('searchSuggestions');
+        if (suggestionsContainer) {
+            suggestionsContainer.style.display = 'none';
+        }
         cargarDatos();
     }
 }
@@ -314,8 +383,8 @@ function deseleccionarTodosEstados() {
 }
 
 // Variables para ordenamiento
-let ordenActual = { columna: 'cliente', direccion: 'desc' };
-const ordenEstados = ['sin comenzar', 'en curso', 'Testing', 'Entregado', 'Cerrado', 'Rework', 'Bloqueado'];
+// Nota: ordenActual y ordenEstados se declaran en las vistas (index.ejs y proyectos-internos.ejs)
+// No declararlas aquí para evitar conflictos
 
 function ordenarPor(columna) {
     if (ordenActual.columna === columna) {
