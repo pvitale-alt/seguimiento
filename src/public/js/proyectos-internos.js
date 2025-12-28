@@ -179,12 +179,6 @@ function renderizarTablaProyectosInternos(datos) {
         } else if (ordenActual.columna === 'avance') {
             valorA = parseInt(a.avance) || 0;
             valorB = parseInt(b.avance) || 0;
-        } else if (ordenActual.columna === 'fecha_inicio') {
-            valorA = a.fecha_inicio || '';
-            valorB = b.fecha_inicio || '';
-        } else if (ordenActual.columna === 'fecha_fin') {
-            valorA = a.fecha_fin || '';
-            valorB = b.fecha_fin || '';
         } else {
             return 0;
         }
@@ -207,22 +201,20 @@ function renderizarTablaProyectosInternos(datos) {
         return 0;
     });
     
-    let tablaHTML = '<div class="modern-table-wrapper"><div class="modern-table proyectos proyectos-internos"><div class="modern-table-header">';
+    let tablaHTML = '<div class="modern-table-wrapper"><div class="modern-table proyectos"><div class="modern-table-header">';
     const flechaAsc = '▲';
     const flechaDesc = '▼';
     
-    tablaHTML += '<div class="modern-table-cell header-cell" style="width: 30px;"></div>';
+    tablaHTML += '<div class="modern-table-cell header-cell" style="width: 40px;"></div>';
     tablaHTML += '<div class="modern-table-cell header-cell" onclick="ordenarPor(\'cliente\')" style="cursor: pointer; user-select: none;' + (ordenActual.columna === 'cliente' ? ' color: var(--primary-color);' : '') + '">Cliente' + (ordenActual.columna === 'cliente' ? ' ' + (ordenActual.direccion === 'asc' ? flechaAsc : flechaDesc) : '') + '</div>';
     tablaHTML += '<div class="modern-table-cell header-cell" onclick="ordenarPor(\'proyecto\')" style="cursor: pointer; user-select: none;' + (ordenActual.columna === 'proyecto' ? ' color: var(--primary-color);' : '') + '">Proyecto' + (ordenActual.columna === 'proyecto' ? ' ' + (ordenActual.direccion === 'asc' ? flechaAsc : flechaDesc) : '') + '</div>';
     tablaHTML += '<div class="modern-table-cell header-cell" onclick="ordenarPor(\'estado\')" style="cursor: pointer; user-select: none; text-align: center; justify-content: center;' + (ordenActual.columna === 'estado' ? ' color: var(--primary-color);' : '') + '">Estado' + (ordenActual.columna === 'estado' ? ' ' + (ordenActual.direccion === 'asc' ? flechaAsc : flechaDesc) : '') + '</div>';
+    tablaHTML += '<div class="modern-table-cell header-cell" onclick="ordenarPor(\'overall\')" style="cursor: pointer; user-select: none;' + (ordenActual.columna === 'overall' ? ' color: var(--primary-color);' : '') + '">Overall' + (ordenActual.columna === 'overall' ? ' ' + (ordenActual.direccion === 'asc' ? flechaAsc : flechaDesc) : '') + '</div>';
+    tablaHTML += '<div class="modern-table-cell header-cell" onclick="ordenarPor(\'alcance\')" style="cursor: pointer; user-select: none;' + (ordenActual.columna === 'alcance' ? ' color: var(--primary-color);' : '') + '">Alcance' + (ordenActual.columna === 'alcance' ? ' ' + (ordenActual.direccion === 'asc' ? flechaAsc : flechaDesc) : '') + '</div>';
+    tablaHTML += '<div class="modern-table-cell header-cell" onclick="ordenarPor(\'costo\')" style="cursor: pointer; user-select: none;' + (ordenActual.columna === 'costo' ? ' color: var(--primary-color);' : '') + '">Costo' + (ordenActual.columna === 'costo' ? ' ' + (ordenActual.direccion === 'asc' ? flechaAsc : flechaDesc) : '') + '</div>';
+    tablaHTML += '<div class="modern-table-cell header-cell" onclick="ordenarPor(\'plazos\')" style="cursor: pointer; user-select: none;' + (ordenActual.columna === 'plazos' ? ' color: var(--primary-color);' : '') + '">Plazos' + (ordenActual.columna === 'plazos' ? ' ' + (ordenActual.direccion === 'asc' ? flechaAsc : flechaDesc) : '') + '</div>';
+    tablaHTML += '<div class="modern-table-cell header-cell" onclick="ordenarPor(\'riesgos\')" style="cursor: pointer; user-select: none;' + (ordenActual.columna === 'riesgos' ? ' color: var(--primary-color);' : '') + '">Riesgos' + (ordenActual.columna === 'riesgos' ? ' ' + (ordenActual.direccion === 'asc' ? flechaAsc : flechaDesc) : '') + '</div>';
     tablaHTML += '<div class="modern-table-cell header-cell" onclick="ordenarPor(\'avance\')" style="cursor: pointer; user-select: none;' + (ordenActual.columna === 'avance' ? ' color: var(--primary-color);' : '') + '">Avance' + (ordenActual.columna === 'avance' ? ' ' + (ordenActual.direccion === 'asc' ? flechaAsc : flechaDesc) : '') + '</div>';
-    tablaHTML += '<div class="modern-table-cell header-cell" onclick="ordenarPor(\'overall\')" style="cursor: pointer; user-select: none; text-align: center; justify-content: center;' + (ordenActual.columna === 'overall' ? ' color: var(--primary-color);' : '') + '">Overall' + (ordenActual.columna === 'overall' ? ' ' + (ordenActual.direccion === 'asc' ? flechaAsc : flechaDesc) : '') + '</div>';
-    tablaHTML += '<div class="modern-table-cell header-cell" onclick="ordenarPor(\'alcance\')" style="cursor: pointer; user-select: none; text-align: center; justify-content: center;' + (ordenActual.columna === 'alcance' ? ' color: var(--primary-color);' : '') + '">Alcance' + (ordenActual.columna === 'alcance' ? ' ' + (ordenActual.direccion === 'asc' ? flechaAsc : flechaDesc) : '') + '</div>';
-    tablaHTML += '<div class="modern-table-cell header-cell" onclick="ordenarPor(\'costo\')" style="cursor: pointer; user-select: none; text-align: center; justify-content: center;' + (ordenActual.columna === 'costo' ? ' color: var(--primary-color);' : '') + '">Costo' + (ordenActual.columna === 'costo' ? ' ' + (ordenActual.direccion === 'asc' ? flechaAsc : flechaDesc) : '') + '</div>';
-    tablaHTML += '<div class="modern-table-cell header-cell" onclick="ordenarPor(\'plazos\')" style="cursor: pointer; user-select: none; text-align: center; justify-content: center;' + (ordenActual.columna === 'plazos' ? ' color: var(--primary-color);' : '') + '">Plazos' + (ordenActual.columna === 'plazos' ? ' ' + (ordenActual.direccion === 'asc' ? flechaAsc : flechaDesc) : '') + '</div>';
-    tablaHTML += '<div class="modern-table-cell header-cell" onclick="ordenarPor(\'riesgos\')" style="cursor: pointer; user-select: none; text-align: center; justify-content: center;' + (ordenActual.columna === 'riesgos' ? ' color: var(--primary-color);' : '') + '">Riesgos' + (ordenActual.columna === 'riesgos' ? ' ' + (ordenActual.direccion === 'asc' ? flechaAsc : flechaDesc) : '') + '</div>';
-    tablaHTML += '<div class="modern-table-cell header-cell" onclick="ordenarPor(\'fecha_inicio\')" style="cursor: pointer; user-select: none; text-align: center;' + (ordenActual.columna === 'fecha_inicio' ? ' color: var(--primary-color);' : '') + '">Fecha Inicio' + (ordenActual.columna === 'fecha_inicio' ? ' ' + (ordenActual.direccion === 'asc' ? flechaAsc : flechaDesc) : '') + '</div>';
-    tablaHTML += '<div class="modern-table-cell header-cell" onclick="ordenarPor(\'fecha_fin\')" style="cursor: pointer; user-select: none; text-align: center; justify-content: center;' + (ordenActual.columna === 'fecha_fin' ? ' color: var(--primary-color);' : '') + '">Fecha Fin' + (ordenActual.columna === 'fecha_fin' ? ' ' + (ordenActual.direccion === 'asc' ? flechaAsc : flechaDesc) : '') + '</div>';
     tablaHTML += '</div>';
     
     datosOrdenados.forEach(function(item) {
@@ -254,7 +246,7 @@ function renderizarTablaProyectosInternos(datos) {
         const itemDataJson = JSON.stringify(itemData).replace(/"/g, '&quot;').replace(/'/g, '&#39;');
         
         tablaHTML += '<div class="modern-table-row" data-id-proyecto="' + item.id_proyecto + '">';
-        tablaHTML += '<div class="modern-table-cell" style="width: 30px;"></div>';
+        tablaHTML += '<div class="modern-table-cell" style="width: 40px;"></div>';
         tablaHTML += '<div class="modern-table-cell item-text">' + (item.cliente || '-') + '</div>';
         tablaHTML += '<div class="modern-table-cell item-text"><a href="javascript:void(0);" onclick="abrirModalDetalle(' + item.id_proyecto + '); event.stopPropagation();" data-item="' + itemDataJson + '" style="color: var(--primary-color); text-decoration: none; cursor: pointer;">' + nombreProyecto + '</a></div>';
         
@@ -275,6 +267,12 @@ function renderizarTablaProyectosInternos(datos) {
         }
         tablaHTML += '<div class="modern-table-cell" style="text-align: center; justify-content: center;">' + crearDropdownEstado(item.id_proyecto, estadoValue, estadoClass) + '</div>';
         
+        tablaHTML += '<div class="modern-table-cell">' + crearDropdownOverall(item.id_proyecto, 'overall', item.overall || '', '') + '</div>';
+        tablaHTML += '<div class="modern-table-cell">' + crearDropdownOverall(item.id_proyecto, 'alcance', item.alcance || '', '') + '</div>';
+        tablaHTML += '<div class="modern-table-cell">' + crearDropdownOverall(item.id_proyecto, 'costo', item.costo || '', '') + '</div>';
+        tablaHTML += '<div class="modern-table-cell">' + crearDropdownOverall(item.id_proyecto, 'plazos', item.plazos || '', '') + '</div>';
+        tablaHTML += '<div class="modern-table-cell">' + crearDropdownRiesgo(item.id_proyecto, item.riesgos || '', '') + '</div>';
+        
         const avanceValue = parseInt(item.avance) || 0;
         let avanceGradient = 'linear-gradient(90deg, #66bb6a 0%, #34a853 100%)';
         if (avanceValue <= 25) {
@@ -288,42 +286,6 @@ function renderizarTablaProyectosInternos(datos) {
         }
         tablaHTML += '<div class="modern-table-cell"><div class="progress-bar-container" data-id="' + item.id_proyecto + '"><div class="progress-bar" style="width: ' + avanceValue + '%; background: ' + avanceGradient + ';"></div><input type="range" min="0" max="100" step="5" value="' + avanceValue + '" class="progress-slider" oninput="actualizarBarraProgreso(this);" onchange="actualizarProyectoInternoDesdeUI(' + item.id_proyecto + ', \'avance\', this.value);" /></div></div>';
         
-        tablaHTML += '<div class="modern-table-cell">' + crearDropdownOverall(item.id_proyecto, 'overall', item.overall || '', '') + '</div>';
-        tablaHTML += '<div class="modern-table-cell">' + crearDropdownOverall(item.id_proyecto, 'alcance', item.alcance || '', '') + '</div>';
-        tablaHTML += '<div class="modern-table-cell">' + crearDropdownOverall(item.id_proyecto, 'costo', item.costo || '', '') + '</div>';
-        tablaHTML += '<div class="modern-table-cell">' + crearDropdownOverall(item.id_proyecto, 'plazos', item.plazos || '', '') + '</div>';
-        tablaHTML += '<div class="modern-table-cell">' + crearDropdownRiesgo(item.id_proyecto, item.riesgos || '', '') + '</div>';
-        
-        // Formatear fechas para mostrar en formato corto (dd/mm)
-        // Usar fechas de epics (planificadas) cuando existan, para ser consistentes con el modal.
-        // Para proyectos padre sin fecha propia, usar el rango de sus subproyectos.
-        let fechaInicio = item.fecha_inicio_epics || item.fecha_inicio || '';
-        let fechaFin = item.fecha_fin_epics || item.fecha_fin || '';
-
-        if ((!fechaInicio || !fechaFin) && item.tiene_subproyectos && Array.isArray(item.subproyectos) && item.subproyectos.length > 0) {
-            const fechasInicioSub = item.subproyectos
-                .map(sp => sp.fecha_inicio_epics || sp.fecha_inicio)
-                .filter(f => !!f)
-                .sort();
-            const fechasFinSub = item.subproyectos
-                .map(sp => sp.fecha_fin_epics || sp.fecha_fin)
-                .filter(f => !!f)
-                .sort()
-                .reverse();
-
-            if (!fechaInicio && fechasInicioSub.length > 0) {
-                fechaInicio = fechasInicioSub[0];
-            }
-            if (!fechaFin && fechasFinSub.length > 0) {
-                fechaFin = fechasFinSub[0];
-            }
-        }
-        const fechaInicioCorta = fechaInicio ? formatearFechaCorta(fechaInicio) : '-';
-        const fechaFinCorta = fechaFin ? formatearFechaCorta(fechaFin) : '-';
-        
-        tablaHTML += '<div class="modern-table-cell" style="font-size: 11px; text-align: center; justify-content: center; color: var(--text-secondary);">' + fechaInicioCorta + '</div>';
-        tablaHTML += '<div class="modern-table-cell" style="font-size: 11px; text-align: center; justify-content: center; color: var(--text-secondary);">' + fechaFinCorta + '</div>';
-        
         tablaHTML += '</div>';
     });
     
@@ -334,11 +296,6 @@ function renderizarTablaProyectosInternos(datos) {
     if (contadorProyectos) {
         contadorProyectos.textContent = 'Total proyectos: ' + datosOrdenados.length;
     }
-    
-    // Ocultar scroll horizontal si no es necesario
-    setTimeout(() => {
-        ajustarScrollHorizontal();
-    }, 100);
 }
 
 // Función para actualizar proyecto interno desde la UI
@@ -454,13 +411,7 @@ function buscar(event) {
     if (event) event.preventDefault();
     const searchInput = document.getElementById('searchInput');
     if (searchInput) {
-        const valor = searchInput.value.trim();
-        busquedaActual = valor;
-        // Si el valor está vacío, limpiar la búsqueda
-        if (!valor) {
-            limpiarBusqueda();
-            return;
-        }
+        busquedaActual = searchInput.value;
         cargarDatosProyectosInternos();
     }
 }
@@ -470,70 +421,29 @@ async function buscarSugerencias(query) {
     clearTimeout(timeoutSugerencias);
     
     const suggestionsContainer = document.getElementById('searchSuggestions');
-    if (!suggestionsContainer) {
-        console.warn('Contenedor de sugerencias no encontrado');
-        return;
-    }
+    if (!suggestionsContainer) return;
     
-    // Si el query está vacío, limpiar la búsqueda y ocultar sugerencias
-    if (!query || query.trim().length === 0) {
-        suggestionsContainer.style.display = 'none';
-        // Si había una búsqueda activa y ahora está vacío, limpiar la búsqueda
-        if (busquedaActual && busquedaActual.trim().length > 0) {
-            busquedaActual = '';
-            cargarDatosProyectosInternos();
-        }
-        return;
-    }
-    
-    // Si el query tiene menos de 2 caracteres, solo ocultar sugerencias
-    if (query.trim().length < 2) {
+    if (!query || query.length < 2) {
         suggestionsContainer.style.display = 'none';
         return;
     }
     
     timeoutSugerencias = setTimeout(async () => {
         try {
-            const queryTrimmed = query.trim();
-            // Validar que el query tenga al menos 2 caracteres después de trim
-            if (!queryTrimmed || queryTrimmed.length < 2) {
-                suggestionsContainer.style.display = 'none';
-                return;
-            }
-
-            // Construir endpoint con producto actual si está disponible
-            let endpoint = '/api/proyectos-internos/sugerencias?q=' + encodeURIComponent(queryTrimmed);
-            if (typeof productoActual !== 'undefined' && productoActual) {
-                endpoint += '&producto=' + encodeURIComponent(productoActual);
-            }
+            const endpoint = '/api/proyectos-internos/sugerencias?q=' + encodeURIComponent(query);
             const response = await fetch(endpoint);
-            
-            // Si hay un error HTTP, simplemente ocultar sugerencias sin mostrar error
-            if (!response.ok) {
-                suggestionsContainer.style.display = 'none';
-                return;
-            }
-            
             const data = await response.json();
             
             if (data.success && data.sugerencias && data.sugerencias.length > 0) {
-                // Escapar caracteres especiales para evitar problemas con comillas
-                const html = data.sugerencias.map(item => {
-                    const nombre = (item.nombre_proyecto || item.nombre || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
-                    const nombreDisplay = (item.nombre_proyecto || item.nombre || 'Sin nombre').replace(/"/g, '&quot;');
-                    // Capitalizar primera letra del estado
-                    const estadoRaw = item.estado || 'Sin estado';
-                    const estadoCapitalizado = estadoRaw.charAt(0).toUpperCase() + estadoRaw.slice(1).toLowerCase();
-                    const estadoDisplay = estadoCapitalizado.replace(/"/g, '&quot;');
-                    return `
-                        <div class="google-suggestion-item" onclick="seleccionarSugerencia('${nombre}')">
-                            <div class="suggestion-text">
-                                <div class="suggestion-title">${nombreDisplay}</div>
-                                <div class="suggestion-subtitle">${estadoDisplay}</div>
-                            </div>
+                const html = data.sugerencias.map(item => `
+                    <div class="google-suggestion-item" onclick="seleccionarSugerencia('${item.nombre_proyecto || item.nombre || ''}')">
+                        <div class="suggestion-icon">${(item.nombre_proyecto || item.nombre || '?').substring(0, 1).toUpperCase()}</div>
+                        <div class="suggestion-text">
+                            <div class="suggestion-title">${item.nombre_proyecto || item.nombre || 'Sin nombre'}</div>
+                            <div class="suggestion-subtitle">${item.cliente || item.producto || ''}</div>
                         </div>
-                    `;
-                }).join('');
+                    </div>
+                `).join('');
                 
                 suggestionsContainer.innerHTML = html;
                 suggestionsContainer.style.display = 'block';
@@ -541,11 +451,10 @@ async function buscarSugerencias(query) {
                 suggestionsContainer.style.display = 'none';
             }
         } catch (error) {
-            // Silenciar errores de red para evitar spam en la consola
-            // Solo ocultar sugerencias si hay error
+            console.error('Error al obtener sugerencias:', error);
             suggestionsContainer.style.display = 'none';
         }
-    }, 250);
+    }, 500);
 }
 
 // Sobrescribir función aplicarFiltrosProyectos para proyectos internos
@@ -565,41 +474,7 @@ function ordenarPor(columna) {
         // Si es cliente, usar 'desc' por defecto, sino 'asc'
         ordenActual.direccion = columna === 'cliente' ? 'desc' : 'asc';
     }
-    
-    // Optimización: ordenar en el cliente sin hacer petición al servidor
-    if (typeof datosOriginales !== 'undefined' && datosOriginales && datosOriginales.length > 0) {
-        // Aplicar filtros a los datos originales
-        let datosFiltrados = [...datosOriginales];
-        
-        // Aplicar filtro de incluir cerrados
-        const incluirCerrados = document.getElementById('incluirCerrados')?.checked || false;
-        if (!incluirCerrados) {
-            datosFiltrados = datosFiltrados.filter(d => (d.estado || '').toLowerCase() !== 'cerrado');
-        }
-        
-        // Aplicar filtros de clientes
-        if (typeof filtrosClientes !== 'undefined' && filtrosClientes.length > 0) {
-            datosFiltrados = datosFiltrados.filter(d => filtrosClientes.includes(d.cliente));
-        }
-        
-        // Aplicar filtros de estados
-        if (typeof filtrosEstados !== 'undefined' && filtrosEstados.length > 0) {
-            datosFiltrados = datosFiltrados.filter(d => filtrosEstados.includes(d.estado));
-        }
-        
-        // Renderizar tabla con datos filtrados (el ordenamiento se hace en renderizarTablaProyectosInternos)
-        if (typeof renderizarTabla === 'function') {
-            renderizarTabla(datosFiltrados);
-        } else if (typeof renderizarTablaProyectosInternos === 'function') {
-            renderizarTablaProyectosInternos(datosFiltrados);
-        } else {
-            // Si no hay función renderizarTabla, hacer petición al servidor como fallback
-            cargarDatosProyectosInternos();
-        }
-    } else {
-        // Si no hay datos en memoria, hacer petición al servidor
-        cargarDatosProyectosInternos();
-    }
+    cargarDatosProyectosInternos();
 }
 
 

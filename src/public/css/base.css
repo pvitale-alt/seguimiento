@@ -40,7 +40,7 @@ body {
     overflow-x: auto; /* Permitir scroll horizontal del navegador */
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    padding-top: 56px; /* Espacio para el header fijo */
+    padding-top: 48px; /* Espacio para el header fijo */
 }
 
 /* Tipografía moderna */
@@ -77,6 +77,29 @@ h3 {
     color: var(--text-primary);
     margin-bottom: 8px;
     letter-spacing: 0;
+}
+
+/* Estilos glue-headline similares a Google Material Design */
+.glue-headline {
+    font-family: 'Google Sans', 'Roboto', sans-serif;
+    font-weight: 400;
+    line-height: 1.2;
+    letter-spacing: 0;
+    color: var(--text-primary);
+}
+
+.glue-headline--headline-1 {
+    font-size: 32px;
+    font-weight: 400;
+    line-height: 1.2;
+    letter-spacing: -0.25px;
+    color: var(--text-primary);
+}
+
+@media (max-width: 768px) {
+    .glue-headline--headline-1 {
+        font-size: 36px;
+    }
 }
 
 

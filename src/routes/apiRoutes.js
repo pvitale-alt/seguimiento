@@ -13,12 +13,12 @@ router.get('/epics/:id_proyecto', seguimientoController.obtenerEpics);
 // Endpoint de subproyectos eliminado - ahora se obtienen directamente en obtenerProyectos
 router.get('/dashboard/metricas', seguimientoController.obtenerMetricasDashboard);
 
-// Rutas para sugerencias de búsqueda (DEBEN ir ANTES de las rutas con parámetros dinámicos)
+// Rutas para sugerencias de búsqueda (deben estar antes de las rutas dinámicas)
 router.get('/mantenimiento/sugerencias', seguimientoController.obtenerSugerenciasMantenimiento);
 router.get('/proyectos/sugerencias', seguimientoController.obtenerSugerenciasProyectos);
 router.get('/proyectos-internos/sugerencias', seguimientoController.obtenerSugerenciasProyectosInternos);
 
-// Rutas con parámetros dinámicos (DEBEN ir DESPUÉS de las rutas específicas)
+// Rutas dinámicas (deben estar después de las rutas específicas)
 router.get('/proyectos/:id_proyecto', seguimientoController.obtenerProyectoPorId);
 
 // Rutas para actualizar datos editables
@@ -116,6 +116,7 @@ router.post('/sincronizar/proyectos', async (req, res) => {
 });
 
 router.post('/sincronizar/epics', requireAuthJWT, seguimientoController.sincronizarEpics);
+router.post('/sincronizar/epics-masivo', requireAuthJWT, seguimientoController.sincronizarEpicsMasivo);
 
 router.post('/sincronizar/proyectos-internos', async (req, res) => {
     console.log('\n📡 =================================');

@@ -39,10 +39,7 @@
 }
 
 .google-search-suggestions {
-    position: absolute;
-    top: 100%;
-    left: 0;
-    right: 0;
+    position: fixed !important;
     background: white;
     border: 1px solid #dfe1e5;
     border-top: none;
@@ -50,9 +47,11 @@
     box-shadow: 0 4px 6px rgba(32,33,36,.28);
     max-height: 400px;
     overflow-y: auto;
-    z-index: 1000;
+    z-index: 99999 !important;
     margin-top: -1px;
     display: none;
+    width: auto;
+    min-width: 300px;
 }
 
 .google-suggestion-item {
@@ -61,10 +60,9 @@
     transition: background 0.15s;
     display: flex;
     align-items: center;
-    min-height: 56px;
+    min-height: 48px;
     font-size: 14px;
     color: var(--text-primary);
-    gap: 12px;
 }
 
 .google-suggestion-item:hover {
@@ -102,12 +100,12 @@
 
 .suggestion-title {
     font-weight: 500;
-    color: #3c4043; /* Gris oscuro */
+    color: var(--text-primary);
 }
 
 .suggestion-subtitle {
     font-size: 12px;
-    color: #5f6368; /* Gris medio oscuro */
+    color: var(--text-secondary);
 }
 
 

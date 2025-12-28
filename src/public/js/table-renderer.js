@@ -342,7 +342,7 @@ function renderizarTablaProyectos(datos, contenido) {
 
         tablaHTML += '<div class="modern-table-cell item-text">' + abreviarCliente(item.cliente || '-') + '</div>';
         // Celda del proyecto - editable (clickeable para abrir modal)
-        tablaHTML += '<div class="modern-table-cell item-text editable-cell" style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0;"><a href="javascript:void(0);" onclick="abrirModalDetalle(' + item.id_proyecto + '); event.stopPropagation();" data-item="' + itemDataJson + '" style="color: var(--primary-color); text-decoration: none; cursor: pointer; display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%;">' + nombreProyecto + '</a></div>';
+        tablaHTML += '<div class="modern-table-cell item-text editable-cell" style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; cursor: pointer;" onclick="abrirModalDetalle(' + item.id_proyecto + '); event.stopPropagation();"><a href="javascript:void(0);" data-item="' + itemDataJson + '" style="color: var(--primary-color); text-decoration: none; cursor: pointer; display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%;">' + nombreProyecto + '</a></div>';
         tablaHTML += '<div class="modern-table-cell item-text">' + abreviarCategoria(item.categoria) + '</div>';
 
         const estadoValue = item.estado || '';
@@ -619,7 +619,7 @@ function crearFilaSubproyectoHTML(id_proyecto, subproyecto) {
     filaHTML += '<div class="modern-table-cell" style="width: 30px;"></div>';
     filaHTML += '<div class="modern-table-cell item-text"></div>';
     // Celda del subproyecto - editable (clickeable para abrir modal)
-    filaHTML += '<div class="modern-table-cell item-text editable-cell" style="padding-left: 16px; font-style: italic; color: var(--text-secondary); font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0;"><a href="javascript:void(0);" onclick="abrirModalDetalle(' + subproyecto.id_proyecto + '); event.stopPropagation();" data-item="' + subproyectoDataJson + '" style="color: var(--primary-color); text-decoration: none; cursor: pointer; display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%;">' + nombreSubproyecto + '</a></div>';
+    filaHTML += '<div class="modern-table-cell item-text editable-cell" style="padding-left: 16px; font-style: italic; color: var(--text-secondary); font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; cursor: pointer;" onclick="abrirModalDetalle(' + subproyecto.id_proyecto + '); event.stopPropagation();"><a href="javascript:void(0);" data-item="' + subproyectoDataJson + '" style="color: var(--primary-color); text-decoration: none; cursor: pointer; display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%;">' + nombreSubproyecto + '</a></div>';
     filaHTML += '<div class="modern-table-cell item-text" style="font-size: 12px; color: var(--text-secondary);">' + abreviarCategoria(subproyecto.categoria) + '</div>';
     // Celda de estado del subproyecto - editable (tiene dropdown)
     // crearDropdownEstado ya calcula la clase de estado internamente, solo pasamos 'subproyecto' como clase adicional
@@ -1045,6 +1045,646 @@ function inicializarDragScrollTabla() {
     document.addEventListener('mouseup', handleMouseUp);
     tableWrapper.addEventListener('mouseleave', handleMouseLeave);
     tableWrapper.addEventListener('mouseenter', handleMouseEnter);
+}
+
+// Función para sincronizar con Redmine (mantenimiento o proyectos según el tipo actual)
+async function sincronizar() {
+    const btnSincronizar = document.getElementById('btnSincronizar') || 
+                          document.querySelector('button[onclick="sincronizar()"]');
+    
+    // Deshabilitar botón durante la sincronización
+    if (btnSincronizar) {
+        btnSincronizar.disabled = true;
+        btnSincronizar.style.opacity = '0.6';
+        btnSincronizar.style.cursor = 'not-allowed';
+    }
+    
+    try {
+        // Obtener producto, equipo y tipo actuales de las variables globales
+        const producto = typeof productoActual !== 'undefined' ? productoActual : null;
+        const equipo = typeof equipoActual !== 'undefined' ? equipoActual : null;
+        const tipo = typeof tipoActual !== 'undefined' ? tipoActual : 'mantenimiento';
+        
+        // Determinar el endpoint según el tipo
+        const endpoint = tipo === 'mantenimiento' 
+            ? '/api/sincronizar/mantenimiento'
+            : '/api/sincronizar/proyectos';
+        
+        // Obtener el número de proyectos antes de sincronizar (solo para proyectos, no mantenimiento)
+        let totalProyectos = null;
+        if (tipo === 'proyectos') {
+            try {
+                const endpointInfo = '/api/proyectos';
+                const paramsInfo = new URLSearchParams({
+                    producto: producto || '',
+                    equipo: equipo || '',
+                    incluirCerrados: 'true'
+                });
+                
+                const responseInfo = await fetch(`${endpointInfo}?${paramsInfo}`, {
+                    credentials: 'include'
+                });
+                
+                if (responseInfo.ok) {
+                    const dataInfo = await responseInfo.json();
+                    if (dataInfo.success && dataInfo.data) {
+                        totalProyectos = dataInfo.data.length;
+                    }
+                }
+            } catch (e) {
+                console.warn('No se pudo obtener el número de proyectos:', e);
+            }
+        }
+        
+        // Mostrar popup de sincronización
+        const titulo = tipo === 'mantenimiento' ? 'Sincronizando Mantenimiento' : 'Sincronizando Proyectos';
+        mostrarPopupSincronizacion(titulo, totalProyectos);
+        actualizarProgresoSincronizacion(0, 'Obteniendo proyectos de Redmine...', 0, totalProyectos);
+        
+        console.log('Iniciando sincronización:', { tipo, producto, equipo, endpoint });
+        
+        // Simular progreso mientras se sincroniza
+        let progresoSimulado = 0;
+        let proyectoActual = 0;
+        const intervaloProgreso = setInterval(() => {
+            if (totalProyectos && totalProyectos > 0) {
+                proyectoActual++;
+                if (proyectoActual <= totalProyectos) {
+                    progresoSimulado = Math.min(90, (proyectoActual / totalProyectos) * 90);
+                    const mensaje = `Sincronizando proyecto [${proyectoActual}/${totalProyectos}]...`;
+                    actualizarProgresoSincronizacion(progresoSimulado, mensaje, proyectoActual - 1, totalProyectos);
+                }
+            } else {
+                progresoSimulado = Math.min(90, progresoSimulado + 2);
+                actualizarProgresoSincronizacion(progresoSimulado, 'Sincronizando...', null, null);
+            }
+        }, 200); // Actualizar cada 200ms
+        
+        // Llamar al endpoint de sincronización con timeout
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 300000); // 5 minutos de timeout
+        
+        let response;
+        try {
+            response = await fetch(endpoint, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    producto: producto,
+                    equipo: equipo,
+                    maxTotal: null // Sin límite para sincronización manual
+                }),
+                signal: controller.signal
+            });
+        } catch (fetchError) {
+            clearInterval(intervaloProgreso);
+            clearTimeout(timeoutId);
+            if (fetchError.name === 'AbortError') {
+                throw new Error('La sincronización tardó demasiado tiempo. Por favor, intente nuevamente.');
+            } else if (fetchError.message.includes('Failed to fetch') || fetchError.message.includes('NetworkError')) {
+                throw new Error('Error de conexión con el servidor. Verifique su conexión a internet o que el servidor esté funcionando.');
+            } else {
+                throw new Error('Error al conectar con el servidor: ' + fetchError.message);
+            }
+        }
+        clearTimeout(timeoutId);
+        clearInterval(intervaloProgreso);
+        
+        if (!response.ok) {
+            const errorText = await response.text();
+            let errorMessage = 'Error del servidor';
+            try {
+                const errorJson = JSON.parse(errorText);
+                errorMessage = errorJson.error || errorMessage;
+            } catch (e) {
+                errorMessage = `Error HTTP ${response.status}: ${response.statusText}`;
+            }
+            throw new Error(errorMessage);
+        }
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            // Mostrar mensaje de éxito con información detallada
+            console.log('Sincronización exitosa:', data);
+            
+            let mensajeCompletado = 'Sincronización completada';
+            let resumenDetallado = '';
+            
+            if (data.redmine_proyectos_externos || data.redmine_mantenimiento) {
+                const info = data.redmine_proyectos_externos || data.redmine_mantenimiento;
+                if (info.total) {
+                    // Mostrar resumen solo de proyectos no cerrados
+                    const nuevosNoCerrados = info.insertadosNoCerrados || 0;
+                    const actualizadosNoCerrados = info.actualizadosNoCerrados || 0;
+                    const proyectosNuevos = data.proyectos_externos?.nuevos || 0;
+                    
+                    mensajeCompletado = 'Sincronización completada';
+                    
+                    // Construir resumen detallado
+                    const partesResumen = [];
+                    if (nuevosNoCerrados > 0) {
+                        partesResumen.push(`${nuevosNoCerrados} proyecto${nuevosNoCerrados !== 1 ? 's' : ''} abierto${nuevosNoCerrados !== 1 ? 's' : ''} nuevo${nuevosNoCerrados !== 1 ? 's' : ''}`);
+                    }
+                    if (actualizadosNoCerrados > 0) {
+                        partesResumen.push(`${actualizadosNoCerrados} proyecto${actualizadosNoCerrados !== 1 ? 's' : ''} abierto${actualizadosNoCerrados !== 1 ? 's' : ''} actualizado${actualizadosNoCerrados !== 1 ? 's' : ''}`);
+                    }
+                    if (proyectosNuevos > 0) {
+                        partesResumen.push(`${proyectosNuevos} registro${proyectosNuevos !== 1 ? 's' : ''} editable${proyectosNuevos !== 1 ? 's' : ''} nuevo${proyectosNuevos !== 1 ? 's' : ''}`);
+                    }
+                    
+                    if (partesResumen.length > 0) {
+                        resumenDetallado = partesResumen.join(', ');
+                    } else {
+                        resumenDetallado = 'Sin cambios en proyectos abiertos';
+                    }
+                }
+            }
+            
+            // Actualizar progreso a 100% con resumen
+            actualizarProgresoSincronizacion(100, mensajeCompletado, totalProyectos, totalProyectos);
+            
+            // Mostrar resumen detallado en el área de información
+            const proyectoActualElement = document.getElementById('syncProyectoActual');
+            if (proyectoActualElement) {
+                if (resumenDetallado) {
+                    proyectoActualElement.innerHTML = `
+                        <div style="margin-bottom: 4px; font-weight: 500;">${mensajeCompletado}</div>
+                        <div style="font-size: 13px; font-weight: 400; color: #80868b; line-height: 1.4;">${resumenDetallado}</div>
+                    `;
+                } else {
+                    proyectoActualElement.textContent = mensajeCompletado;
+                }
+            }
+            
+            // Ocultar popup después de un delay más largo para que se vea el resumen
+            setTimeout(() => {
+                ocultarPopupSincronizacion();
+                // Recargar los datos
+                if (typeof cargarDatos === 'function') {
+                    cargarDatos();
+                } else {
+                    // Si no hay función cargarDatos, recargar la página
+                    window.location.reload();
+                }
+            }, 2500);
+        } else {
+            console.error('Error en la sincronización:', data.error || 'Error desconocido');
+            actualizarProgresoSincronizacion(100, 'Error en la sincronización', null, null);
+            setTimeout(() => {
+                ocultarPopupSincronizacion();
+            }, 1500);
+        }
+    } catch (error) {
+        console.error('Error al sincronizar:', error);
+        let mensajeError = 'Error: ' + error.message;
+        
+        // Mensajes más amigables para errores comunes
+        if (error.message.includes('conexión') || error.message.includes('connection') ||
+            error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
+            mensajeError = 'Error de conexión. Verifique que el servidor esté funcionando.';
+        } else if (error.message.includes('timeout') || error.message.includes('tardó demasiado')) {
+            mensajeError = 'La sincronización está tomando demasiado tiempo.';
+        }
+        
+        actualizarProgresoSincronizacion(100, mensajeError, null, null);
+        setTimeout(() => {
+            ocultarPopupSincronizacion();
+        }, 2000);
+    } finally {
+        // Restaurar botón
+        if (btnSincronizar) {
+            btnSincronizar.disabled = false;
+            btnSincronizar.style.opacity = '1';
+            btnSincronizar.style.cursor = 'pointer';
+        }
+    }
+}
+
+// Hacer la función disponible globalmente
+if (typeof window !== 'undefined') {
+    window.sincronizar = sincronizar;
+}
+
+// Variables globales para sincronización de epics
+let cancelarSincronizacion = false;
+let abortControllerSync = null;
+
+// Función para mostrar popup de sincronización
+function mostrarPopupSincronizacion(titulo = 'Sincronizando con Redmine', totalProyectos = null) {
+    cancelarSincronizacion = false;
+    abortControllerSync = null;
+    
+    let overlay = document.getElementById('syncOverlay');
+    if (!overlay) {
+        overlay = document.createElement('div');
+        overlay.id = 'syncOverlay';
+        overlay.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 10000; display: flex; align-items: center; justify-content: center;';
+    }
+    
+    let popup = document.getElementById('syncPopup');
+    if (!popup) {
+        popup = document.createElement('div');
+        popup.id = 'syncPopup';
+        popup.style.cssText = 'background: white; border-radius: 16px; padding: 32px; min-width: 450px; max-width: 550px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15), 0 2px 4px rgba(0, 0, 0, 0.1);';
+    }
+    
+    popup.innerHTML = `
+        <div style="text-align: left; width: 100%;">
+            <div id="syncPopupTitle" style="font-size: 18px; font-weight: 500; color: #202124; margin-bottom: 12px; font-family: 'Google Sans', 'Roboto', sans-serif; text-align: center;">
+                ${titulo}
+            </div>
+            <div id="syncContadorProyectos" style="font-size: 14px; font-weight: 500; color: #5f6368; margin-bottom: 12px; font-family: 'Roboto', sans-serif; text-align: left; letter-spacing: 0.3px;">
+                ${totalProyectos ? `[0/${totalProyectos}]` : ''}
+            </div>
+            <div style="background: #f8f9fa; border-radius: 8px; padding: 12px; margin-bottom: 16px;">
+                <div id="syncProyectoActual" style="font-size: 14px; color: #5f6368; margin-bottom: 6px; font-family: 'Roboto', sans-serif; min-height: 20px; font-weight: 500;">
+                    Iniciando...
+                </div>
+                <div id="syncSubproyectoActual" style="font-size: 12px; color: #80868b; margin-bottom: 4px; font-family: 'Roboto', sans-serif; min-height: 16px; font-style: italic; padding-left: 12px;">
+                </div>
+                <div id="syncEpicsInfo" style="font-size: 13px; color: #5f6368; font-family: 'Roboto', sans-serif; min-height: 18px; font-style: italic;">
+                </div>
+            </div>
+            <div style="width: 100%; height: 12px; background: #f1f3f4; border-radius: 6px; overflow: hidden; margin-bottom: 12px;">
+                <div id="syncProgressBar" style="height: 100%; background: linear-gradient(90deg, #0D5AA2 0%, #1a73e8 100%); width: 0%; transition: width 0.3s ease; border-radius: 6px;"></div>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 16px;">
+                <div id="syncProgressText" style="font-size: 14px; color: #202124; font-family: 'Roboto', sans-serif; font-weight: 500;">
+                    0%
+                </div>
+                <button id="btnCancelarSync" style="padding: 10px 20px; font-size: 14px; color: #5f6368; background: #f1f3f4; border: 1px solid #dfe1e5; border-radius: 6px; cursor: pointer; font-family: 'Roboto', sans-serif; transition: all 0.2s; font-weight: 500;" 
+                    onmouseover="this.style.background='#e8eaed'" 
+                    onmouseout="this.style.background='#f1f3f4'"
+                    onclick="cancelarSincronizacionEpics()">
+                    Cancelar
+                </button>
+            </div>
+        </div>
+    `;
+    
+    overlay.appendChild(popup);
+    document.body.appendChild(overlay);
+}
+
+// Función para actualizar progreso de sincronización
+function actualizarProgresoSincronizacion(porcentaje, proyectoActual = null, proyectoIndex = null, totalProyectos = null) {
+    porcentaje = Math.max(0, Math.min(100, porcentaje));
+    
+    const progressBar = document.getElementById('syncProgressBar');
+    const progressText = document.getElementById('syncProgressText');
+    const proyectoActualElement = document.getElementById('syncProyectoActual');
+    const contadorElement = document.getElementById('syncContadorProyectos');
+    
+    if (progressBar) {
+        progressBar.style.width = porcentaje + '%';
+    }
+    
+    if (progressText) {
+        progressText.textContent = Math.round(porcentaje) + '%';
+    }
+    
+    // Actualizar contador fijo arriba (más visible)
+    if (contadorElement && proyectoIndex !== null && totalProyectos !== null) {
+        contadorElement.textContent = `[${proyectoIndex + 1}/${totalProyectos}]`;
+    }
+    
+    // Actualizar información del proyecto actual (sin contador, ya que está arriba)
+    if (proyectoActualElement) {
+        if (proyectoActual) {
+            // Remover el contador del texto si está presente
+            let textoMostrar = proyectoActual.replace(/\s*\[\d+\/\d+\]\s*$/, '').trim();
+            const nombreCorto = textoMostrar.length > 70 ? textoMostrar.substring(0, 67) + '...' : textoMostrar;
+            proyectoActualElement.textContent = nombreCorto;
+        } else if (porcentaje >= 100) {
+            proyectoActualElement.textContent = 'Completado';
+        } else {
+            proyectoActualElement.textContent = 'Preparando...';
+        }
+    }
+}
+
+// Actualizar información de subproyecto actual
+function actualizarSubproyectoInfo(subproyectoNombre) {
+    const subproyectoInfoElement = document.getElementById('syncSubproyectoActual');
+    if (subproyectoInfoElement) {
+        if (subproyectoNombre) {
+            subproyectoInfoElement.textContent = `→ ${subproyectoNombre}`;
+        } else {
+            subproyectoInfoElement.textContent = '';
+        }
+    }
+}
+
+// Actualizar información de epics sincronizados
+function actualizarEpicsInfo(epicsObtenidos, totalEstimado) {
+    const epicsInfoElement = document.getElementById('syncEpicsInfo');
+    if (epicsInfoElement) {
+        if (epicsObtenidos > 0) {
+            if (totalEstimado && totalEstimado > epicsObtenidos) {
+                epicsInfoElement.textContent = `Epics obtenidos: ${epicsObtenidos} / ${totalEstimado}...`;
+            } else {
+                epicsInfoElement.textContent = `Epics obtenidos: ${epicsObtenidos}...`;
+            }
+        } else {
+            epicsInfoElement.textContent = '';
+        }
+    }
+}
+
+// Ocultar popup de sincronización
+function ocultarPopupSincronizacion() {
+    const overlay = document.getElementById('syncOverlay');
+    if (overlay) {
+        overlay.remove();
+    }
+}
+
+// Cancelar sincronización (epics o proyectos)
+function cancelarSincronizacionEpics() {
+    cancelarSincronizacion = true;
+    // Cancelar el fetch si existe
+    if (abortControllerSync) {
+        abortControllerSync.abort();
+        abortControllerSync = null;
+    }
+    ocultarPopupSincronizacion();
+    // También restaurar botones si están deshabilitados
+    const btnSincronizar = document.getElementById('btnSincronizar');
+    const btnSincronizarEpics = document.getElementById('btnSincronizarEpics');
+    if (btnSincronizar) {
+        btnSincronizar.disabled = false;
+        btnSincronizar.style.opacity = '1';
+        btnSincronizar.style.cursor = 'pointer';
+    }
+    if (btnSincronizarEpics) {
+        btnSincronizarEpics.disabled = false;
+        btnSincronizarEpics.style.opacity = '1';
+        btnSincronizarEpics.style.cursor = 'pointer';
+    }
+}
+
+// Función para sincronizar epics masivamente
+async function sincronizarEpicsMasivo() {
+    if (!productoActual) {
+        alert('Por favor selecciona un producto primero');
+        return;
+    }
+    
+    const btnSincronizarEpics = document.getElementById('btnSincronizarEpics');
+    if (btnSincronizarEpics) {
+        btnSincronizarEpics.disabled = true;
+        btnSincronizarEpics.style.opacity = '0.6';
+        btnSincronizarEpics.style.cursor = 'not-allowed';
+    }
+    
+    try {
+        const incluirCerrados = document.getElementById('incluirCerrados')?.checked || false;
+        const categoria = typeof categoriaActual !== 'undefined' && categoriaActual ? categoriaActual : null;
+        
+        // Obtener el número de proyectos que se van a sincronizar
+        const endpointInfo = '/api/proyectos';
+        const paramsInfo = new URLSearchParams({
+            producto: productoActual,
+            equipo: equipoActual || '',
+            incluirCerrados: incluirCerrados.toString()
+        });
+        
+        if (categoria) {
+            paramsInfo.append('categoria', categoria);
+        }
+        
+        const responseInfo = await fetch(`${endpointInfo}?${paramsInfo}`, {
+            credentials: 'include'
+        });
+        
+        let totalProyectos = 0;
+        if (responseInfo.ok) {
+            const dataInfo = await responseInfo.json();
+            if (dataInfo.success && dataInfo.data) {
+                const proyectosConCodigo = dataInfo.data.filter(p => p.codigo_proyecto);
+                totalProyectos = proyectosConCodigo.length;
+            }
+        }
+        
+        // Mostrar popup de sincronización
+        mostrarPopupSincronizacion('Sincronizando Epics', totalProyectos);
+        
+        if (totalProyectos > 0) {
+            actualizarProgresoSincronizacion(0, 'Preparando sincronización...', 0, totalProyectos);
+        }
+        
+        const endpoint = '/api/sincronizar/epics-masivo';
+        
+        // Crear AbortController para poder cancelar la petición
+        abortControllerSync = new AbortController();
+        
+        // Usar fetch con POST para poder enviar headers de autenticación
+        const response = await fetch(endpoint, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            credentials: 'include',
+            signal: abortControllerSync.signal,
+            body: JSON.stringify({
+                producto: productoActual,
+                equipo: equipoActual || '',
+                categoria: categoria || '',
+                incluirCerrados: incluirCerrados.toString()
+            })
+        });
+        
+        if (!response.ok) {
+            throw new Error(`Error HTTP: ${response.status}`);
+        }
+        
+        // Variables para el seguimiento del progreso
+        let proyectosCompletados = 0;
+        let totalProyectosSync = 0;
+        let result = { success: false, data: { procesados: 0, exitosos: 0, errores: 0, proyectos: [] } };
+        
+        // Leer el stream SSE manualmente
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = '';
+        
+        const processStream = async () => {
+            while (true) {
+                // Verificar cancelación antes de leer
+                if (cancelarSincronizacion) {
+                    try {
+                        reader.cancel();
+                    } catch (e) {
+                        // Ignorar errores al cancelar
+                    }
+                    break;
+                }
+                
+                const { done, value } = await reader.read();
+                if (done) break;
+                
+                // Verificar cancelación después de leer
+                if (cancelarSincronizacion) {
+                    try {
+                        reader.cancel();
+                    } catch (e) {
+                        // Ignorar errores al cancelar
+                    }
+                    break;
+                }
+                
+                buffer += decoder.decode(value, { stream: true });
+                
+                // Los eventos SSE están separados por \n\n
+                const events = buffer.split('\n\n');
+                buffer = events.pop() || '';
+                
+                for (const eventText of events) {
+                    // Verificar cancelación dentro del loop de eventos
+                    if (cancelarSincronizacion) {
+                        try {
+                            reader.cancel();
+                        } catch (e) {
+                            // Ignorar errores al cancelar
+                        }
+                        return;
+                    }
+                    
+                    if (!eventText.trim()) continue;
+                    
+                    const lines = eventText.split('\n');
+                    let eventType = null;
+                    let eventData = null;
+                    
+                    for (const line of lines) {
+                        if (line.startsWith('event: ')) {
+                            eventType = line.substring(7).trim();
+                        } else if (line.startsWith('data: ')) {
+                            try {
+                                eventData = JSON.parse(line.substring(6).trim());
+                            } catch (e) {
+                                console.error('Error al parsear datos del evento:', e);
+                            }
+                        }
+                    }
+                    
+                    if (eventData) {
+                        // Procesar eventos según el tipo
+                        if (eventType === 'inicio' || (eventData.totalProyectos !== undefined && !eventType)) {
+                            totalProyectosSync = eventData.totalProyectos || totalProyectosSync;
+                            actualizarProgresoSincronizacion(0, 'Iniciando...', 0, totalProyectosSync);
+                            actualizarEpicsInfo(0, null);
+                        } else if (eventType === 'proyecto_inicio' || (eventData.nombre && eventData.index && !eventData.epicsObtenidos && !eventData.epics && !eventData.error)) {
+                            const contador = `[${eventData.index}/${totalProyectosSync}]`;
+                            const mensaje = `Sincronizando: ${eventData.nombre}... ${contador}`;
+                            const porcentaje = Math.round(((eventData.index - 1) / totalProyectosSync) * 100);
+                            actualizarProgresoSincronizacion(porcentaje, mensaje, eventData.index - 1, totalProyectosSync);
+                            actualizarEpicsInfo(0, null);
+                        } else if (eventType === 'subproyecto_inicio' || (eventData.subproyectoNombre && eventData.proyectoNombre && !eventData.epics)) {
+                            // Evento de inicio de subproyecto
+                            actualizarSubproyectoInfo(eventData.subproyectoNombre);
+                        } else if (eventType === 'subproyecto_completado' || (eventData.subproyectoNombre && eventData.epics !== undefined)) {
+                            // Evento de subproyecto completado
+                            const mensajeSub = `${eventData.subproyectoNombre} - ${eventData.epics} epics`;
+                            actualizarSubproyectoInfo(mensajeSub);
+                            // Limpiar después de un breve delay
+                            setTimeout(() => {
+                                actualizarSubproyectoInfo('');
+                            }, 2000);
+                        } else if (eventType === 'epics_progreso' || eventData.epicsObtenidos !== undefined) {
+                            actualizarEpicsInfo(eventData.epicsObtenidos, eventData.totalEstimado);
+                        } else if (eventType === 'proyecto_completado' || (eventData.epics !== undefined || eventData.error)) {
+                            // Limpiar información de subproyecto cuando se completa el proyecto
+                            actualizarSubproyectoInfo('');
+                            proyectosCompletados++;
+                            const indexProyecto = eventData.index || proyectosCompletados;
+                            const porcentaje = Math.round((indexProyecto / totalProyectosSync) * 100);
+                            const contador = `[${indexProyecto}/${totalProyectosSync}]`;
+                            if (eventData.epics !== undefined) {
+                                const mensaje = `${eventData.nombre} - ${eventData.epics} epics encontrados ${contador}`;
+                                actualizarProgresoSincronizacion(porcentaje, mensaje, indexProyecto - 1, totalProyectosSync);
+                                actualizarEpicsInfo(eventData.epics, eventData.epics);
+                            } else if (eventData.error) {
+                                const mensaje = `${eventData.nombre} - Error: ${eventData.error} ${contador}`;
+                                actualizarProgresoSincronizacion(porcentaje, mensaje, indexProyecto - 1, totalProyectosSync);
+                                actualizarEpicsInfo(0, null);
+                            }
+                        } else if (eventType === 'completado' || (eventData.success !== undefined && eventData.data)) {
+                            result = eventData;
+                        }
+                    }
+                }
+            }
+        };
+        
+        try {
+            await processStream();
+        } catch (error) {
+            // Si es un error de abort, no hacer nada (ya se canceló)
+            if (error.name === 'AbortError' || cancelarSincronizacion) {
+                return;
+            }
+            throw error;
+        }
+        
+        if (cancelarSincronizacion) {
+            abortControllerSync = null;
+            return;
+        }
+        
+        // Limpiar el AbortController al completar
+        abortControllerSync = null;
+        
+        actualizarProgresoSincronizacion(100, 'Completado', totalProyectosSync, totalProyectosSync);
+        
+        setTimeout(() => {
+            ocultarPopupSincronizacion();
+            if (result.success) {
+                // Limpiar cache de epics del Gantt para forzar recarga con datos actualizados
+                if (typeof limpiarCacheEpics === 'function') {
+                    limpiarCacheEpics();
+                }
+                cargarDatos();
+                // No mostrar alert, solo recargar datos
+            } else {
+                // Solo mostrar error si realmente falló
+                console.error('Error en la sincronización:', result.error || 'Error desconocido');
+            }
+        }, 800);
+        
+    } catch (error) {
+        // Si es un error de abort (cancelación), no hacer nada
+        if (error.name === 'AbortError' || cancelarSincronizacion) {
+            // La cancelación ya se manejó, solo limpiar
+            abortControllerSync = null;
+            return;
+        }
+        console.error('Error al sincronizar epics masivamente:', error);
+        ocultarPopupSincronizacion();
+        abortControllerSync = null;
+        // No mostrar alert, solo loggear el error
+    } finally {
+        // Limpiar el AbortController en el finally
+        abortControllerSync = null;
+        if (btnSincronizarEpics) {
+            btnSincronizarEpics.disabled = false;
+            btnSincronizarEpics.style.opacity = '1';
+            btnSincronizarEpics.style.cursor = 'pointer';
+        }
+    }
+}
+
+// Hacer funciones disponibles globalmente
+if (typeof window !== 'undefined') {
+    window.sincronizarEpicsMasivo = sincronizarEpicsMasivo;
+    window.cancelarSincronizacionEpics = cancelarSincronizacionEpics;
+    window.mostrarPopupSincronizacion = mostrarPopupSincronizacion;
+    window.actualizarProgresoSincronizacion = actualizarProgresoSincronizacion;
+    window.ocultarPopupSincronizacion = ocultarPopupSincronizacion;
+    window.actualizarEpicsInfo = actualizarEpicsInfo;
 }
 
 

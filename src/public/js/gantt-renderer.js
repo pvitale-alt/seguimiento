@@ -1191,3 +1191,19 @@ function mostrarTooltipGantt(event, nombre, fechaInicio, fechaFin, estado) {
 function ocultarTooltipGantt() {
     if (ganttTooltipElement) ganttTooltipElement.style.display = 'none';
 }
+
+// Función para limpiar el cache de epics (útil después de sincronizar)
+function limpiarCacheEpics() {
+    ganttEpicsCache = {};
+    // También limpiar el cache del Gantt de equipo para forzar recarga completa
+    if (ganttDataCache['team_gantt']) {
+        delete ganttDataCache['team_gantt'];
+    }
+}
+
+// Exponer funciones globalmente
+if (typeof window !== 'undefined') {
+    window.renderizarGanttChart = renderizarGanttChart;
+    window.renderizarGanttEquipo = renderizarGanttEquipo;
+    window.limpiarCacheEpics = limpiarCacheEpics;
+}

@@ -225,6 +225,122 @@ button.btn.btn-primary[disabled],
     border-color: rgba(67, 114, 158, 0.6);
 }
 
+/* Botón dividido minimalista para sincronización */
+.sync-btn-split {
+    display: inline-flex;
+    align-items: center;
+    background: white;
+    border: 1px solid #dadce0;
+    border-radius: 24px;
+    overflow: hidden;
+    box-shadow: 0 1px 2px 0 rgba(60, 64, 67, 0.3), 0 1px 3px 1px rgba(60, 64, 67, 0.15);
+    transition: all 0.2s ease;
+}
+
+.sync-btn-split:hover {
+    box-shadow: 0 2px 4px 0 rgba(60, 64, 67, 0.3), 0 2px 6px 2px rgba(60, 64, 67, 0.15);
+}
+
+.sync-btn-half {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 10px 16px;
+    border: none;
+    background: transparent;
+    color: #5f6368;
+    font-size: 14px;
+    font-weight: 500;
+    font-family: 'Google Sans', 'Roboto', sans-serif;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    position: relative;
+    height: 40px;
+    min-width: 100px;
+}
+
+/* Esquinas redondeadas: izquierda para Proyectos, derecha para Epics */
+.sync-btn-proyectos {
+    border-top-left-radius: 24px;
+    border-bottom-left-radius: 24px;
+}
+
+.sync-btn-epics {
+    border-top-right-radius: 24px;
+    border-bottom-right-radius: 24px;
+}
+
+.sync-btn-half svg {
+    width: 16px;
+    height: 16px;
+    stroke-width: 2;
+    transition: transform 0.2s ease;
+}
+
+.sync-btn-half:hover {
+    background: #f8f9fa;
+    color: #202124;
+}
+
+.sync-btn-half:hover svg {
+    transform: rotate(180deg);
+}
+
+.sync-btn-half:active {
+    background: #f1f3f4;
+    transform: scale(0.98);
+}
+
+.sync-btn-half:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+/* Divider entre los dos botones */
+.sync-btn-divider {
+    width: 1px;
+    height: 24px;
+    background: #dadce0;
+    flex-shrink: 0;
+}
+
+/* Estilos específicos para cada mitad */
+.sync-btn-proyectos {
+    color: #1a73e8;
+}
+
+.sync-btn-proyectos:hover {
+    background: #e8f0fe;
+    color: #1557b0;
+}
+
+.sync-btn-epics {
+    color: #1a73e8;
+}
+
+.sync-btn-epics:hover {
+    background: #e8f0fe;
+    color: #1557b0;
+}
+
+/* Estilos para botón Epics cuando está solo (no dentro de sync-btn-split) - como en el modal */
+.sync-btn-half.sync-btn-epics:not(.sync-btn-split .sync-btn-epics) {
+    border: 1px solid #dadce0;
+    border-radius: 24px;
+    background: white;
+    box-shadow: 0 1px 2px 0 rgba(60, 64, 67, 0.3), 0 1px 3px 1px rgba(60, 64, 67, 0.15);
+    border-top-left-radius: 24px;
+    border-bottom-left-radius: 24px;
+    border-top-right-radius: 24px;
+    border-bottom-right-radius: 24px;
+}
+
+.sync-btn-half.sync-btn-epics:not(.sync-btn-split .sync-btn-epics):hover {
+    box-shadow: 0 2px 4px 0 rgba(60, 64, 67, 0.3), 0 2px 6px 2px rgba(60, 64, 67, 0.15);
+}
+
 
 
 

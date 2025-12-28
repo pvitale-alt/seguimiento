@@ -14,7 +14,7 @@
 <body>
     <!-- Header General -->
     <header class="top-header">
-        <div style="display: flex; align-items: center; gap: 12px;">
+        <div style="display: flex; align-items: center; gap: 0; padding-left: 4px;">
             <a href="/" style="display: flex; align-items: center; text-decoration: none;">
                 <img src="/images/Mercap-logo-horizontal-1920x1080.png" alt="Logo Mercap" style="height: 70px; width: auto; display: block;" onerror="this.style.display='none';" />
             </a>
@@ -161,7 +161,7 @@
                     <% } %>
                 </div>
                 <!-- Chips de filtros aplicados (debajo del panel de filtros) -->
-                <div id="filtrosAplicados" style="display: none; padding: 12px 16px; background: white; border-bottom: 1px solid var(--border-color); flex-wrap: wrap; gap: 8px; align-items: center; position: relative; z-index: 2;"></div>
+                <div id="filtrosAplicados" style="display: none; padding: 12px 24px; background: white; border-bottom: 1px solid var(--border-color); flex-wrap: wrap; gap: 8px; align-items: center; position: relative; z-index: 2;"></div>
 
                 <div id="contenido" class="table-container">
                     <div class="empty-state">
@@ -187,8 +187,6 @@
         let filtrosEstados = [];
         let datosTablaActual = [];
         let datosOriginales = [];
-        let ordenActual = { columna: 'cliente', direccion: 'desc' };
-        const ordenEstados = ['sin comenzar', 'en curso', 'Testing', 'Entregado', 'Cerrado', 'Rework', 'Bloqueado'];
     </script>
     
     <!-- Scripts modulares -->
@@ -198,7 +196,6 @@
     <script src="/js/data-loader.js?v=<%= Date.now() %>"></script>
     <script src="/js/table-renderer.js?v=<%= Date.now() %>"></script>
     <script src="/js/sync.js?v=<%= Date.now() %>"></script>
-    <script src="/js/date-picker.js?v=<%= Date.now() %>"></script>
     <script src="/js/modal.js?v=<%= Date.now() %>"></script>
     <script src="/js/proyectos-internos.js?v=<%= Date.now() %>"></script>
     

@@ -128,24 +128,48 @@ window.abrirModalDetalle = async function abrirModalDetalle(id_proyecto, mostrar
 
         modalTitulo.textContent = itemData.nombre_proyecto || 'Detalle del Proyecto';
 
-        // Verificar si es proyecto padre
-        // Primero verificar en itemData, si no está, verificar consultando la API
-        let esProyectoPadre = itemData.tiene_subproyectos || false;
-
-        // Si no está en itemData, verificar consultando subproyectos
-        if (!esProyectoPadre) {
-            try {
-                const subproyectosCheckResponse = await fetch('/api/proyectos?proyecto_padre=' + id_proyecto);
-                const subproyectosCheckData = await subproyectosCheckResponse.json();
-                if (subproyectosCheckData.success && subproyectosCheckData.data && subproyectosCheckData.data.length > 0) {
-                    esProyectoPadre = true;
+        // Mostrar modal inmediatamente con indicador de carga
+        modal.style.display = 'block';
+        modalBody.innerHTML = `
+            <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 60px 20px; min-height: 300px;">
+                <div style="width: 40px; height: 40px; border: 4px solid #f3f3f3; border-top: 4px solid #1a73e8; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 20px;"></div>
+                <div style="font-size: 14px; color: #5f6368; font-family: 'Roboto', sans-serif;">Cargando información del proyecto...</div>
+            </div>
+            <style>
+                @keyframes spin {
+                    0% { transform: rotate(0deg); }
+                    100% { transform: rotate(360deg); }
                 }
-            } catch (error) {
-                console.error('Error al verificar subproyectos:', error);
-            }
-        }
+            </style>
+        `;
 
-        let horasEstimadas = parseFloat(itemData.horas_estimadas) || 0;
+        // Cargar datos de forma asíncrona
+        const cargarDatosModal = async () => {
+            try {
+                // Verificar si es proyecto padre
+                // Primero verificar en itemData, si no está, verificar consultando la API
+                let esProyectoPadre = itemData.tiene_subproyectos || false;
+
+                // Si no está en itemData, verificar consultando subproyectos
+                if (!esProyectoPadre) {
+                    try {
+                        // Para verificar si es proyecto padre, obtener TODOS los subproyectos (sin filtrar por producto/equipo)
+                        const params = new URLSearchParams({
+                            proyecto_padre: id_proyecto,
+                            incluirCerrados: 'true'  // Incluir cerrados para verificar correctamente
+                            // NO pasar producto/equipo para obtener TODOS los subproyectos
+                        });
+                        const subproyectosCheckResponse = await fetch('/api/proyectos?' + params.toString());
+                        const subproyectosCheckData = await subproyectosCheckResponse.json();
+                        if (subproyectosCheckData.success && subproyectosCheckData.data && subproyectosCheckData.data.length > 0) {
+                            esProyectoPadre = true;
+                        }
+                    } catch (error) {
+                        console.error('Error al verificar subproyectos:', error);
+                    }
+                }
+
+            let horasEstimadas = parseFloat(itemData.horas_estimadas) || 0;
         let horasRealizadas = parseFloat(itemData.horas_realizadas) || 0;
         let fechaInicio = formatearFecha(itemData.fecha_inicio_epics || itemData.fecha_inicio || '');
         let fechaFin = formatearFecha(itemData.fecha_fin_epics || itemData.fecha_fin || '');
@@ -166,141 +190,30 @@ window.abrirModalDetalle = async function abrirModalDetalle(id_proyecto, mostrar
             tieneEpics = false;
             epicsHTML = '';
             try {
-                // Obtener subproyectos
-                const subproyectosResponse = await fetch('/api/proyectos?proyecto_padre=' + id_proyecto);
+                // Obtener TODOS los subproyectos del proyecto padre (sin filtrar por producto/equipo)
+                // IMPORTANTE: En el modal siempre incluir cerrados y NO filtrar por producto/equipo
+                // porque los subproyectos pueden pertenecer a diferentes equipos/productos
+                const params = new URLSearchParams({
+                    proyecto_padre: id_proyecto,
+                    incluirCerrados: 'true'  // Siempre incluir cerrados en el modal
+                    // NO pasar producto/equipo para obtener TODOS los subproyectos
+                });
+                const subproyectosResponse = await fetch('/api/proyectos?' + params.toString());
                 const subproyectosData = await subproyectosResponse.json();
                 subproyectos = subproyectosData.success ? subproyectosData.data : [];
 
-                // Sumarizar datos de subproyectos
+                // Sumarizar datos básicos de subproyectos (sin epics todavía)
                 let totalHorasEstimadas = 0;
                 let totalHorasRealizadas = 0;
-                const fechasInicio = [];
-                const fechasFinPlanificada = [];
-                const fechasFinReal = [];
-
-                // Obtener epics de todos los subproyectos para extraer fechas
-                const epicsPromises = subproyectos.map(async function (sub) {
-                    try {
-                        const epicsResponse = await fetch('/api/epics/' + sub.id_proyecto + '?es_proyecto_padre=false');
-                        const epicsData = await epicsResponse.json();
-                        return epicsData.success ? epicsData.data : [];
-                    } catch (error) {
-                        console.error('Error al obtener epics del subproyecto ' + sub.id_proyecto + ':', error);
-                        return [];
-                    }
-                });
-
-                const epicsArrays = await Promise.all(epicsPromises);
-
-                // Verificar si todos los subproyectos tienen fecha fin
-                let todosTienenFechaFin = true;
-
-                subproyectos.forEach(function (sub, index) {
+                subproyectos.forEach(function (sub) {
                     totalHorasEstimadas += parseFloat(sub.horas_estimadas || 0);
                     totalHorasRealizadas += parseFloat(sub.horas_realizadas || 0);
-
-                    // Obtener fechas de los epics del subproyecto
-                    const epicsSub = epicsArrays[index] || [];
-
-                    // Extraer fechas de inicio de los epics (cf_21)
-                    epicsSub.forEach(function (epic) {
-                        if (epic.cf_21 && epic.cf_21.trim() !== '') {
-                            fechasInicio.push(epic.cf_21);
-                        }
-                    });
-
-                    // Verificar si el subproyecto tiene fecha fin
-                    let subproyectoTieneFechaFin = false;
-
-                    // Verificar en epics (cf_22)
-                    epicsSub.forEach(function (epic) {
-                        if (epic.cf_22 && epic.cf_22.trim() !== '') {
-                            fechasFinPlanificada.push(epic.cf_22);
-                            subproyectoTieneFechaFin = true;
-                        }
-                    });
-
-                    // Verificar en campos directos del proyecto
-                    const fechaFinSub = sub.fecha_fin_epics || sub.fecha_fin || '';
-                    if (fechaFinSub && fechaFinSub.trim() !== '') {
-                        fechasFinPlanificada.push(fechaFinSub);
-                        subproyectoTieneFechaFin = true;
-                    }
-
-                    // Si el subproyecto no tiene fecha fin, marcar que no todos tienen
-                    if (!subproyectoTieneFechaFin) {
-                        todosTienenFechaFin = false;
-                    }
-
-                    // Extraer fechas de fin real de los epics (cf_15)
-                    epicsSub.forEach(function (epic) {
-                        if (epic.cf_15 && epic.cf_15.trim() !== '') {
-                            fechasFinReal.push(epic.cf_15);
-                        }
-                    });
-
-                    // También intentar obtener fechas directamente del proyecto si existen
-                    const fechaInicioSub = sub.fecha_inicio_epics || sub.fecha_inicio || '';
-                    if (fechaInicioSub && fechaInicioSub.trim() !== '') {
-                        fechasInicio.push(fechaInicioSub);
-                    }
-
-                    if (sub.fecha_fin_real && sub.fecha_fin_real.trim() !== '') {
-                        fechasFinReal.push(sub.fecha_fin_real);
-                    }
-                });
-
-                // Si no todos los subproyectos tienen fecha fin, NO limpiar el array de fechas fin
-                // (Comentado para permitir que se calcule la fecha fin máxima de los subproyectos que sí la tienen)
-                /*
-                if (!todosTienenFechaFin) {
-                    fechasFinPlanificada.length = 0; // Limpiar el array
-                }
-                */
-
-                console.log('Fechas recolectadas de subproyectos:', {
-                    fechasInicio: fechasInicio,
-                    fechasFinPlanificada: fechasFinPlanificada,
-                    totalSubproyectos: subproyectos.length
                 });
 
                 horasEstimadas = totalHorasEstimadas;
                 horasRealizadas = totalHorasRealizadas;
 
-                if (fechasInicio.length > 0) {
-                    // Ordenar fechas correctamente (la más temprana primero)
-                    const fechasInicioOrdenadas = fechasInicio
-                        .filter(f => f) // Filtrar valores vacíos
-                        .map(f => {
-                            // Convertir a formato comparable (YYYY-MM-DD)
-                            const match = String(f).match(/^(\d{4})-(\d{2})-(\d{2})/);
-                            return match ? match[0] : f;
-                        })
-                        .sort();
-                    if (fechasInicioOrdenadas.length > 0) {
-                        fechaInicioPlanificada = fechasInicioOrdenadas[0];
-                    }
-                }
-                if (fechasFinPlanificada.length > 0) {
-                    // Ordenar fechas correctamente (la más tardía última)
-                    const fechasFinOrdenadas = fechasFinPlanificada
-                        .filter(f => f) // Filtrar valores vacíos
-                        .map(f => {
-                            // Convertir a formato comparable (YYYY-MM-DD)
-                            const match = String(f).match(/^(\d{4})-(\d{2})-(\d{2})/);
-                            return match ? match[0] : f;
-                        })
-                        .sort()
-                        .reverse();
-                    if (fechasFinOrdenadas.length > 0) {
-                        fechaFinPlanificada = fechasFinOrdenadas[0];
-                    }
-                }
-                if (fechasFinReal.length > 0) {
-                    fechaFinReal = fechasFinReal.sort().reverse()[0];
-                }
-
-                // Generar HTML de subproyectos como tabla
+                // Generar HTML de subproyectos INMEDIATAMENTE (sin esperar epics)
                 if (subproyectos.length === 0) {
                     subproyectosHTML = '<div class="epics-table-container"><div class="epics-table-empty">No hay subproyectos</div></div>';
                 } else {
@@ -356,6 +269,139 @@ window.abrirModalDetalle = async function abrirModalDetalle(id_proyecto, mostrar
                     subproyectosHTML += '</tbody></table>';
                     subproyectosHTML += '</div>';
                 }
+
+                // Cargar epics de todos los subproyectos en segundo plano (para el Gantt)
+                // Esto se hace después de mostrar los subproyectos
+                const cargarEpicsParaGantt = async () => {
+                    try {
+                        const fechasInicio = [];
+                        const fechasFinPlanificada = [];
+                        const fechasFinReal = [];
+
+                        // Obtener epics de todos los subproyectos para extraer fechas
+                        const epicsPromises = subproyectos.map(async function (sub) {
+                            try {
+                                const epicsResponse = await fetch('/api/epics/' + sub.id_proyecto + '?es_proyecto_padre=false');
+                                const epicsData = await epicsResponse.json();
+                                return epicsData.success ? epicsData.data : [];
+                            } catch (error) {
+                                console.error('Error al obtener epics del subproyecto ' + sub.id_proyecto + ':', error);
+                                return [];
+                            }
+                        });
+
+                        const epicsArrays = await Promise.all(epicsPromises);
+
+                        // Procesar fechas de los epics
+                        subproyectos.forEach(function (sub, index) {
+                            // Obtener fechas de los epics del subproyecto
+                            const epicsSub = epicsArrays[index] || [];
+
+                            // Extraer fechas de inicio de los epics (cf_21)
+                            epicsSub.forEach(function (epic) {
+                                if (epic.cf_21 && epic.cf_21.trim() !== '') {
+                                    fechasInicio.push(epic.cf_21);
+                                }
+                            });
+
+                            // Verificar en epics (cf_22)
+                            epicsSub.forEach(function (epic) {
+                                if (epic.cf_22 && epic.cf_22.trim() !== '') {
+                                    fechasFinPlanificada.push(epic.cf_22);
+                                }
+                            });
+
+                            // Verificar en campos directos del proyecto
+                            const fechaFinSub = sub.fecha_fin_epics || sub.fecha_fin || '';
+                            if (fechaFinSub && fechaFinSub.trim() !== '') {
+                                fechasFinPlanificada.push(fechaFinSub);
+                            }
+
+                            // Extraer fechas de fin real de los epics (cf_15)
+                            epicsSub.forEach(function (epic) {
+                                if (epic.cf_15 && epic.cf_15.trim() !== '') {
+                                    fechasFinReal.push(epic.cf_15);
+                                }
+                            });
+
+                            // También intentar obtener fechas directamente del proyecto si existen
+                            const fechaInicioSub = sub.fecha_inicio_epics || sub.fecha_inicio || '';
+                            if (fechaInicioSub && fechaInicioSub.trim() !== '') {
+                                fechasInicio.push(fechaInicioSub);
+                            }
+
+                            if (sub.fecha_fin_real && sub.fecha_fin_real.trim() !== '') {
+                                fechasFinReal.push(sub.fecha_fin_real);
+                            }
+                        });
+
+                        // Calcular fechas mínimas/máximas
+                        if (fechasInicio.length > 0) {
+                            const fechasInicioOrdenadas = fechasInicio
+                                .filter(f => f)
+                                .map(f => {
+                                    const match = String(f).match(/^(\d{4})-(\d{2})-(\d{2})/);
+                                    return match ? match[0] : f;
+                                })
+                                .sort();
+                            if (fechasInicioOrdenadas.length > 0) {
+                                fechaInicioPlanificada = fechasInicioOrdenadas[0];
+                            }
+                        }
+                        if (fechasFinPlanificada.length > 0) {
+                            const fechasFinOrdenadas = fechasFinPlanificada
+                                .filter(f => f)
+                                .map(f => {
+                                    const match = String(f).match(/^(\d{4})-(\d{2})-(\d{2})/);
+                                    return match ? match[0] : f;
+                                })
+                                .sort()
+                                .reverse();
+                            if (fechasFinOrdenadas.length > 0) {
+                                fechaFinPlanificada = fechasFinOrdenadas[0];
+                            }
+                        }
+                        if (fechasFinReal.length > 0) {
+                            fechaFinReal = fechasFinReal.sort().reverse()[0];
+                        }
+
+                        // Actualizar fechas en el modal si están visibles
+                        const modalBody = document.getElementById('modalBody');
+                        if (modalBody && modalBody.getAttribute('data-proyecto-actual') === String(id_proyecto)) {
+                            // Actualizar fechas en los campos del modal si existen
+                            if (fechaInicioPlanificada) {
+                                const fechaInicioInput = modalBody.querySelector('input[type="date"][value*="' + fechaInicioPlanificada.substring(0, 4) + '"]');
+                                if (fechaInicioInput) {
+                                    fechaInicioInput.value = formatearFecha(fechaInicioPlanificada);
+                                }
+                            }
+                            if (fechaFinPlanificada) {
+                                const fechaFinInput = modalBody.querySelector('input[type="date"][value*="' + fechaFinPlanificada.substring(0, 4) + '"]');
+                                if (fechaFinInput) {
+                                    fechaFinInput.value = formatearFecha(fechaFinPlanificada);
+                                }
+                            }
+
+                            // Renderizar Gantt Chart con los datos de subproyectos
+                            if (typeof renderizarGanttChart === 'function') {
+                                const proyectoDataStr = modalBody.getAttribute('data-proyecto-data');
+                                if (proyectoDataStr) {
+                                    try {
+                                        const proyectoData = JSON.parse(proyectoDataStr);
+                                        renderizarGanttChart(id_proyecto, true, subproyectos, proyectoData);
+                                    } catch (e) {
+                                        console.error('Error al parsear datos del proyecto para Gantt:', e);
+                                    }
+                                }
+                            }
+                        }
+                    } catch (error) {
+                        console.error('Error al cargar epics para Gantt:', error);
+                    }
+                };
+
+                // Iniciar carga de epics en segundo plano (no esperar)
+                cargarEpicsParaGantt();
             } catch (error) {
                 console.error('Error al cargar subproyectos:', error);
                 subproyectosHTML = '<div style="color: #d93025; padding: 20px; text-align: center;">Error al cargar subproyectos</div>';
@@ -433,8 +479,8 @@ window.abrirModalDetalle = async function abrirModalDetalle(id_proyecto, mostrar
                         // Epic ID con link
                         html += '<td class="epic-id-cell"><a href="' + epicUrl + '" target="_blank" title="' + estadoEpic + '">#' + epic.epic_id + '</a></td>';
 
-                        // Título
-                        html += '<td class="epic-title-cell" title="' + epicTitle.replace(/"/g, '&quot;') + '">' + epicTitle + '</td>';
+                        // Título (no clickeable - los epics no abren proyectos)
+                        html += '<td class="epic-title-cell" style="cursor: default; pointer-events: none;" title="' + epicTitle.replace(/"/g, '&quot;') + '">' + epicTitle + '</td>';
 
                         // Horas estimadas
                         html += '<td class="epic-hours-cell estimated">' + (parseFloat(epic.total_estimated_hours) || 0).toFixed(1) + 'h</td>';
@@ -540,7 +586,7 @@ window.abrirModalDetalle = async function abrirModalDetalle(id_proyecto, mostrar
         contenido += '</div>';
         contenido += '<div style="display: flex; align-items: center; gap: 16px;">';
         if (!esProyectoPadre) {
-            contenido += '<button class="button" onclick="sincronizarEpicsDesdeModal(' + id_proyecto + ', \'' + (itemData.codigo_proyecto || '').replace(/'/g, "\\'") + '\', this)" style="padding: 8px 16px; font-size: 13px; white-space: nowrap;"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="margin-right: 8px; vertical-align: middle;"><path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>Sincronizar Redmine</button>';
+            contenido += '<button class="sync-btn-half sync-btn-epics" onclick="sincronizarEpicsDesdeModal(' + id_proyecto + ', \'' + (itemData.codigo_proyecto || '').replace(/'/g, "\\'") + '\', this)" style="white-space: nowrap;" title="Sincronizar Epics"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/></svg><span>Epics</span></button>';
         }
         if (fechaUltimaActualizacion) {
             contenido += '<div id="ultimaActualizacion_' + id_proyecto + '" style="font-size: 12px; color: var(--text-secondary); font-family: \'Google Sans\', \'Roboto\', sans-serif;">Última Actualización: ' + fechaUltimaActualizacion + '</div>';
@@ -661,8 +707,17 @@ window.abrirModalDetalle = async function abrirModalDetalle(id_proyecto, mostrar
         // Cargar accionables
         cargarAccionablesProyecto(id_proyecto);
 
-        // Renderizar Gantt Chart
-        renderizarGanttChart(id_proyecto, esProyectoPadre, esProyectoPadre ? subproyectos : epicsArray, itemData);
+        // Renderizar Gantt Chart (solo si NO es proyecto padre, porque para proyecto padre se carga después)
+        if (!esProyectoPadre) {
+            renderizarGanttChart(id_proyecto, esProyectoPadre, epicsArray, itemData);
+        } else {
+            // Para proyecto padre, el Gantt se renderizará después de cargar los epics en segundo plano
+            // Mostrar un placeholder mientras se carga
+            const ganttPanel = document.getElementById('ganttPanel_' + id_proyecto);
+            if (ganttPanel) {
+                ganttPanel.innerHTML = '<div style="padding: 20px; text-align: center; color: var(--text-secondary); font-style: italic;">Cargando Gantt...</div>';
+            }
+        }
 
         // Inicializar estado de edición
         accionablesEditados = false;
@@ -678,10 +733,23 @@ window.abrirModalDetalle = async function abrirModalDetalle(id_proyecto, mostrar
             }, 500); // Esperar a que se carguen los accionables
         }
 
-        // Verificar estado inicial del botón check
-        setTimeout(() => {
-            marcarAccionablesEditado(id_proyecto);
-        }, 100);
+                // Verificar estado inicial del botón check
+                setTimeout(() => {
+                    marcarAccionablesEditado(id_proyecto);
+                }, 100);
+            } catch (error) {
+                console.error('Error al cargar datos del modal:', error);
+                modalBody.innerHTML = `
+                    <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 60px 20px; min-height: 300px;">
+                        <div style="font-size: 16px; color: #d93025; font-family: 'Roboto', sans-serif; margin-bottom: 12px;">Error al cargar el proyecto</div>
+                        <div style="font-size: 14px; color: #5f6368; font-family: 'Roboto', sans-serif;">${error.message || 'Error desconocido'}</div>
+                    </div>
+                `;
+            }
+        };
+
+        // Iniciar carga de datos
+        cargarDatosModal();
     } catch (error) {
         console.error('Error al abrir modal:', error);
         alert('Error al abrir detalles del proyecto');
@@ -1386,6 +1454,246 @@ function actualizarTextoUltimaActualizacion(id_proyecto, updatedAt) {
         elemento.textContent = 'Última Actualización: ' + updatedAt;
     }
 }
+
+// Función para sincronizar epics desde el modal
+window.sincronizarEpicsDesdeModal = async function sincronizarEpicsDesdeModal(id_proyecto, codigo_proyecto, buttonElement) {
+    if (!id_proyecto || !codigo_proyecto) {
+        alert('Error: ID de proyecto y código son requeridos');
+        return;
+    }
+
+    // Deshabilitar botón durante la sincronización
+    if (buttonElement) {
+        const originalText = buttonElement.innerHTML;
+        buttonElement.disabled = true;
+        buttonElement.style.opacity = '0.6';
+        buttonElement.style.cursor = 'not-allowed';
+        buttonElement.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="animation: spin 1s linear infinite;"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/></svg><span>Sincronizando...</span>';
+    }
+
+    try {
+        const response = await fetch('/api/sincronizar/epics', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            credentials: 'include',
+            body: JSON.stringify({
+                id_proyecto: id_proyecto,
+                codigo_proyecto: codigo_proyecto
+            })
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+            // Actualizar la fecha de última actualización
+            const fechaActual = new Date().toLocaleString('es-AR', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            });
+            const ultimaActualizacionElement = document.getElementById('ultimaActualizacion_' + id_proyecto);
+            if (ultimaActualizacionElement) {
+                ultimaActualizacionElement.textContent = 'Última Actualización: ' + fechaActual;
+            }
+
+            // Recargar epics en el modal
+            const epicsResponse = await fetch('/api/epics/' + id_proyecto + '?es_proyecto_padre=false', {
+                credentials: 'include'
+            });
+            const epicsData = await epicsResponse.json();
+
+            if (epicsData.success && epicsData.data) {
+                // Actualizar la tabla de epics usando la misma estructura que en abrirModalDetalle
+                const epicsContainer = document.querySelector('#modalBody .epics-table-container');
+                if (epicsContainer) {
+                    // Función auxiliar para renderizar fila de epic (igual que en abrirModalDetalle)
+                    function renderizarEpicFila(epic) {
+                        const epicUrl = 'https://redmine.mercap.net/issues/' + epic.epic_id;
+                        const epicTitle = epic.subject || 'Sin título';
+                        const estadoEpic = epic.status || '';
+                        const estadoLower = estadoEpic.toLowerCase();
+
+                        // Determinar clase de estado
+                        let statusClass = '';
+                        if (estadoLower.includes('cerrado') || estadoLower.includes('closed') ||
+                            estadoLower.includes('entregado') || estadoLower.includes('resuelto') ||
+                            estadoLower.includes('resolved')) {
+                            statusClass = 'status-closed';
+                        }
+                        else if (estadoLower.includes('en progreso') || estadoLower.includes('in progress')) {
+                            statusClass = 'status-progress';
+                        }
+                        else if (estadoLower.includes('nuevo') || estadoLower.includes('new') ||
+                            estadoLower.includes('abierto') || estadoLower.includes('open')) {
+                            statusClass = 'status-open';
+                        }
+
+                        // Formatear fechas
+                        const fechaInicio = epic.cf_21 ? formatearFecha(epic.cf_21) : '';
+                        const fechaFinPlan = epic.cf_22 ? formatearFecha(epic.cf_22) : '';
+                        const fechaFinReal = epic.cf_15 ? formatearFecha(epic.cf_15) : '';
+
+                        let html = '<tr>';
+
+                        // Epic ID con link
+                        html += '<td class="epic-id-cell"><a href="' + epicUrl + '" target="_blank" title="' + estadoEpic + '">#' + epic.epic_id + '</a></td>';
+
+                        // Título (no clickeable - los epics no abren proyectos)
+                        html += '<td class="epic-title-cell" style="cursor: default; pointer-events: none;" title="' + epicTitle.replace(/"/g, '&quot;') + '">' + epicTitle + '</td>';
+
+                        // Horas estimadas
+                        html += '<td class="epic-hours-cell estimated">' + (parseFloat(epic.total_estimated_hours) || 0).toFixed(1) + 'h</td>';
+
+                        // Horas reales
+                        html += '<td class="epic-hours-cell spent">' + (parseFloat(epic.total_spent_hours) || 0).toFixed(1) + 'h</td>';
+
+                        // Fecha inicio planificada
+                        html += '<td class="epic-date-cell ' + (fechaInicio ? 'has-date' : 'no-date') + '">' + (fechaInicio || '-') + '</td>';
+
+                        // Fecha fin planificada
+                        html += '<td class="epic-date-cell ' + (fechaFinPlan ? 'has-date' : 'no-date') + '">' + (fechaFinPlan || '-') + '</td>';
+
+                        // Fecha fin real
+                        html += '<td class="epic-date-cell ' + (fechaFinReal ? 'has-date' : 'no-date') + '">' + (fechaFinReal || '-') + '</td>';
+
+                        html += '</tr>';
+                        return html;
+                    }
+
+                    // Reconstruir la tabla de epics con la estructura correcta
+                    let epicsHTML = '<table class="epics-table">';
+                    epicsHTML += '<thead><tr>';
+                    epicsHTML += '<th>Epic</th>';
+                    epicsHTML += '<th>Título</th>';
+                    epicsHTML += '<th style="text-align: right;">Hs Est.</th>';
+                    epicsHTML += '<th style="text-align: right;">Hs Real</th>';
+                    epicsHTML += '<th>Inicio Plan.</th>';
+                    epicsHTML += '<th>Fin Plan.</th>';
+                    epicsHTML += '<th>Fin Real</th>';
+                    epicsHTML += '</tr></thead>';
+                    epicsHTML += '<tbody>';
+
+                    if (epicsData.data.length === 0) {
+                        epicsHTML += '<tr><td colspan="7" style="text-align: center; padding: 20px; color: var(--text-secondary);">No hay epics sincronizados</td></tr>';
+                    } else {
+                        epicsData.data.forEach(function(epic) {
+                            epicsHTML += renderizarEpicFila(epic);
+                        });
+                    }
+
+                    epicsHTML += '</tbody></table>';
+                    epicsContainer.innerHTML = epicsHTML;
+                }
+
+                // Obtener modalBody
+                const modalBody = document.getElementById('modalBody');
+
+                // Actualizar el contador de epics
+                const epicsHeader = document.querySelector('#modalBody h3');
+                if (epicsHeader && epicsHeader.textContent.includes('Epics Sincronizados')) {
+                    const horasEstimadas = result.data.horas_estimadas || 0;
+                    const horasRealizadas = result.data.horas_realizadas || 0;
+                    const nextSibling = epicsHeader.nextElementSibling;
+                    if (nextSibling) {
+                        nextSibling.textContent = `Total: ${(parseFloat(horasEstimadas) || 0).toFixed(1)}h est. / ${(parseFloat(horasRealizadas) || 0).toFixed(1)}h real.`;
+                    }
+                }
+
+                // Actualizar horas estimadas y realizadas en el panel izquierdo
+                if (modalBody) {
+                    const labels = Array.from(modalBody.querySelectorAll('label'));
+                    
+                    const horasEstimadasLabel = labels.find(l => l.textContent.includes('Horas Estimadas'));
+                    if (horasEstimadasLabel) {
+                        const horasEstimadasDiv = horasEstimadasLabel.nextElementSibling;
+                        if (horasEstimadasDiv && horasEstimadasDiv.tagName === 'DIV') {
+                            const horasEstimadas = result.data.horas_estimadas || 0;
+                            horasEstimadasDiv.textContent = (parseFloat(horasEstimadas) || 0).toFixed(1) + 'h';
+                        }
+                    }
+
+                    const horasRealizadasLabel = labels.find(l => l.textContent.includes('Horas Realizadas'));
+                    if (horasRealizadasLabel) {
+                        const horasRealizadasDiv = horasRealizadasLabel.nextElementSibling;
+                        if (horasRealizadasDiv && horasRealizadasDiv.tagName === 'DIV') {
+                            const horasRealizadas = result.data.horas_realizadas || 0;
+                            horasRealizadasDiv.textContent = (parseFloat(horasRealizadas) || 0).toFixed(1) + 'h';
+                        }
+                    }
+                }
+
+                // Actualizar datos del proyecto en itemData para el Gantt
+                if (modalBody) {
+                    const proyectoDataStr = modalBody.getAttribute('data-proyecto-data');
+                    if (proyectoDataStr) {
+                        try {
+                            const proyectoData = JSON.parse(proyectoDataStr);
+                            proyectoData.horas_estimadas = result.data.horas_estimadas || 0;
+                            proyectoData.horas_realizadas = result.data.horas_realizadas || 0;
+                            proyectoData.fecha_inicio_epics = result.data.fecha_inicio || '';
+                            proyectoData.fecha_fin_epics = result.data.fecha_fin || '';
+                            modalBody.setAttribute('data-proyecto-data', JSON.stringify(proyectoData));
+                        } catch (e) {
+                            console.error('Error al actualizar datos del proyecto:', e);
+                        }
+                    }
+                }
+
+                // Refrescar Gantt Chart si existe
+                if (typeof renderizarGanttChart === 'function') {
+                    const epicsArray = epicsData.data.map(e => ({
+                        epic_id: e.epic_id,
+                        subject: e.subject,
+                        fechaInicio: e.cf_21,
+                        fechaFin: e.cf_22,
+                        horasEstimadas: e.total_estimated_hours || 0,
+                        horasRealizadas: e.total_spent_hours || 0
+                    }));
+
+                    const modalBody = document.getElementById('modalBody');
+                    let itemData = null;
+                    if (modalBody) {
+                        const proyectoDataStr = modalBody.getAttribute('data-proyecto-data');
+                        if (proyectoDataStr) {
+                            try {
+                                itemData = JSON.parse(proyectoDataStr);
+                            } catch (e) {
+                                console.error('Error al parsear datos del proyecto:', e);
+                            }
+                        }
+                    }
+
+                    if (itemData) {
+                        renderizarGanttChart(id_proyecto, false, epicsArray, itemData);
+                    }
+                }
+            }
+
+            // Recargar datos de la tabla principal
+            if (typeof cargarDatos === 'function') {
+                cargarDatos();
+            }
+        } else {
+            alert('Error al sincronizar epics: ' + (result.error || 'Error desconocido'));
+        }
+    } catch (error) {
+        console.error('Error al sincronizar epics:', error);
+        alert('Error al sincronizar epics: ' + error.message);
+    } finally {
+        // Restaurar botón
+        if (buttonElement) {
+            buttonElement.disabled = false;
+            buttonElement.style.opacity = '1';
+            buttonElement.style.cursor = 'pointer';
+            buttonElement.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/></svg><span>Epics</span>';
+        }
+    }
+};
 
 // =============================================
 // GANTT CHART - Componente interactivo

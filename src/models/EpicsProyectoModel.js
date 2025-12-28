@@ -113,18 +113,35 @@ class EpicsProyectoModel {
      * @returns {Promise<Object>} - Resultado de la operación
      */
     static async guardarEpics(id_proyecto, epics) {
+        if (!epics || epics.length === 0) {
+            return {
+                success: true,
+                insertados: 0,
+                actualizados: 0,
+                total: 0
+            };
+        }
+
         const client = await pool.connect();
         try {
             await client.query('BEGIN');
             
+            // Optimización: Obtener todos los epic_ids existentes en una sola query
+            const epicIds = epics.map(e => e.epic_id);
+            const checkQuery = `
+                SELECT epic_id 
+                FROM epics_proyecto 
+                WHERE id_proyecto = $1 AND epic_id = ANY($2::int[])
+            `;
+            const checkResult = await client.query(checkQuery, [id_proyecto, epicIds]);
+            const epicIdsExistentes = new Set(checkResult.rows.map(r => r.epic_id));
+            
             let insertados = 0;
             let actualizados = 0;
             
+            // Procesar epics en batch para mejor rendimiento
             for (const epic of epics) {
-                // Primero verificar si el epic ya existe
-                const checkQuery = `SELECT created_at, updated_at FROM epics_proyecto WHERE id_proyecto = $1 AND epic_id = $2`;
-                const checkResult = await client.query(checkQuery, [id_proyecto, epic.epic_id]);
-                const existe = checkResult.rows.length > 0;
+                const existe = epicIdsExistentes.has(epic.epic_id);
                 
                 const query = `
                     INSERT INTO epics_proyecto (

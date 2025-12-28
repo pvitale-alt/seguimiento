@@ -284,16 +284,18 @@ async function sincronizarProyectos(producto = null, equipo = null, maxTotal = n
         const todosLosProyectos = [...proyectosPrincipales, ...proyectosHeredados];
         
         // Filtrar proyectos que NO sean de categoría "Mantenimiento" ni "Licencias"
-        let proyectosExcluidos = 0;
-        const proyectosFiltrados = todosLosProyectos.filter(p => {
+        let proyectosExcluidosPorCategoria = 0;
+        const proyectosPorCategoria = todosLosProyectos.filter(p => {
             if (p.categoria === 'Mantenimiento' || p.categoria === 'Licencias' || !p.categoria || p.categoria === '') {
-                proyectosExcluidos++;
+                proyectosExcluidosPorCategoria++;
                 return false;
             }
             return true;
         });
         
-        if (proyectosFiltrados.length === 0) {
+        // Consultar la BD para obtener proyectos existentes con su estado interno
+        const idsProyectosRedmine = proyectosPorCategoria.map(p => p.id_proyecto);
+        if (idsProyectosRedmine.length === 0) {
             console.log('⚠️ No se encontraron proyectos para sincronizar');
             return {
                 success: true,
@@ -304,7 +306,74 @@ async function sincronizarProyectos(producto = null, equipo = null, maxTotal = n
             };
         }
         
-        console.log(`\n   📊 Resumen: ${proyectosFiltrados.length} proyectos a sincronizar | ${proyectosExcluidos} proyectos excluidos\n`);
+        // Obtener proyectos existentes con su estado interno
+        const querySQL = `
+            SELECT p.id_proyecto, p.estado
+            FROM proyectos_externos p
+            WHERE p.id_proyecto = ANY($1::int[])
+        `;
+        const result = await query(querySQL, [idsProyectosRedmine]);
+        const proyectosExistentes = new Map();
+        result.rows.forEach(row => {
+            proyectosExistentes.set(row.id_proyecto, row.estado);
+        });
+        
+        // Separar proyectos en: nuevos (no existen) y existentes no cerrados (para actualizar)
+        const proyectosNuevos = [];
+        const proyectosParaActualizar = [];
+        let proyectosExcluidosPorCerrado = 0;
+        
+        proyectosPorCategoria.forEach(p => {
+            const existeEnBD = proyectosExistentes.has(p.id_proyecto);
+            const estadoInterno = existeEnBD ? proyectosExistentes.get(p.id_proyecto) : null;
+            
+            if (!existeEnBD) {
+                // Proyecto nuevo (no existe en BD)
+                proyectosNuevos.push(p);
+            } else if (estadoInterno !== 'Cerrado') {
+                // Proyecto existente y NO cerrado (incluye null, "en curso", etc.) - se actualiza
+                proyectosParaActualizar.push(p);
+            } else {
+                // Proyecto existente pero cerrado (se excluye)
+                proyectosExcluidosPorCerrado++;
+            }
+        });
+        
+        // Combinar proyectos nuevos + existentes no cerrados para sincronizar
+        const proyectosFiltrados = [...proyectosNuevos, ...proyectosParaActualizar];
+        
+        // Consultar qué proyectos muestra realmente la vista con los mismos filtros
+        const ProyectosExternosModel = require('../models/ProyectosExternosModel');
+        const filtrosVista = {
+            producto: producto,
+            equipo: equipo,
+            excluirCategorias: ['Mantenimiento', 'On-Site'],
+            incluirCerrados: false
+        };
+        const proyectosVista = await ProyectosExternosModel.obtenerTodos(filtrosVista);
+        const idsVista = proyectosVista.map(p => p.id_proyecto);
+        
+        // Filtrar proyectos para sincronizar: solo los que están en la vista O son nuevos
+        const idsParaSincronizar = new Set();
+        proyectosNuevos.forEach(p => idsParaSincronizar.add(p.id_proyecto));
+        idsVista.forEach(id => idsParaSincronizar.add(id));
+        
+        const proyectosParaSincronizar = proyectosFiltrados.filter(p => idsParaSincronizar.has(p.id_proyecto));
+        
+        if (proyectosParaSincronizar.length === 0) {
+            console.log('⚠️ No se encontraron proyectos para sincronizar');
+            return {
+                success: true,
+                message: 'No hay proyectos para sincronizar',
+                insertados: 0,
+                actualizados: 0,
+                total: 0
+            };
+        }
+        
+        const totalExcluidos = proyectosExcluidosPorCategoria + proyectosExcluidosPorCerrado + (proyectosFiltrados.length - proyectosParaSincronizar.length);
+        const excluidosPorVista = proyectosFiltrados.length - proyectosParaSincronizar.length;
+        console.log(`\n   📊 Resumen: ${proyectosParaSincronizar.length} proyectos a sincronizar (${proyectosNuevos.filter(p => proyectosParaSincronizar.includes(p)).length} nuevos, ${proyectosParaActualizar.filter(p => proyectosParaSincronizar.includes(p)).length} a actualizar) | ${totalExcluidos} proyectos excluidos (${proyectosExcluidosPorCategoria} por categoría, ${proyectosExcluidosPorCerrado} cerrados, ${excluidosPorVista} no en vista)\n`);
         
         // 3. Insertar/actualizar en redmine_proyectos_externos
         console.log('💾 Sincronizando proyectos en la base de datos...');
@@ -312,7 +381,7 @@ async function sincronizarProyectos(producto = null, equipo = null, maxTotal = n
         let insertados = 0;
         let actualizados = 0;
         
-        for (const proyecto of proyectosFiltrados) {
+        for (const proyecto of proyectosParaSincronizar) {
             try {
                 const result = await query(`
                     INSERT INTO redmine_proyectos_externos (
@@ -379,12 +448,19 @@ async function sincronizarProyectos(producto = null, equipo = null, maxTotal = n
             RETURNING id, id_proyecto;
         `);
         
-        const proyectosNuevos = syncResult.rowCount;
-        console.log(`✅ ${proyectosNuevos} registros editables nuevos creados\n`);
+        const registrosEditablesCreados = syncResult.rowCount;
+        console.log(`✅ ${registrosEditablesCreados} registros editables nuevos creados\n`);
         
         console.log('🎉 =================================');
         console.log('   SINCRONIZACIÓN PROYECTOS COMPLETADA');
         console.log('   =================================\n');
+        
+        // Contar proyectos no cerrados (ya filtrados arriba, todos los de proyectosParaSincronizar son no cerrados)
+        const idsSincronizados = new Set(proyectosParaSincronizar.map(p => p.id_proyecto));
+        const proyectosNuevosSincronizados = proyectosNuevos.filter(p => idsSincronizados.has(p.id_proyecto));
+        const proyectosActualizadosSincronizados = proyectosParaActualizar.filter(p => idsSincronizados.has(p.id_proyecto));
+        const insertadosNoCerrados = proyectosNuevosSincronizados.length;
+        const actualizadosNoCerrados = proyectosActualizadosSincronizados.length;
         
         return {
             success: true,
@@ -392,10 +468,12 @@ async function sincronizarProyectos(producto = null, equipo = null, maxTotal = n
             redmine_proyectos_externos: {
                 insertados,
                 actualizados,
-                total: proyectosFiltrados.length
+                insertadosNoCerrados,
+                actualizadosNoCerrados,
+                total: proyectosParaSincronizar.length
             },
             proyectos_externos: {
-                nuevos: proyectosNuevos
+                nuevos: registrosEditablesCreados
             }
         };
         

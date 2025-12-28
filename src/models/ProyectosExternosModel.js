@@ -358,6 +358,60 @@ class ProyectosExternosModel {
     }
 
     /**
+     * Obtener subproyectos de un proyecto padre específico con filtros de producto/equipo
+     * @param {Object} filtros - Filtros para obtener subproyectos
+     * @returns {Promise<Array>} - Array de subproyectos
+     */
+    static async obtenerSubproyectosPorPadre(filtros) {
+        try {
+            const params = [];
+            let paramCount = 1;
+            
+            let query = `
+                SELECT * FROM v_proyectos_externos_completo
+                WHERE proyecto_padre::text = $${paramCount}
+            `;
+            params.push(String(filtros.proyecto_padre));
+            paramCount++;
+            
+            // Filtro por producto
+            if (filtros.producto) {
+                query += ` AND producto = $${paramCount}`;
+                params.push(filtros.producto);
+                paramCount++;
+            }
+            
+            // Filtro por equipo (solo si se especifica y no es '*')
+            if (filtros.equipo && filtros.equipo !== '*' && filtros.equipo !== 'null') {
+                query += ` AND equipo = $${paramCount}`;
+                params.push(filtros.equipo);
+                paramCount++;
+            }
+            
+            // Excluir proyectos con estado "Cerrado" (solo si no se solicita incluir cerrados)
+            if (!filtros.incluirCerrados) {
+                query += ` AND (estado IS NULL OR estado != 'Cerrado')`;
+            }
+            
+            query += ` ORDER BY nombre_proyecto`;
+            
+            const result = await pool.query(query, params);
+            console.log(`📊 Subproyectos obtenidos para proyecto_padre ${filtros.proyecto_padre}: ${result.rows.length} subproyectos`);
+            if (filtros.producto) {
+                console.log(`   Filtrado por producto: ${filtros.producto}`);
+            }
+            if (filtros.equipo) {
+                console.log(`   Filtrado por equipo: ${filtros.equipo}`);
+            }
+            console.log(`   Incluir cerrados: ${filtros.incluirCerrados}`);
+            return result.rows;
+        } catch (error) {
+            console.error('Error al obtener subproyectos por padre:', error);
+            throw error;
+        }
+    }
+
+    /**
      * Obtener métricas del dashboard por producto
      * @returns {Promise<Array>} - Array de métricas por producto
      */
